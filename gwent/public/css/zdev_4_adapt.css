@@ -1,0 +1,8 @@
+@media screen and (max-width: 1366px) {
+  /*content-card-wrap-main*/
+  .content-card-wrap-main .content-card-center-checkbox {
+    padding-left: 0%;
+    font-size: 13px; }
+  .content-card-wrap-main .jq-selectbox__trigger {
+    width: 20px; }
+  /*/content-card-wrap-main*/ }

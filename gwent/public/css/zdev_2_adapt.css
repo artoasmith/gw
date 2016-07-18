@@ -1,0 +1,14 @@
+@media screen and (max-width: 1600px) {
+  .mbox .header-box .rating .convert-resurses .resurses {
+    margin-right: 15px; }
+  .mbox .header-box .rating {
+    padding-top: 0px; }
+  .mbox .header-box .rating p {
+    vertical-align: top;
+    padding-top: 30px; } }
+
+@media screen and (max-width: 1366px) {
+  .mbox .header-box .rating .convert-resurses .resurses {
+    padding-bottom: 5px; }
+    .mbox .header-box .rating .convert-resurses .resurses:last-child {
+      display: block; } }
