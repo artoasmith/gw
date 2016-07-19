@@ -769,18 +769,28 @@ $(document).ready(function(){
 	   $(this).parent().hide();
 	});
 
-	$('.conteiner-rase ul li .button-buy-next').click(function(){
-		var race = $(this).parent().attr('data-race');
+
+	$('.conteiner-rase .afterloader').css({'opacity':'0', 'z-index':'-1'});
+
+	$('.conteiner-rase ul li .button-buy-next').click(function(e){
+		e.preventDefault();
+		var race = $(this).attr('name');
+		$('.conteiner-rase #gameForm input[name=currentRace]').val(race);
 		$.ajax({
-			url:		'/looking_for_playing',
-			type:		'GET',
+			url:	'/validate_deck',
+			type:	'GET',
 			beforeSend: function(){
 				$('.conteiner-rase .afterloader').css({'opacity':'1', 'z-index':'100'});
 			},
-			data:		{race:race},
-			success:	function(data){
+			data:	{race:race},
+			success:function(data){
 				$('.conteiner-rase .afterloader').css({'opacity':'0', 'z-index':'-1'});
-				console.log(data);
+				var res = JSON.parse(data);
+				if(res['message'] == 'success'){
+					$('.conteiner-rase #gameForm').submit();
+				}else{
+					alert(res['message']);
+				}
 			}
 		});
 	});

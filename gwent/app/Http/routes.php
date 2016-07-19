@@ -44,30 +44,41 @@ Route::get('/logout', [
 Route::group(['middleware' => 'notAuth'], function() {
 
     //Представления страниц
+        //Столы
+        Route::post('/games', [
+            'as'    => 'user-active-games',
+            'uses'  => 'Site\SitePagesController@games'
+        ]);
+
+        //Играть
+        Route::get('/play', [
+            'as'    => 'user-in-game',
+            'uses'  => 'Site\SitePagesController@play'
+        ]);
         //Мои карты
         Route::get('/deck', [
-            'as' => 'user-deck',
-            'uses' => 'Site\SitePagesController@deck'
+            'as'    => 'user-deck',
+            'uses'  => 'Site\SitePagesController@deck'
         ]);
         //Магазин
         Route::get('/market', [
-            'as' => 'user-market',
-            'uses' => 'Site\SitePagesController@market'
+            'as'    => 'user-market',
+            'uses'  => 'Site\SitePagesController@market'
         ]);
         //Волшебство
         Route::get('/market_effects', [
-            'as' => 'user-market-effects',
-            'uses' => 'Site\SitePagesController@marketEffects'
+            'as'    => 'user-market-effects',
+            'uses'  => 'Site\SitePagesController@marketEffects'
         ]);
         //Настройки пользлователя
         Route::get('/settings', [
-            'as' => 'user-settings',
-            'uses' => 'Site\SitePagesController@settings'
+            'as'    => 'user-settings',
+            'uses'  => 'Site\SitePagesController@settings'
         ]);
         //Обучение
         Route::get('/training', [
-            'as' => 'user-training',
-            'uses' => 'Site\SitePagesController@training'
+            'as'    => 'user-training',
+            'uses'  => 'Site\SitePagesController@training'
         ]);
 
 
@@ -118,10 +129,11 @@ Route::get('/get_magic_by_race', [
 Route::get('/get_magic_effect_data', [
     'uses' => 'Site\SiteFunctionsController@getMagicEffectData'
 ]);
-//Пользователь ищет оппонентов
-Route::get('/looking_for_playing', [
-    'uses' => 'Site\SiteGameController@userWantToPlay'
+//Проверка колоды пользователя
+Route::get('/validate_deck', [
+    'uses' => 'Site\SiteFunctionsController@validateUserDeck'
 ]);
+
 
 //Изменение пользовательских данных
 //Отправка данных настройки пользователя

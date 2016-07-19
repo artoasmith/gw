@@ -30,6 +30,21 @@ class SitePagesController extends BaseController
         return view('registration', ['races' => $races]);
     }
 
+    //Страница "Столы"
+    public function games(Request $request){
+        SiteFunctionsController::updateConnention();
+        $data = $request -> all();
+        $races = RaceModel::where('race_type', '=', 'race')->orderBy('position','asc')->get();
+        return view('game', ['races' => $races, 'current_race' => $data['currentRace']]);
+    }
+
+    //Страница "Играть"
+    public function play(){
+        SiteFunctionsController::updateConnention();
+        $races = RaceModel::where('race_type', '=', 'race')->orderBy('position','asc')->get();
+        return view('play', ['races' => $races]);
+    }
+
     //Страница "Мои карты"
     public function deck(){
         SiteFunctionsController::updateConnention();

@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Auth;
 class SiteGameController extends BaseController
 {
     protected function userWantToPlay(Request $request){
+        SiteFunctionsController::updateConnention();
         $user = Auth::user();
 
         $user_data = UserAdditionalDataModel::where('user_id','=',$user['id'])->get();
@@ -43,6 +44,7 @@ class SiteGameController extends BaseController
             $warrior_card_quantity = 0;
             $special_card_quantity = 0;
             foreach($current_deck[$request->input('race')] as $key => $value){
+
                 $card = CardsModel::where('id', '=', $key)->get();
                 //Проверяем максимальное колличество карт каждого типа
                 if($value > $card[0]->max_quant_in_deck){
@@ -52,17 +54,18 @@ class SiteGameController extends BaseController
                 //Узнаем "Вес" колоды
                 $deck_weight += $card[0]->card_value;
 
+
                 //Количество карт-лидеров
                 if(0 != $card[0]->is_leader){
-                    $leader_card_quantity++;
+                    $leader_card_quantity += $value;
                 }
 
                 //Количество спец. карт
                 if($card[0]->card_type == 'special'){
-                    $special_card_quantity++;
+                    $special_card_quantity += $value;
                 }else{
                     //Количество карт-воинов
-                    $warrior_card_quantity++;
+                    $warrior_card_quantity += $value;
                 }
             }
 
@@ -96,11 +99,7 @@ class SiteGameController extends BaseController
                 }
             }
 
-            $available_battles = BattleModel::where('league', '=', $current_user_league)->get();
-
-            if(count($available_battles) < 1){
-
-            }
+            $available_battles = BattleModel::where('league', '=', $current_user_league)->where('fight_status', '=', 0)->get();
 
 
 

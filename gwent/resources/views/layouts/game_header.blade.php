@@ -52,10 +52,11 @@ $user = Auth::user();
 
 
     <script type="text/javascript" src="{{ URL::asset('js/scenario.js') }}"></script>
+    <script type="text/javascript" src="{{ URL::asset('js/game.js') }}"></script>
     <script type="text/javascript" src="{{ URL::asset('js/cron_imitator.js') }}"></script>
     <!-- endbuild -->
 
-    <!-- <script src="@{{ URL::asset('js/validate_script.js') }}"></script>-->
+<!-- <script src="@{{ URL::asset('js/validate_script.js') }}"></script>-->
 
     <script src='https://www.google.com/recaptcha/api.js'></script>
 
@@ -68,8 +69,8 @@ $user = Auth::user();
     <![endif]-->
 
 </head>
-<body>
 
+<body>
 <div class="hidden-block">
     <!-- Окно покупки карт/волшебства -->
     <div class="market-buy-popup" id="buyingCardOrmagic">
@@ -81,33 +82,30 @@ $user = Auth::user();
         </div>
     </div>
 
-   <!-- Меню->Играть всплывающее окно -->
+    <!-- Меню->Играть всплывающее окно -->
     <div id="choose-rase-block">
         <div class="conteiner-rase look-wrap cfix">
             <div class="afterloader">
                 <img src="images/379.gif" alt="">
             </div>
             <div class="title-rase head-text"> Выберете расу</div>
-            {{ Form::open(['route' => 'user-active-games', 'method' => 'POST', 'id' => 'gameForm']) }}
-            <input type="hidden" name="currentRace">
             <ul>
-            @foreach($races as $key => $value)
-                @if($value->race_type == 'race')
+                @foreach($races as $key => $value)
+                    @if($value->race_type == 'race')
 
-                <li>
-                    <div class="image-conteiner">
-                        <img src="img/card_images/{{ $value->img_url }}" alt="">
-                    </div>
-                    <button class="form-button button-buy-next" type="submit" name="{{ $value -> slug }}">
-                        <span class="form-button-hover"></span>
-                        <span class="form-button-text">{{ $value -> title }}</span>
-                    </button>
-                </li>
+                        <li data-race="{{ $value -> slug }}">
+                            <div class="image-conteiner">
+                                <img src="img/card_images/{{ $value->img_url }}" alt="">
+                            </div>
+                            <button class="form-button button-buy-next" type="submit">
+                                <span class="form-button-hover"></span>
+                                <span class="form-button-text">{{ $value -> title }}</span>
+                            </button>
+                        </li>
 
-                @endif
-            @endforeach
+                    @endif
+                @endforeach
             </ul>
-            {{ Form::close() }}
         </div>
     </div>
 
