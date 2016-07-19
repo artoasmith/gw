@@ -412,6 +412,20 @@ Route::group(['middleware' => 'admin'], function(){
         'as'    => 'admin-users',
         'uses'  => 'Admin\AdminUsersController@index'
     ]);
+    //Роут "Пользователи"->детально
+    Route::get('/admin/users/view/{id}', [
+        'as'    => 'admin-users-view',
+        'uses'  => 'Admin\AdminUsersController@view'
+    ]);
+    //Роут "Пользователи"->бан
+    Route::post('/admin/users/ban', [
+        'uses'  => 'Admin\AdminUsersController@ban'
+    ]);
+    //Роут "Пользователи"->Удалить
+    Route::delete('/admin/user/delete', [
+        'as'    => 'admin-users-delete',
+        'uses'  => 'Admin\AdminUsersController@deleteUser'
+    ]);
 
 
     //Роут "Администраторы"

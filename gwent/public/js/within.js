@@ -412,3 +412,22 @@ $(document).ready(function(){
     });
     
 });
+
+function needban(status,id) {
+    if(confirm('Вы уверены в этом действии?')){
+        var token = $('input[name=_token]').val();
+
+        $.ajax({
+            url:        '/admin/users/ban',
+            headers:    {'X-CSRF-TOKEN': token},
+            type:       'POST',
+            data:       {
+                status:status?1:0,
+                id: id
+            },
+            success:    function(data){
+                location.reload();
+            }
+        });
+    }
+}
