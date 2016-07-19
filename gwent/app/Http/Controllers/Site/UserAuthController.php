@@ -47,6 +47,7 @@ class UserAuthController extends BaseController
 
         $data = $request -> all();
 
+        //Валидация основных данных пользователя
         $validator = Validator::make($data, [
             'login'     => 'required|max:255|min:6',
             'password'  => 'required|min:6',
@@ -66,6 +67,7 @@ class UserAuthController extends BaseController
         $password = htmlspecialchars(strip_tags(trim($data['password'])));
         $conf_pass = htmlspecialchars(strip_tags(trim($data['confirm_password'])));
 
+        //если праоль не сходится с подтверждением
         if($password != $conf_pass){
             return redirect(route('user-registration'))->withErrors(['Подтвердите пароль']);
         }
@@ -75,10 +77,12 @@ class UserAuthController extends BaseController
 
         $user_race = htmlspecialchars(strip_tags(trim($data['fraction_select'])));
 
+        //Узнаем есть ли в БД пользователь с таким же логином
         $user = User::where('login', '=', $login )->where('password', '=', $password)->count();
 
-
+        //Если такого пользователя не существует
         if(0 == $user){
+            //Создаем пользователя и заносим его в таблицу с основными данными users
             $result = User::create([
                 'login'     => $login,
                 'email'     => $email,
@@ -89,29 +93,34 @@ class UserAuthController extends BaseController
                 'user_online' => '1'
             ]);
 
-            if($result != false){
+            //Если пользователь создан успешно
+            if($result !== false){
+                //Проводим логинизацию
                 $auth = Auth::loginUsingId($result->id);
 
+                //Базовые значения ресурсов пользователя
                 $base_fields = EtcDataModel::where('label_data', '=', 'base_user_fields')->get();
                 $user_begin_data = [];
                 foreach($base_fields as $key){
                     $user_begin_data[$key->meta_key] = $key->meta_value;
                 }
 
+                //Начальная раса пользователя
                 $races = RaceModel::where('race_type', '=', 'race')->get();
                 $user_card_deck = [];
                 foreach($races as $race){
                     $user_card_deck[$race->slug] = [];
                 }
-
                 $races = RaceModel::where('slug', '=', $user_race)->get();
-                $available_deck = [];
 
+                //Массив начальных доступных карт
+                $available_deck = [];
                 $race_deck = unserialize($races[0]->base_card_deck);
                 foreach($race_deck as $key => $value){
                     $available_deck[$value->id] = $value -> q;
                 }
 
+                //Вносим в tbl_user_data дополнительные данные пользователя
                 $result = UserAdditionalDataModel::create([
                     'user_id'           => $result->id,
                     'login'             => $login,
@@ -138,7 +147,7 @@ class UserAuthController extends BaseController
 
     }
 
-
+    //пользователь меняет свои данніе
     protected function userChangeSettings(Request $request){
         if( csrf_token() == $request->input('token')){
             $data = $request->all();
@@ -152,8 +161,6 @@ class UserAuthController extends BaseController
                 $user = Auth::user();
 
                 if(!empty($new_pass)){
-                    $passwords = ['new' => $new_pass, 'conf' => $new_conf_pass];
-
                     if($user['password'] == md5($old_pass.$user['login'])){
                         if($new_pass == $new_conf_pass){
                             User::where('id','=',$user['id'])->update(['password' => md5($new_pass.$user['login'])]);

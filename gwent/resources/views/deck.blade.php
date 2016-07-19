@@ -16,8 +16,8 @@ $errors = $errors->all();
                 <div class="dragon-image cfix">
                     <div class="dragon-middle-wrap">
                         <div class="dragon-middle">
-                            <img src="images/dragon_glaz.png" alt=""  class="glaz" />
-                            <img src="images/header_dragon_gold.png" alt="" />
+                            <img src="{{ URL::asset('images/dragon_glaz.png') }}" alt=""  class="glaz" />
+                            <img src="{{ URL::asset('images/header_dragon_gold.png') }}" alt="" />
                         </div>
                     </div>
                 </div>
@@ -77,7 +77,7 @@ $errors = $errors->all();
                                         <div class="content-card-center-block">
                                             <div class="content-card-center-img-wrap">
                                                 @if($user['img_url'] != '')
-                                                <img src="/img/user_images/{{ $user['img_url'] }}" alt="" />
+                                                <img src="{{ URL::asset('img/user_images/'.$user['img_url']) }}" alt="" />
                                                 @endif
                                             </div>
                                             <div class="content-card-center-description-block">

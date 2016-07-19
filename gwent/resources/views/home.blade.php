@@ -15,8 +15,8 @@ $errors = $errors->all();
                     <div class="dragon-image cfix">
                         <div class="dragon-middle-wrap">
                             <div class="dragon-middle">
-                                <img src="images/dragon_glaz.png" alt=""  class="glaz" />
-                                <img src="images/header_dragon_gold.png" alt="" />
+                                <img src="{{ URL::asset('images/dragon_glaz.png') }}" alt=""  class="glaz" />
+                                <img src="{{ URL::asset('images/header_dragon_gold.png') }}" alt="" />
                             </div>
                         </div>
                     </div>
@@ -28,7 +28,7 @@ $errors = $errors->all();
                 <div class="content-wrap">
                     <!-- add many img must do programist -->
                     <div class="rase">
-                        <img src="images/main_bg_1.jpg" alt="">
+                        <img src="{{ URL::asset('images/main_bg_1.jpg') }}" alt="">
                     </div>
                 </div>
             </div>
@@ -67,7 +67,7 @@ $errors = $errors->all();
 
                 <div class="conteiner-title">
                     <div class="geib-text">
-                        <img src="images/gayb-say.png" alt="">
+                        <img src="{{ URL::asset('images/gayb-say.png') }}" alt="">
                     </div>
                 </div>
 

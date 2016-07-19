@@ -15,96 +15,33 @@ use Illuminate\Support\Facades\Auth;
 
 class SiteGameController extends BaseController
 {
-    /*protected function userWantToPlay(Request $request){
+    protected function createTable(Request $request){
         SiteFunctionsController::updateConnention();
-        $user = Auth::user();
+        $data = $request->all();
 
-        $user_data = UserAdditionalDataModel::where('user_id','=',$user['id'])->get();
+        if (($data['players'] % 2 == 0) && ($data['players'] <= 8) && ($data['players'] >= 2)) {
+            $user = Auth::user();
 
-        $current_deck = unserialize($user_data[0]->user_cards_in_deck);
+            $deck_weight = substr(SiteFunctionsController::dsCrypt(base64_decode($data['deck_weight']), 1), 3);
+            $league = substr(SiteFunctionsController::dsCrypt(base64_decode($data['league']), 1), 3);
 
-        $deck_options = EtcDataModel::where('label_data', '=', 'deck_options')->get();
-        $deck_rules = [];
-        foreach($deck_options as $key => $value){
-            $deck_rules[$value->meta_key] = $value->meta_value;
+            $players_deck[] = [$user['id'] => $user['user_current_deck']];
+
+            $result = BattleModel::create([
+                'creator_id'        => $user['id'],
+                'players_decks'     => serialize($players_deck),
+                'players_quantity'  => $data['players'],
+                'deck_weight'       => $deck_weight,
+                'league'            => $league,
+                'fight_status'      => 0,
+                'player_num_turn'   => rand(0, $data['players']-1),
+                'round_status'      => serialize(['enemy'=>[], 'alias'=>[]]),
+                'fight_log'         => '<p>'.$user['title'].' создал стол</p>'
+            ]);
+
+            if($result !== false){
+                return redirect(route('user-in-game', ['game' => SiteFunctionsController::dsCrypt(base64_encode('000'.$result->id))]));
+            }
         }
-
-        $leagues = LeagueModel::orderBy('min_lvl','asc')->get();
-
-        //Валидация колоды
-
-        //Если колода не пуста
-        if(!empty($current_deck[$request->input('race')])){
-
-            $error = '';
-
-            $deck_weight = 0;
-
-            $leader_card_quantity = 0;
-            $warrior_card_quantity = 0;
-            $special_card_quantity = 0;
-            foreach($current_deck[$request->input('race')] as $key => $value){
-
-                $card = CardsModel::where('id', '=', $key)->get();
-                //Проверяем максимальное колличество карт каждого типа
-                if($value > $card[0]->max_quant_in_deck){
-                    $error .= '<p>В колоде находится слишком много карт "'.$card[0]->title.'" (Максимальное колличество - '.$card[0]->max_quant_in_deck.').</p>';
-                }
-
-                //Узнаем "Вес" колоды
-                $deck_weight += $card[0]->card_value;
-
-
-                //Количество карт-лидеров
-                if(0 != $card[0]->is_leader){
-                    $leader_card_quantity += $value;
-                }
-
-                //Количество спец. карт
-                if($card[0]->card_type == 'special'){
-                    $special_card_quantity += $value;
-                }else{
-                    //Количество карт-воинов
-                    $warrior_card_quantity += $value;
-                }
-            }
-
-            if( ($warrior_card_quantity + $special_card_quantity) > $deck_rules['maxCardQuantity']){
-                $error .= '<p>Количество карт в колоде должно быть не больше '.$deck_rules['maxCardQuantity'].' штук</p>';
-            }
-
-            if($warrior_card_quantity < $deck_rules['minWarriorQuantity']) {
-                $error .= '<p>Количество карт воинов в  колоде должно быть не меньше '.$deck_rules['minWarriorQuantity'].' штук</p>';
-            }
-
-            if($special_card_quantity > $deck_rules['specialQuantity']){
-                $error .= '<p>Количество спец. карт в колоде должно быть не больше '.$deck_rules['specialQuantity'].' штук</p>';
-            }
-
-            if($leader_card_quantity > $deck_rules['leaderQuantity']){
-                $error .= '<p>Количество карт лидеров в колоде должно быть не больше '.$deck_rules['leaderQuantity'].' штук</p>';
-            }
-
-            //Если есть ошибки валидации
-            if($error != ''){
-                return json_encode(['message' => $error]);
-            }
-
-            //Узнаем лигу текущей колоды
-            $current_user_league = '';
-            foreach ($leagues as $league) {
-                //если Вес колоды больше минимального уровня вхождения в лигу
-                if($deck_weight > $league['min_lvl']){
-                    $current_user_league = $league['title'];
-                }
-            }
-
-            $available_battles = BattleModel::where('league', '=', $current_user_league)->where('fight_status', '=', 0)->get();
-
-
-
-        }else{
-            return json_encode(['message' => 'Пустая колда']);
-        }
-    }*/
+    }
 }

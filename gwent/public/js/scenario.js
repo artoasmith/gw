@@ -66,7 +66,7 @@ function getUserData(user_login){
 			if(user_login != ''){
 				var res = JSON.parse(data);
 				if(res['avatar'] != ''){
-					$('.user .user-image').append('<img src="img/user_images/' + res['avatar'] + '" alt="">');
+					$('.user .user-image').append('<img src="/img/user_images/' + res['avatar'] + '" alt="">');
 				}
 				$('.rating .resurses .gold').text(res['gold']);
 				$('.rating .resurses .silver').text(res['silver']);
@@ -714,7 +714,7 @@ function showEnergyBuyingPopup(){
 
 
 $(document).ready(function(){
-	if( (!$('.login-page').length>0) && (!$('.not-main').length > 0) ) getUserData();  //Получить данные пользователя (по идее должна не работать только после логинизации)
+	if( (!$('.login-page').length>0) && (!$('.registration-main-page').length > 0) ) getUserData();  //Получить данные пользователя (по идее должна не работать только после логинизации)
 	showFormOnMain();                       //Украшение формы логина на главной
 	showWindowAboutOnMain();                //Кнопка "ОБ ИГРЕ" на главной
 	fancyboxForm();
@@ -794,4 +794,8 @@ $(document).ready(function(){
 			}
 		});
 	});
+
+	$(document).on('click', 'input[name=createTable]', function(){
+        $('#createTable').show(300);
+    });
 });

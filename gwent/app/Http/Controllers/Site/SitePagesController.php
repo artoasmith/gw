@@ -5,6 +5,7 @@ use App\EtcDataModel;
 use App\RaceModel;
 use App\LeagueModel;
 use App\BattleModel;
+use App\User;
 use Validator;
 use App\CardsModel;
 use App\UserAdditionalDataModel;
@@ -31,7 +32,7 @@ class SitePagesController extends BaseController
         return view('registration', ['races' => $races]);
     }
 
-    //Страница "Столы"
+    //Страница доступных игр "Столы"
     public function games(Request $request){
         SiteFunctionsController::updateConnention();
 
@@ -49,13 +50,15 @@ class SitePagesController extends BaseController
             //Вес колоды
             $deck_weight = 0;
 
-            //Подсчет веса колодык
+            //Подсчет веса колоды
             foreach($current_deck[$request->input('currentRace')] as $key => $value){
                 $card = CardsModel::where('id', '=', $key)->get();
 
                 $deck_weight += $card[0]->card_value * $value;
             }
         }
+
+        //Текущая лига
         $current_user_league = '';
         foreach ($leagues as $league) {
             //если Вес колоды больше минимального уровня вхождения в лигу
@@ -63,23 +66,34 @@ class SitePagesController extends BaseController
                 $current_user_league = $league['title'];
             }
         }
-
+        //Расы
         $races = RaceModel::where('race_type', '=', 'race')->orderBy('position','asc')->get();
-
+        //Активные для данной лиги столы
         $battles = BattleModel::where('league','=',$current_user_league)->where('fight_status', '=', 0)->get();
+
+        $user_to_update = User::find($user['id']);
+        $user_to_update -> user_current_deck = $request->input('currentRace');
+        $user_to_update -> save();
 
         return view('game', [
             'races'         => $races,
-            'current_race'  => $request -> input('currentRace'),
-            'battles'       => $battles
+            'deck_weight'   => base64_encode(SiteFunctionsController::dsCrypt('000'.$deck_weight)),
+            'battles'       => $battles,
+            'league'        => base64_encode(SiteFunctionsController::dsCrypt('000'.$current_user_league))
         ]);
     }
 
-    //Страница "Играть"
-    public function play(){
+    //Страница боя
+    public function play(Request $request){
+        $data = $request -> all();
+
         SiteFunctionsController::updateConnention();
         $races = RaceModel::where('race_type', '=', 'race')->orderBy('position','asc')->get();
-        return view('play', ['races' => $races]);
+
+        $game_id = substr(base64_decode(SiteFunctionsController::dsCrypt($data['game'], 1)), 3);
+        $battle_data = BattleModel::where('id','=', $game_id)->get();
+
+        return view('play', ['races' => $races, 'battle_data' => $battle_data[0]]);
     }
 
     //Страница "Мои карты"

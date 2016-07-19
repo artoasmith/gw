@@ -86,7 +86,7 @@ $user = Auth::user();
     <div id="choose-rase-block">
         <div class="conteiner-rase look-wrap cfix">
             <div class="afterloader">
-                <img src="images/379.gif" alt="">
+                <img src="{{ URL::asset('images/379.gif') }}" alt="">
             </div>
             <div class="title-rase head-text"> Выберете расу</div>
             <ul>
@@ -95,7 +95,7 @@ $user = Auth::user();
 
                         <li data-race="{{ $value -> slug }}">
                             <div class="image-conteiner">
-                                <img src="img/card_images/{{ $value->img_url }}" alt="">
+                                <img src="{{ URL::asset('img/card_images/'.$value->img_url) }}" alt="">
                             </div>
                             <button class="form-button button-buy-next" type="submit">
                                 <span class="form-button-hover"></span>
@@ -118,7 +118,7 @@ $user = Auth::user();
             <p>Пополнение баланса золота, золото зачисляеться автоматически после оплаты.</p>
 
             <input name="goldToBuy" type="number" required="required" autocomplete="off" value="0" min="0">
-            <img class="resource" src="images/header_logo_gold.png" alt="">
+            <img class="resource" src="{{ URL::asset('images/header_logo_gold.png') }}" alt="">
 
             <span> = </span><b id="goldToUsd">0</b><span> $ </span>
 
@@ -140,10 +140,10 @@ $user = Auth::user();
 
         <div class="popup-content-wrap">
             <p>Обмен</p>
-            <img class="resource" src="images/header_logo_gold.png" alt="">
+            <img class="resource" src="{{ URL::asset('images/header_logo_gold.png') }}" alt="">
             <input name="goldToSell" type="number" required="required" autocomplete="off" value="0" min="0">
             <span> = </span>
-            <img class="resource" src="images/header_logo_silver.png" alt="">
+            <img class="resource" src="{{ URL::asset('images/header_logo_silver.png') }}" alt="">
             <b id="silverToBuy">0</b>
             <input type="button" name="buyingSilver" value="Обменять">
         </div>
@@ -167,12 +167,12 @@ $user = Auth::user();
                 <span>100</span>
                 <div class="popup-energy-exchanges-wrap">
                     <div>
-                        <img class="resource" src="images/header_logo_gold.png" alt="">
+                        <img class="resource" src="{{ URL::asset('images/header_logo_gold.png') }}" alt="">
                         <span>{{ $prices['gold_to_100_energy'] }}</span>
                         <input name="gold_to_100_energy" type="button" value="Обменять">
                     </div>
                     <div>
-                        <img class="resource" src="images/header_logo_silver.png" alt="">
+                        <img class="resource" src="{{ URL::asset('images/header_logo_silver.png') }}" alt="">
                         <span>{{ $prices['silver_to_100_energy'] }}</span>
                         <input name="silver_to_100_energy" type="button" value="Обменять">
                     </div>
@@ -183,12 +183,12 @@ $user = Auth::user();
                 <span>200</span>
                 <div class="popup-energy-exchanges-wrap">
                     <div>
-                        <img class="resource" src="images/header_logo_gold.png" alt="">
+                        <img class="resource" src="{{ URL::asset('images/header_logo_gold.png') }}" alt="">
                         <span>{{ $prices['gold_to_200_energy'] }}</span>
                         <input name="gold_to_200_energy" type="button" value="Обменять">
                     </div>
                     <div>
-                        <img class="resource" src="images/header_logo_silver.png" alt="">
+                        <img class="resource" src="{{ URL::asset('images/header_logo_silver.png') }}" alt="">
                         <span>{{ $prices['silver_to_200_energy'] }}</span>
                         <input name="silver_to_200_energy" type="button" value="Обменять">
                     </div>

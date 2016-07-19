@@ -15,8 +15,8 @@ $errors = $errors->all();
                     <div class="dragon-image cfix">
                         <div class="dragon-middle-wrap">
                             <div class="dragon-middle">
-                                <img src="images/dragon_glaz.png" alt=""  class="glaz" />
-                                <img src="images/header_dragon_gold.png" alt="" />
+                                <img src="{{ URL::asset('images/dragon_glaz.png') }}" alt=""  class="glaz" />
+                                <img src="{{ URL::asset('images/header_dragon_gold.png') }}" alt="" />
                             </div>
                         </div>
                     </div>
@@ -34,7 +34,7 @@ $errors = $errors->all();
                                         <div class="selection-rase-img">
                                             <div class="selection-rase-img-wrap">
                                                 <div class="select-rase-img active">
-                                                    <img src="img/card_images/{{ $races[0]['img_url'] }}" alt="">
+                                                    <img src="{{ URL::asset('img/card_images/'.$races[0]['img_url']) }}" alt="">
                                                 </div>
                                             </div>
                                         </div>

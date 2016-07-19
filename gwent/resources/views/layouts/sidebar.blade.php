@@ -102,7 +102,7 @@
             <div class="left-menu-bottom">
                 <div class="left-menu-bottom-wrap">
                     <div class="left-menu-img">
-                        <img src="images/left-menu-img.png" alt="">
+                        <img src="{{ URL::asset('images/left-menu-img.png') }}" alt="">
                     </div>
                 </div>
             </div>

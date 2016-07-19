@@ -3,7 +3,7 @@
 <?php
 $errors = $errors->all();
 ?>
-    <div class="not-main">
+    <div class="not-main registration-main-page">
         <div class="main form-block">
 
             <div class="mbox">
@@ -32,7 +32,7 @@ $errors = $errors->all();
 
                 <div class="forms-main vfix">
                     <div class="forms-img">
-                        <img src="images/gwent-forms-img-fon.png" alt="" />
+                        <img src="{{ URL::asset('images/gwent-forms-img-fon.png') }}" alt="" />
                     </div>
                     <div class="form-wrap">
                         <div class="form-wrap-main">

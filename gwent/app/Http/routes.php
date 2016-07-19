@@ -51,7 +51,7 @@ Route::group(['middleware' => 'notAuth'], function() {
         ]);
 
         //Играть
-        Route::get('/play', [
+        Route::post('/play', [
             'as'    => 'user-in-game',
             'uses'  => 'Site\SitePagesController@play'
         ]);
@@ -132,6 +132,11 @@ Route::get('/get_magic_effect_data', [
 //Проверка колоды пользователя
 Route::get('/validate_deck', [
     'uses' => 'Site\SiteFunctionsController@validateUserDeck'
+]);
+//Пользователь создает стол
+Route::post('/user_create_battle', [
+    'as'    => 'user-create-table',
+    'uses'  => 'Site\SiteGameController@createTable'
 ]);
 
 

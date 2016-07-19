@@ -2,6 +2,9 @@
 @section('content')
 <?php
 $user = Auth::user();
+
+dd($user);
+$players_decks=unserialize($battle_data->players_decks);
 ?>
 <header class="header">
     <div class="mbox">
@@ -9,7 +12,7 @@ $user = Auth::user();
             <div class="convert-header">
                 <div class="user preload">
                     <div class="preloader">
-                        <img src="images/359.gif" alt="">
+                        <img src="{{ URL::asset('images/359.gif') }}" alt="">
                     </div>
                     <div class="user-image"></div>
                     <div class="user-name">{{ $user['login'] }}</div>
@@ -17,14 +20,14 @@ $user = Auth::user();
                 <div class="convert-stats">
                     <div class="stats ">
                         <div class="time-box">
-                            <img src="images/header_logo_time.png" alt="" />
+                            <img src="{{ URL::asset('images/header_logo_time.png') }}" alt="" />
                             <div class="time"> 04:36:22 </div>
                         </div>
                         <div class="people-box preload">
                             <div class="preload-peoples">
-                                <img src="images/379.gif" alt="">
+                                <img src="{{ URL::asset('images/379.gif') }}" alt="">
                             </div>
-                            <img src="images/header_logo_man.png" alt="" />
+                            <img src="{{ URL::asset('images/header_logo_man.png') }}" alt="" />
                             <div class="people"></div>
                         </div>
                     </div>
@@ -33,23 +36,23 @@ $user = Auth::user();
                     <p>РЕЙТИНГ</p>
                     <div class="convert-resurses preload">
                         <div class="preload-resurses">
-                            <img src="images/76.gif" alt="">
+                            <img src="{{ URL::asset('images/76.gif') }}" alt="">
                         </div>
 
                         <div class="resurses">
                             <a href="#buy-gold" class="button-plus buy-more-gold"></a>
-                            <img src="images/header_logo_gold.png" alt="" />
+                            <img src="{{ URL::asset('images/header_logo_gold.png') }}" alt="" />
 
                             <div class="gold"></div>
                         </div>
                         <div class="resurses">
                             <a href="#buy-silver" class="button-plus buy-more-silver"></a>
-                            <img src="images/header_logo_silver.png" alt="" />
+                            <img src="{{ URL::asset('images/header_logo_silver.png') }}" alt="" />
                             <div class="silver"></div>
                         </div>
                         <div class="resurses ">
                             <a href="#buy-energy" class="button-plus buy-more-energy"></a>
-                            <img src="images/header_logo_lighting.png" alt="" />
+                            <img src="{{ URL::asset('images/header_logo_lighting.png') }}" alt="" />
                             <div class="lighting"></div>
                         </div>
                     </div>
@@ -64,8 +67,8 @@ $user = Auth::user();
         <div class="dragon-image cfix">
             <div class="dragon-middle-wrap">
                 <div class="dragon-middle">
-                    <img src="images/dragon_glaz.png" alt=""  class="glaz" />
-                    <img src="images/dragoon-small.png" alt="" class="dragoon"  />
+                    <img src="{{ URL::asset('images/dragon_glaz.png') }}" alt=""  class="glaz" />
+                    <img src="{{ URL::asset('images/dragoon-small.png') }}" alt="" class="dragoon"  />
                 </div>
             </div>
         </div>
@@ -128,7 +131,7 @@ $user = Auth::user();
                 <div class="oponent-stats">
                     <div class="stats-power">
                         <div class="pover-greencard">
-                            <img src="images/greencard.png" alt="">
+                            <img src="{{ URL::asset('images/greencard.png') }}" alt="">
 
                             <div class="greencard-num"> 10<!-- Количество карт на руках --></div>
                         </div>
@@ -210,7 +213,7 @@ $user = Auth::user();
                 <div class="user-stats">
                     <div class="stats-power">
                         <div class="pover-greencard">
-                            <img src="images/greencard.png" alt="">
+                            <img src="{{ URL::asset('images/greencard.png') }}" alt="">
                             <div class="greencard-num"> 10<!-- Количество карт на руках --></div>
                         </div>
                     </div>

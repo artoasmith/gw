@@ -15,8 +15,8 @@ $errors = $errors->all();
                 <div class="dragon-image cfix">
                     <div class="dragon-middle-wrap">
                         <div class="dragon-middle">
-                            <img src="images/dragon_glaz.png" alt=""  class="glaz" />
-                            <img src="images/header_dragon_gold.png" alt="" />
+                            <img src="{{ URL::asset('images/dragon_glaz.png') }}" alt=""  class="glaz" />
+                            <img src="{{ URL::asset('images/header_dragon_gold.png') }}" alt="" />
                         </div>
                     </div>
                 </div>
@@ -29,7 +29,7 @@ $errors = $errors->all();
                 <div class="form-wrap preloading-class">
 
                     <div class="preloader" style="display: none;">
-                        <img src="images/359.gif" alt="">
+                        <img src="{{ URL::asset('images/359.gif') }}" alt="">
                     </div>
 
                     <div class="form-wrap-main">
@@ -44,7 +44,7 @@ $errors = $errors->all();
                                 <div class="faceman">
                                     <div class="form-description-settings-img-wrap">
                                         @if($user['img_url'] != '')
-                                            <img id="avatarImg" src="img/user_images/{{ $user['img_url'] }}" alt="">
+                                            <img id="avatarImg" src="{{ URL::asset('img/user_images/'.$user['img_url']) }}" alt="">
                                         @endif
 
                                     </div>

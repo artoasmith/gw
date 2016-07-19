@@ -34,7 +34,7 @@
             -->
             <div class="forms-footer-blocks right">
                 <span class="forms-footer-link">
-                    <a href="/support.html">Техническая поддержка</a>
+                    <a href="{{ URL::asset('support.html') }}">Техническая поддержка</a>
                 </span>
             </div>
         </div>
