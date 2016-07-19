@@ -1,6 +1,8 @@
 puphpet/config-custom.yaml
 gwent/.env
-gwent/vendor
-gwent/node_modules
-gwent/public/storage
+gwent/vendor/
+gwent/node_modules/
+gwent/public/storage/
+gwent/public/bigdump.php
 .vagrant/
+.idea/
