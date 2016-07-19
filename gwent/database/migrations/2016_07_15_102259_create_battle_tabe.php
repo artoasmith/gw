@@ -16,6 +16,7 @@ class CreateBattleTabe extends Migration
             $table->increments('id')->unsigned();
             $table->integer('creator_id')->unsigned();
             $table->text('players_decks'); //массив array[отбой => [], рука => [], колода => [] ]
+            $table->tinyInteger('players_quantity')->unsigned(); //Колличество игроков
             $table->integer('deck_weight')->unsigned();
             $table->string('league');
             $table->tinyInteger('fight_status')->unsigned(); //0 - ожидание другого игрока. 1 - подготовка к бою. 2 - бой продолжается. 3 - бой окончен

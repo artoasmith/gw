@@ -1,4 +1,6 @@
 puphpet/config-custom.yaml
+gwent/.artisan
+gwent/composer.phar
 gwent/.env
 gwent/vendor/
 gwent/node_modules/
