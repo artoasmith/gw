@@ -3,9 +3,10 @@ namespace App\Http\Controllers\Site;
 
 use App\EtcDataModel;
 use App\RaceModel;
-use App\MagicEffectsModel;
+use App\LeagueModel;
+use App\BattleModel;
 use Validator;
-use App\User;
+use App\CardsModel;
 use App\UserAdditionalDataModel;
 use Auth;
 use Illuminate\Foundation\Bus\DispatchesJobs;
@@ -33,9 +34,45 @@ class SitePagesController extends BaseController
     //Страница "Столы"
     public function games(Request $request){
         SiteFunctionsController::updateConnention();
-        $data = $request -> all();
+
+        $user = Auth::user();
+        //Данные пользователя
+        $user_data = UserAdditionalDataModel::where('user_id', '=', $user['id'])->get();
+
+        //Данные Лиг
+        $leagues = LeagueModel::orderBy('min_lvl','asc')->get();
+
+        //Текущие колоды пользователя
+        $current_deck = unserialize($user_data[0]->user_cards_in_deck);
+
+        if(!empty($current_deck[$request->input('currentRace')])) {
+            //Вес колоды
+            $deck_weight = 0;
+
+            //Подсчет веса колодык
+            foreach($current_deck[$request->input('currentRace')] as $key => $value){
+                $card = CardsModel::where('id', '=', $key)->get();
+
+                $deck_weight += $card[0]->card_value * $value;
+            }
+        }
+        $current_user_league = '';
+        foreach ($leagues as $league) {
+            //если Вес колоды больше минимального уровня вхождения в лигу
+            if($deck_weight > $league['min_lvl']){
+                $current_user_league = $league['title'];
+            }
+        }
+
         $races = RaceModel::where('race_type', '=', 'race')->orderBy('position','asc')->get();
-        return view('game', ['races' => $races, 'current_race' => $data['currentRace']]);
+
+        $battles = BattleModel::where('league','=',$current_user_league)->where('fight_status', '=', 0)->get();
+
+        return view('game', [
+            'races'         => $races,
+            'current_race'  => $request -> input('currentRace'),
+            'battles'       => $battles
+        ]);
     }
 
     //Страница "Играть"

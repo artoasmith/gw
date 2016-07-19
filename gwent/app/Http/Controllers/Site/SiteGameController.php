@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\Auth;
 
 class SiteGameController extends BaseController
 {
-    protected function userWantToPlay(Request $request){
+    /*protected function userWantToPlay(Request $request){
         SiteFunctionsController::updateConnention();
         $user = Auth::user();
 
@@ -106,5 +106,5 @@ class SiteGameController extends BaseController
         }else{
             return json_encode(['message' => 'Пустая колда']);
         }
-    }
+    }*/
 }

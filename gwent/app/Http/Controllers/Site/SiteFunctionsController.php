@@ -672,8 +672,6 @@ class SiteFunctionsController extends BaseController
 
             $error = '';
 
-            $deck_weight = 0;
-
             $leader_card_quantity = 0;
             $warrior_card_quantity = 0;
             $special_card_quantity = 0;
@@ -684,11 +682,6 @@ class SiteFunctionsController extends BaseController
                 if($value > $card[0]->max_quant_in_deck){
                     $error .= '<p>В колоде находится слишком много карт "'.$card[0]->title.'" (Максимальное колличество - '.$card[0]->max_quant_in_deck.').</p>';
                 }
-
-                //Узнаем "Вес" колоды
-                $deck_weight += $card[0]->card_value;
-
-
                 //Количество карт-лидеров
                 if(0 != $card[0]->is_leader){
                     $leader_card_quantity += $value;
