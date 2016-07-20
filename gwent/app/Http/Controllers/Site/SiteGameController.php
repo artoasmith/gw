@@ -44,4 +44,9 @@ class SiteGameController extends BaseController
             }*/
         }
     }
+
+    public function test(Request $request){
+        $races = RaceModel::where('race_type', '=', 'race')->orderBy('position','asc')->get();
+        return view('playtest',['races'=>$races]);
+    }
 }

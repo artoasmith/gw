@@ -98,6 +98,12 @@ Route::group(['middleware' => 'notAuth'], function() {
             'as'    => 'user-wm-fail',
             'uses'  => 'Site\SitePagesController@WM_fail'
         ]);
+
+    //battle
+        Route::get('/playtest',[
+            'as' => 'play-test',
+            'uses' => 'Site\SiteGameController@test'
+        ]);
 });
 
 //Скрипты выборки данных из БД
