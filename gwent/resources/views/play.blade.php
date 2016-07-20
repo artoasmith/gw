@@ -2,9 +2,14 @@
 @section('content')
 <?php
 $user = Auth::user();
+/*
+$players_decks = unserialize($battle_data->players_decks);
+$players_decks[] = [$user['id'] => $user['user_current_deck']];
 
-dd($user);
-$players_decks=unserialize($battle_data->players_decks);
+$battle_data -> players_decks = serialize($players_decks);
+$battle_data -> save();
+
+*/
 ?>
 <header class="header">
     <div class="mbox">

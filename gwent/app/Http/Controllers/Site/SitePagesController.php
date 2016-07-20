@@ -91,9 +91,11 @@ class SitePagesController extends BaseController
         $races = RaceModel::where('race_type', '=', 'race')->orderBy('position','asc')->get();
 
         $game_id = substr(base64_decode(SiteFunctionsController::dsCrypt($data['game'], 1)), 3);
-        $battle_data = BattleModel::where('id','=', $game_id)->get();
 
-        return view('play', ['races' => $races, 'battle_data' => $battle_data[0]]);
+        dd($game_id);
+        $battle_data = BattleModel::find($game_id);
+
+        return view('play', ['races' => $races, 'battle_data' => $battle_data]);
     }
 
     //Страница "Мои карты"

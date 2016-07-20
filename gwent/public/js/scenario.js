@@ -798,4 +798,28 @@ $(document).ready(function(){
 	$(document).on('click', 'input[name=createTable]', function(){
         $('#createTable').show(300);
     });
+
+	$('#createTable input[name=createTable]').click(function(){
+		var league = $('#createTable input[name=league]').val();
+		var deck_weight = $('#createTable input[name=deck_weight]').val();
+		var players_quant = $('#createTable select[name=players]').val();
+		var token = $('.market-buy-popup input[name=_token]').val();
+
+		$.ajax({
+			url:		'/user_create_battle',
+			type:		'POST',
+			headers:    {'X-CSRF-TOKEN': token},
+			data:		{league:league, deck_weight:deck_weight, players:players_quant},
+			success:	function(data){
+				var res = JSON.parse(data);
+				if(res['message'] == 'success'){
+					$('#createTableForm input[name=game]').val(res['game']);
+					$('#createTableForm form').submit();
+					$('#createTable').hide(300);
+				}else{
+					alert(res);
+				}
+			}
+		});
+	});
 });

@@ -27,7 +27,7 @@ class SiteGameController extends BaseController
 
             $players_deck[] = [$user['id'] => $user['user_current_deck']];
 
-            $result = BattleModel::create([
+            /*$result = BattleModel::create([
                 'creator_id'        => $user['id'],
                 'players_decks'     => serialize($players_deck),
                 'players_quantity'  => $data['players'],
@@ -40,8 +40,8 @@ class SiteGameController extends BaseController
             ]);
 
             if($result !== false){
-                return redirect(route('user-in-game', ['game' => SiteFunctionsController::dsCrypt(base64_encode('000'.$result->id))]));
-            }
+                return json_encode(['game' => SiteFunctionsController::dsCrypt(base64_encode('000'.$result->id)), 'message' => 'success']);
+            }*/
         }
     }
 }
