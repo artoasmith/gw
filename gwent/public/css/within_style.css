@@ -82,7 +82,7 @@ header .top-menu li ul li{
     vertical-align: middle;
     text-align: center;
 }
-.edit, .drop{
+.edit, .drop, .list-icon{
     border:none;
     cursor: pointer;
     display: inline-block;
@@ -94,6 +94,7 @@ header .top-menu li ul li{
 }
 .edit{background: url('/img/edit.png') 0 0 no-repeat;}
 .drop{background: url('/img/drop.png') 0 0 no-repeat;}
+.list-icon{background: url('/img/list.png') 0 0 no-repeat;}
 
 .button-wrap{
     display: block;
@@ -270,4 +271,20 @@ select optgroup optgroup option{
     position: fixed;
     bottom: 5%;
     left: 5%;
+}
+
+.table-wrap{
+    display: inline-block;
+    text-align: center;
+}
+
+.btn-set input[type=submit], .btn-set button {
+    min-width: 100px;
+    -webkit-appearance: none;
+    display: inline-block;
+    margin-right: 10px;
+}
+
+.btn-set form {
+    display: inline-block;
 }
