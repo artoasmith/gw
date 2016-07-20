@@ -4,18 +4,18 @@
             GO CLICK!
         </button>
         <script>
-            var conn = new WebSocket('ws://g.loc:8080');
+            var conn = new WebSocket('ws://gwent.lar:8080');
             conn.onopen = function (e) {
                 console.log('connected');
             };
             
             conn.onmessage = function (e) {
-                console.log('message ' + e.data);
+                console.log(JSON.parse(e.data));
             };
 
             function send() {
                 console.log('send');
-                conn.send('send random ' + Math.random());
+                conn.send('{"message": "'+Math.random()+'"}');
             }
         </script>
     </div>

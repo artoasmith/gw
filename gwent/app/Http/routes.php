@@ -51,7 +51,7 @@ Route::group(['middleware' => 'notAuth'], function() {
         ]);
 
         //Играть
-        Route::post('/play', [
+        Route::get('/play/{id}', [
             'as'    => 'user-in-game',
             'uses'  => 'Site\SitePagesController@play'
         ]);
@@ -143,6 +143,10 @@ Route::get('/validate_deck', [
 Route::post('/user_create_battle', [
     'as'    => 'user-create-table',
     'uses'  => 'Site\SiteGameController@createTable'
+]);
+//Пользователь присоединяется к столу
+Route::put('/user_connect_to_battle', [
+    'uses'  => 'Site\SiteGameController@userConnectToBattle'
 ]);
 
 

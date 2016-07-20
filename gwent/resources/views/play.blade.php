@@ -1,16 +1,17 @@
 @extends('layouts.game')
 @section('content')
-<?php
-$user = Auth::user();
-/*
-$players_decks = unserialize($battle_data->players_decks);
-$players_decks[] = [$user['id'] => $user['user_current_deck']];
+    @if(!empty($errors->all()))
+        @foreach($errors->all() as $key => $value)
+            {{ $value }}
+        @endforeach
+        {{ die() }}
+    @endif
 
-$battle_data -> players_decks = serialize($players_decks);
-$battle_data -> save();
+    <?php
+    $user = Auth::user();
+    dd($user);
+    ?>
 
-*/
-?>
 <header class="header">
     <div class="mbox">
         <div class="header-box cfix">
