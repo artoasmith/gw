@@ -15,6 +15,7 @@ class CreateBattleLog extends Migration
         Schema::create('tbl_battle_log', function (Blueprint $table) {
             $table->increments('id');
             $table->integer('battle_id')->unsigned();
+            $table->text('users_decks');    // array[]('user_id'=>'user_deck')
             $table->text('fight_log');
             $table->timestamps();
         });

@@ -27,21 +27,23 @@ $errors = $errors->all();
 
             <input name="createTable" type="button" value="Создать Стол">
 
-            @foreach($battles as $key => $value)
-                {{ Form::open(['route'=>'user-in-game', 'method'=>'POST']) }}
-                <p style="margin: 10px;">
-                    Стол №{{ $value->id }}
-                    @if($user['id'] != $value->creator_id)
-                        <input name="game" type="hidden" value="{{ App\Http\Controllers\Site\SiteFunctionsController::dsCrypt(base64_encode('000'.$value->id)) }}">
-                        {{ Form::submit('Присоедениться') }}
-                    @else
-                        (Создан Вами)
-                    @endif
+            <div class="tables-list">
 
-                    Количество игроков -> {{ $value-> players_quantity}}
-                </p>
-                {{ Form::close() }}
-            @endforeach
+                @foreach($battles as $key => $value)
+                    <p style="margin: 10px;">
+                        Стол №{{ $value->id }}
+                        @if($user['id'] != $value->creator_id)
+                            <input name="game" type="hidden" value="{{ base64_encode($value->id) }}">
+                            <a class="play-game" href="/play/{{ $value->id }}" id="{{ $value->id }}">Присоединиться</a>
+                        @else
+                            <a class="play-game" href="/play/{{ $value->id }}" id="{{ $value->id }}">Вернуться за стол</a>
+                        @endif
+
+                        Количество игроков -> {{ $value-> players_quantity}}
+                    </p>
+                @endforeach
+
+            </div>
         </div>
     </div>
 
@@ -51,7 +53,7 @@ $errors = $errors->all();
         <div class="close-popup">X</div>
 
         <div class="popup-content-wrap">
-
+            {{ Form::open(['route' => 'user-create-table', 'method' => 'POST']) }}
             <input name="league" type="hidden" value="{{ $league }}">
             <input name="deck_weight" type="hidden" value="{{ $deck_weight }}">
             <label>Укажите колличество игроков:</label>
@@ -62,15 +64,11 @@ $errors = $errors->all();
                 <option value="8">8</option>
             </select>
             <div style="text-align: center; padding-top: 20px;">
-                <input name="createTable" type="button" value="Ok">
+                {{ Form::submit('Ok') }}
             </div>
+            {{ Form::close() }}
         </div>
     </div>
 
-    <div class="market-buy-popup" id="createTableForm">
-        {{ Form::open(['route' => 'user-in-game', 'method' => 'POST']) }}
-        <input type="hidden" name="game" value="">
-        {{ Form::close() }}
-    </div>
 @endif
 @stop

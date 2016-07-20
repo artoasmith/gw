@@ -77,23 +77,21 @@ class SitePagesController extends BaseController
 
         return view('game', [
             'races'         => $races,
-            'deck_weight'   => base64_encode(SiteFunctionsController::dsCrypt('000'.$deck_weight)),
+            'deck_weight'   => base64_encode($deck_weight),
             'battles'       => $battles,
-            'league'        => base64_encode(SiteFunctionsController::dsCrypt('000'.$current_user_league))
+            'league'        => base64_encode($current_user_league)
         ]);
     }
 
     //Страница боя
-    public function play(Request $request){
-        $data = $request -> all();
-
+    public function play($id){
         SiteFunctionsController::updateConnention();
         $races = RaceModel::where('race_type', '=', 'race')->orderBy('position','asc')->get();
+        $battle_data = BattleModel::find($id);
 
-        $game_id = substr(base64_decode(SiteFunctionsController::dsCrypt($data['game'], 1)), 3);
-
-        dd($game_id);
-        $battle_data = BattleModel::find($game_id);
+        if(!$battle_data){
+            return view('play', ['races' => $races])->withErrors(['Данный стол не существует.']);
+        }
 
         return view('play', ['races' => $races, 'battle_data' => $battle_data]);
     }

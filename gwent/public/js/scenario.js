@@ -799,26 +799,18 @@ $(document).ready(function(){
         $('#createTable').show(300);
     });
 
-	$('#createTable input[name=createTable]').click(function(){
-		var league = $('#createTable input[name=league]').val();
-		var deck_weight = $('#createTable input[name=deck_weight]').val();
-		var players_quant = $('#createTable select[name=players]').val();
-		var token = $('.market-buy-popup input[name=_token]').val();
-
+	$('.tables-list').on('click', 'a.play-game', function(e){
+		e.preventDefault();
+		var id = $(this).attr('id');
 		$.ajax({
-			url:		'/user_create_battle',
-			type:		'POST',
-			headers:    {'X-CSRF-TOKEN': token},
-			data:		{league:league, deck_weight:deck_weight, players:players_quant},
-			success:	function(data){
+			url:	'/user_connect_to_battle',
+			type:	'PUT',
+			headers:{'X-CSRF-TOKEN': $('.market-buy-popup input[name=_token]').val()},
+			data:	{id:id},
+			success:function(data){
 				var res = JSON.parse(data);
-				if(res['message'] == 'success'){
-					$('#createTableForm input[name=game]').val(res['game']);
-					$('#createTableForm form').submit();
-					$('#createTable').hide(300);
-				}else{
-					alert(res);
-				}
+				if(res['message'] == 'own_create') location = '/play/'+id;
+				console.log(res);
 			}
 		});
 	});

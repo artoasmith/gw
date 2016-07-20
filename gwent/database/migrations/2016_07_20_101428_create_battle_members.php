@@ -17,7 +17,7 @@ class CreateBattleMembers extends Migration
             $table->string('user_id');
             $table->integer('battle_id')->unsigned();
             $table->text('user_deck');
-            $table->text('magic_abilities');
+            $table->text('magic_effects');
             $table->integer('user_energy')->unsigned();
             $table->timestamps();
         });
