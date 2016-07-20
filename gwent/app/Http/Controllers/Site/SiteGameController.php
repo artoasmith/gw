@@ -29,8 +29,7 @@ class SiteGameController extends BaseController
 
             /*$result = BattleModel::create([
                 'creator_id'        => $user['id'],
-                'players_decks'     => serialize($players_deck),
-                'players_quantity'  => $data['players'],
+                 'players_quantity'  => $data['players'],
                 'deck_weight'       => $deck_weight,
                 'league'            => $league,
                 'fight_status'      => 0,
