@@ -9,7 +9,8 @@
 
     <?php
     $user = Auth::user();
-    dd($user);
+    $battle_log = \App\BattleLogModel::where('battle_id','=',$battle_data->id)->get();
+    //Проверка колоды + блок пользователя на время игры + заблокировать скрипты маркета, магии и колоды
     ?>
 
 <header class="header">

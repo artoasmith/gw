@@ -1,9 +1,11 @@
 <?php
 namespace App\Classes\Socket;
 
+use App\User;
 use App\Classes\Socket\Base\BaseSocket;
 use Ratchet\ConnectionInterface;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Session\SessionManager;
 
 class BattleSocket extends BaseSocket
 {
@@ -18,8 +20,8 @@ class BattleSocket extends BaseSocket
     {
         //save client
         $this->clients->attach($conn);
-        $user = Auth::user();
-        echo "new one ({$conn->resourceId}) \n-----".print_r($user,true)."\n";
+
+        echo "new one ({$conn->resourceId}) \n-----".print_r('',true)."\n";
     }
 
     function onClose(ConnectionInterface $conn)

@@ -809,7 +809,7 @@ $(document).ready(function(){
 			data:	{id:id},
 			success:function(data){
 				var res = JSON.parse(data);
-				if(res['message'] == 'own_create') location = '/play/'+id;
+				if(res['message'] == 'success') location = '/play/'+id;
 				console.log(res);
 			}
 		});
