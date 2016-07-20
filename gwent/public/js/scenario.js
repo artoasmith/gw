@@ -432,7 +432,7 @@ function userByingCard(){
 									var res = JSON.parse(data);
 									if(res['message'] == 'success'){
 										refreshRosources(res);
-										$('#buyingCardOrmagic.popup-content-wrap').html('<p>Карта '+res['title']+' стала доступной.</p>');
+										$('#buyingCardOrmagic .popup-content-wrap').empty().append('<p>Карта "'+res['title']+'" стала доступной.</p>');
 										$('#buyingCardOrmagic').show(300).delay(3000).hide(400);
 									}
 								}
