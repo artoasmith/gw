@@ -91,16 +91,16 @@
 
 
     <!-- Правый сайдбар -->
-    <div class="convert-right-info">
-        <div class="oponent-describer">
+    <div class="convert-right-info" id="{{ $battle_data->id }}">
+        <div class="oponent-describer" id="164">
 
             <div class="useless-card">
                 <div class="inside-for-some-block"><!-- Активная магия --></div>
             </div>
 
             <!-- Данные попротивника -->
-            <div class="stash-about">
-                <div class="power-element ">
+            <div class="stash-about" >
+                <div class="power-element">
                     <div class="power-text power-text-oponent">0<!-- Сумарная сила воинов во всех рядах противника --></div>
                 </div>
                 <div class="oponent-discribe">
@@ -183,7 +183,7 @@
         </div>
 
         <!-- Данные пользователя -->
-        <div class="user-describer">
+        <div class="user-describer" id="231">
 
             <div class="stash-about">
                 <div class="power-element">
