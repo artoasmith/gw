@@ -246,11 +246,11 @@
         var stat = false;
         conn.onopen = function (data) {
             console.log('connected');
-            console.log('checking user');
             stat = true;
             conn.send(
                 JSON.stringify(
                     {
+                        action: 'join',
                         ident: ident
                     }
                 )

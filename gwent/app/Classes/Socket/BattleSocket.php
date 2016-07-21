@@ -12,6 +12,11 @@ class BattleSocket extends BaseSocket
     protected $clients;
     protected $battles;
     protected $resoursesInBattle;
+    protected $resoursesInUsers;
+    private $actionSpecter = [
+        0=>'join',  //подключился и прошел проверку новый пользователь
+        1=>'close'  //пользователь покинул стол
+    ];
 
     public function __construct()
     {
@@ -28,14 +33,33 @@ class BattleSocket extends BaseSocket
 
     function onClose(ConnectionInterface $conn)
     {
+
+        echo "close connection ({$conn->resourceId}) \n";
+
         $this->clients->detach($conn);
         //delete connections from battle
         if(isset($this->resoursesInBattle[$conn->resourceId]) && isset($this->battles[$this->resoursesInBattle[$conn->resourceId]])) {
-            unset($this->resoursesInBattle[$conn->resourceId]);
             $this->battles[$this->resoursesInBattle[$conn->resourceId]]->detach($conn);
-        }
 
-        echo "close connection ({$conn->resourceId}) \n";
+            $userInfo = false;
+            if(isset($this->resoursesInUsers[$conn->resourceId])) {
+                $userInfo = $this->resoursesInUsers[$conn->resourceId];
+                unset($this->resoursesInUsers[$conn->resourceId]);
+            }
+            echo count($this->battles[$this->resoursesInBattle[$conn->resourceId]]).' in battle '.$this->resoursesInBattle[$conn->resourceId]."\n";
+
+            if($userInfo && count($this->battles[$this->resoursesInBattle[$conn->resourceId]])>0){
+                foreach ($this->battles[$this->resoursesInBattle[$conn->resourceId]] as $client){
+                    $client->send(
+                        json_encode([
+                            'action'=>'close',
+                            'user_id'=>$userInfo->id
+                        ])
+                    );
+                }
+            }
+            unset($this->resoursesInBattle[$conn->resourceId]);
+        }
     }
 
     function onError(ConnectionInterface $conn, \Exception $e)
@@ -50,6 +74,11 @@ class BattleSocket extends BaseSocket
         //get params
         $incom = json_decode($msg,true);
 
+        //check action
+        if(!isset($incom['action']) || !in_array($incom['action'],$this->actionSpecter))
+            return $from->send($this->getErrorJson('Ошибка передачи действия'));
+        $action = $incom['action'];
+
         //chech auth
         $user = $this->getUser($incom);
         if(!$user)
@@ -63,8 +92,30 @@ class BattleSocket extends BaseSocket
         if(!$this->battles[$battleId]->contains($from))
             $this->battles[$battleId]->attach($from);
         $this->resoursesInBattle[$from->resourceId] = $battleId;
+        $this->resoursesInUsers[$from->resourceId] = $user;
 
-        $from->send(json_encode($user));
+        $userResp  = [];
+        $othersResp = [];
+        
+        ///main logic
+        switch ($action){
+            case 'join':
+                $othersResp = ['action'=>$action,'user_id'=>$user->id];
+                $userResp = ['action'=>'welcome','user_id'=>$user->id];
+                break;
+        }
+        //--main logic end
+
+        //response
+        //to user
+        $from->send(json_encode($userResp));
+        //to battle members
+        $resp = 'some event';
+        foreach ($this->battles[$battleId] as $client){
+            if($client->resourceId != $from->resourceId){
+                $client->send(json_encode($othersResp));
+            }
+        }
     }
 
     //для одинаковой типизации ошибок
