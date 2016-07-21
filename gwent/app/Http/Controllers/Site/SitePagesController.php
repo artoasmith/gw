@@ -9,7 +9,7 @@ use App\User;
 use Validator;
 use App\CardsModel;
 use App\UserAdditionalDataModel;
-use Auth;
+use  Illuminate\Support\Facades\Auth;
 use Illuminate\Foundation\Bus\DispatchesJobs;
 use Illuminate\Routing\Controller as BaseController;
 use Illuminate\Foundation\Validation\ValidatesRequests;
@@ -87,13 +87,22 @@ class SitePagesController extends BaseController
     public function play($id){
         SiteFunctionsController::updateConnention();
         $races = RaceModel::where('race_type', '=', 'race')->orderBy('position','asc')->get();
-        $battle_data = BattleModel::find($id);
 
+        $battle_data = BattleModel::find($id);
         if(!$battle_data){
             return view('play', ['races' => $races])->withErrors(['Данный стол не существует.']);
         }
 
-        return view('play', ['races' => $races, 'battle_data' => $battle_data]);
+        $user = Auth::user();
+        $hash = md5(getenv('SECRET_MD5_KEY').$user->id);
+        return view('play', [
+            'races' => $races, 
+            'battle_data' => $battle_data, 
+            'hash'=>$hash, 
+            'user'=>$user,
+            'dom'=>getenv('APP_DOMEN_NAME'),
+            'members'=>[]
+        ]);
     }
 
     //Страница "Мои карты"

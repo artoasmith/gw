@@ -4,7 +4,7 @@
             GO CLICK!
         </button>
         <script>
-            var conn = new WebSocket('ws://gwent.lar:8080');
+            var conn = new WebSocket('ws://g.loc:8080');
             conn.onopen = function (e) {
                 console.log('connected');
             };
