@@ -2,6 +2,8 @@
 namespace App\Classes\Socket;
 
 use App\User;
+use App\BattleModel;
+use App\BattleMembersModel;
 use App\Classes\Socket\Base\BaseSocket;
 use Ratchet\ConnectionInterface;
 use Illuminate\Support\Facades\Auth;
@@ -13,6 +15,7 @@ class BattleSocket extends BaseSocket
     protected $battles;
     protected $resoursesInBattle;
     protected $resoursesInUsers;
+    protected $userBattle;
     private $actionSpecter = [
         0=>'join',  //подключился и прошел проверку новый пользователь
         1=>'close'  //пользователь покинул стол
@@ -44,6 +47,8 @@ class BattleSocket extends BaseSocket
             $userInfo = false;
             if(isset($this->resoursesInUsers[$conn->resourceId])) {
                 $userInfo = $this->resoursesInUsers[$conn->resourceId];
+                if(isset($this->userBattle[$userInfo->id.'_'.$this->resoursesInBattle[$conn->resourceId]]))
+                    unset($this->userBattle[$userInfo->id.'_'.$this->resoursesInBattle[$conn->resourceId]]);
                 unset($this->resoursesInUsers[$conn->resourceId]);
             }
             echo count($this->battles[$this->resoursesInBattle[$conn->resourceId]]).' in battle '.$this->resoursesInBattle[$conn->resourceId]."\n";
@@ -58,6 +63,7 @@ class BattleSocket extends BaseSocket
                     );
                 }
             }
+
             unset($this->resoursesInBattle[$conn->resourceId]);
         }
     }
@@ -93,7 +99,7 @@ class BattleSocket extends BaseSocket
             $this->battles[$battleId]->attach($from);
         $this->resoursesInBattle[$from->resourceId] = $battleId;
         $this->resoursesInUsers[$from->resourceId] = $user;
-
+        $this->userBattle[$user->id.'_'.$battleId] = true;
         $userResp  = [];
         $othersResp = [];
         
@@ -105,6 +111,10 @@ class BattleSocket extends BaseSocket
                 break;
         }
         //--main logic end
+
+        //battle info
+        $othersResp['battleInfo'] = $userResp['battleInfo'] = $this->getBattleInfo($battleId);
+        $othersResp['battleMembers'] = $userResp['battleMembers'] = $this->getMembersInfo($battleId);
 
         //response
         //to user
@@ -144,6 +154,33 @@ class BattleSocket extends BaseSocket
         return ($user?$user:false);
     }
 
-    //battle members activiti check
+    private function getBattleInfo($id){
+        /**
+         * @var BattleModel $battle
+         */
+        $battle = BattleModel::find($id);
+        if(!$battle)
+            return false;
 
+        return [
+            'fightStatus'=>$battle->fight_status
+        ];
+    }
+
+    private function getMembersInfo($battleId){
+        $members = BattleMembersModel::where('battle_id','=',$battleId)->get();
+        if(!$members)
+            return false;
+
+        /**
+         * @var BattleMembersModel $member
+         */
+        $resp = [];
+        foreach ($members as $member){
+            $resp[$member->user_id] = [
+                'online'=>(isset($this->userBattle[$member->user_id.'_'.$battleId]))
+            ];
+        }
+        return $resp;
+    }
 }

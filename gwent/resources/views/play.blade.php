@@ -9,6 +9,7 @@
 
     <?php
     $user = Auth::user();
+    $battle_status_change = \App\BattleModel::find($battle_data->id);
     $battle_members = \App\BattleMembersModel::where('battle_id','=',$battle_data->id)->get();
 
     $user_positions = ['enemy' => [], 'alias' => []];
@@ -39,12 +40,10 @@
     //Если присоединившийся пользователь не является создателем стола - изменяем статус битвы
     if($user['id'] != $battle_data['creator_id']){
         if($players_count == $battle_data -> players_quantity){
-            $battle_status_change = \App\BattleModel::find($battle_data->id);
             $battle_status_change -> fight_status = 1;
             $battle_status_change -> save();
             //Выбор игрока который даст фору в первом ходе (который не будет ходить)
             $user_fora_id = $battle_members[rand(0, count($battle_members) -1)] -> user_id;
-
         }
     }
     ?>
@@ -276,7 +275,6 @@
             userId: {{ $user->id }},
             hash: "{{$hash}}"
         };
-
         {{-- start soket --}}
         var conn = new WebSocket('ws://{{ $dom }}:8080');
         var stat = false;
