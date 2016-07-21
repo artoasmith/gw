@@ -585,7 +585,8 @@ body {
         -moz-box-shadow: inset 0px 2px 9.2px 0.8px rgba(0, 24, 8, 0.004);
         box-shadow: inset 0px 2px 9.2px 0.8px rgba(0, 24, 8, 0.004);
         width: 120px;
-        height: 170px; }
+        height: 170px;
+        position:relative}
       .convert-left-info .cards-bet ul li .card-init {
         background-image: url(../images/card-op-bg.png);
         -webkit-background-size: 120px 170px;
@@ -1056,7 +1057,7 @@ body {
     padding-top: 40px;
     padding-bottom: 15px; }
     .stash-about .oponent-discribe .image-oponent-ork {
-      background-image: url(../images/rasaork.png);
+      /*background-image: url(../images/rasaork.png);*/
       width: 102px;
       height: 102px;
       margin-left: 20px; }

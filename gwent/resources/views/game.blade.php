@@ -33,8 +33,14 @@ $errors = $errors->all();
                     <p style="margin: 10px;">
                         Стол №{{ $value->id }}
                         @if($user['id'] != $value->creator_id)
-                            <input name="game" type="hidden" value="{{ base64_encode($value->id) }}">
-                            <a class="play-game" href="/play/{{ $value->id }}" id="{{ $value->id }}">Присоединиться</a>
+
+                            @if($value -> fight_status === 0)
+                                <input name="game" type="hidden" value="{{ base64_encode($value->id) }}">
+                                <a class="play-game" href="/play/{{ $value->id }}" id="{{ $value->id }}">Присоединиться</a>
+                            @else
+                                <a class="play-game" href="/play/{{ $value->id }}" id="{{ $value->id }}">Вернуться за стол</a>
+                            @endif
+
                         @else
                             <a class="play-game" href="/play/{{ $value->id }}" id="{{ $value->id }}">Вернуться за стол</a>
                         @endif
