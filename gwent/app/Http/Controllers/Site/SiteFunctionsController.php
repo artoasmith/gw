@@ -414,10 +414,22 @@ class SiteFunctionsController extends BaseController
 	//Если пользователь начал проявлять активность - делаем его активным
 	public static function updateConnention(){
 		$user = Auth::user();
-		if($user){
-			User::where('login', '=', $user['login'])->update(['updated_at' => date('Y-m-d H:i:s'), 'user_online' => '1']);
-		}
+        $user_plying_status = self::checkUserIsPlaying();
+        //Если пользователь не в бою
+        if($user_plying_status === 0){
+            if($user){
+                User::where('login', '=', $user['login'])->update(['updated_at' => date('Y-m-d H:i:s'), 'user_online' => '1']);
+            }
+        }
 	}
+
+    //Если пользователь начал проявлять активность - делаем его активным (Force метод)
+	public static function updateUserInBattleConnection(){
+        $user = Auth::user();
+        if($user){
+            User::where('login', '=', $user['login'])->update(['updated_at' => date('Y-m-d H:i:s'), 'user_online' => '1']);
+        }
+    }
 
 
 	//Пользователь покупает карту

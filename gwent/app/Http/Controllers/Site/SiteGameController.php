@@ -46,13 +46,14 @@ class SiteGameController extends BaseController
         return ['deck' => $user_deck, 'magic_effects' => $user_magic];
     }
 
-    public static function updateBattleMembers($user_id, $battle_id, $user_deck, $user_magic, $user_energy){
+    public static function updateBattleMembers($user_id, $battle_id, $user_deck_race, $user_deck, $user_magic, $user_energy){
         $user_is_battle_member = BattleMembersModel::where('user_id', '=', $user_id)->get();
 
         if( 1 > count($user_is_battle_member) ){
             $result = BattleMembersModel::create([
                 'user_id'       => $user_id,
                 'battle_id'     => $battle_id,
+                'user_deck_race'=> $user_deck_race,
                 'user_deck'     => $user_deck,
                 'magic_effects' => $user_magic,
                 'user_energy'   => $user_energy
@@ -60,6 +61,7 @@ class SiteGameController extends BaseController
         }else{
             $user_battle = BattleMembersModel::find($user_is_battle_member[0]->id);
             $user_battle -> battle_id       = $battle_id;
+            $user_battle -> user_deck_race  = $user_deck_race;
             $user_battle -> user_deck       = $user_deck;
             $user_battle -> magic_effects   = $user_magic;
             $user_battle -> user_energy     = $user_energy;
@@ -100,6 +102,7 @@ class SiteGameController extends BaseController
             $battle_members = self::updateBattleMembers(
                 $user['id'],
                 $result->id,
+                $user['user_current_deck'],
                 serialize($user_settings['deck']),
                 serialize($user_settings['magic_effects']),
                 $user_data[0]->user_energy
@@ -155,6 +158,7 @@ class SiteGameController extends BaseController
         $battle_members = self::updateBattleMembers(
             $user['id'],
             $battle_data->id,
+            $user['user_current_deck'],
             serialize($user_settings['deck']),
             serialize($user_settings['magic_effects']),
             $user_data[0]->user_energy
