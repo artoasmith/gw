@@ -9,8 +9,44 @@
 
     <?php
     $user = Auth::user();
-    $battle_log = \App\BattleLogModel::where('battle_id','=',$battle_data->id)->get();
-    // блок пользователя на время игры + заблокировать скрипты маркета, магии и колоды
+    $battle_members = \App\BattleMembersModel::where('battle_id','=',$battle_data->id)->get();
+
+    $user_positions = ['enemy' => [], 'alias' => []];
+    $players_count = 0;
+
+    //Создание сторон противников и союзников
+    foreach($battle_members as $key => $value){
+        if($user['id'] == $value->user_id){
+
+           $user_positions['alias'][$value -> user_id] = [
+                'user_deck'     => unserialize($value -> user_deck),
+                'magic_effects' => unserialize($value -> magic_effects),
+                'user_energy'   => $value -> user_energy
+            ];
+
+        }else{
+
+            $user_positions['enemy'][$value -> user_id] = [
+                'user_deck'     => unserialize($value -> user_deck),
+                'magic_effects' => unserialize($value -> magic_effects),
+                'user_energy'   => $value -> user_energy
+            ];
+
+        }
+        $players_count++;
+    }
+
+    //Если присоединившийся пользователь не является создателем стола - изменяем статус битвы
+    if($user['id'] != $battle_data['creator_id']){
+        if($players_count == $battle_data -> players_quantity){
+            $battle_status_change = \App\BattleModel::find($battle_data->id);
+            $battle_status_change -> fight_status = 1;
+            $battle_status_change -> save();
+            //Выбор игрока который даст фору в первом ходе (который не будет ходить)
+            $user_fora_id = $battle_members[rand(0, count($battle_members) -1)] -> user_id;
+
+        }
+    }
     ?>
 
 <header class="header">
