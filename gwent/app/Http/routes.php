@@ -49,7 +49,6 @@ Route::group(['middleware' => 'notAuth'], function() {
             'as'    => 'user-active-games',
             'uses'  => 'Site\SitePagesController@games'
         ]);
-
         //Играть
         Route::get('/play/{id}', [
             'as'    => 'user-in-game',
@@ -107,17 +106,10 @@ Route::group(['middleware' => 'notAuth'], function() {
 });
 
 //Скрипты выборки данных из БД
-//Получение данных пользователя
-Route::get('/get_user_data', [
-    'uses' => 'Site\SiteFunctionsController@getUserData'
-]);
-//Получение колвичества игроков онлайн
-Route::get('/get_user_quantity', [
-    'uses' => 'Site\SiteFunctionsController@getUserQuantity'
-]);
-//Получение колоды пользователя
-Route::get('/get_user_deck', [
-    'uses' => 'Site\SiteFunctionsController@getUserDeck'
+
+//Поверка "Пользователь находится в битве"
+Route::get('/check_user_is_plying_status', [
+    'uses' => 'Site\SiteFunctionsController@checkUserIsPlaying'
 ]);
 //Получить все карты определенной расы
 Route::get('/get_cards_by_race', [
@@ -135,27 +127,34 @@ Route::get('/get_magic_by_race', [
 Route::get('/get_magic_effect_data', [
     'uses' => 'Site\SiteFunctionsController@getMagicEffectData'
 ]);
-//Проверка колоды пользователя
-Route::get('/validate_deck', [
-    'uses' => 'Site\SiteFunctionsController@validateUserDeck'
+//Получение данных пользователя
+Route::get('/get_user_data', [
+    'uses' => 'Site\SiteFunctionsController@getUserData'
+]);
+//Получение колоды пользователя
+Route::get('/get_user_deck', [
+    'uses' => 'Site\SiteFunctionsController@getUserDeck'
+]);
+//Получение колвичества игроков онлайн
+Route::get('/get_user_quantity', [
+    'uses' => 'Site\SiteFunctionsController@getUserQuantity'
+]);
+//Пользователь присоединяется к столу
+Route::put('/user_connect_to_battle', [
+    'uses'  => 'Site\SiteGameController@userConnectToBattle'
 ]);
 //Пользователь создает стол
 Route::post('/user_create_battle', [
     'as'    => 'user-create-table',
     'uses'  => 'Site\SiteGameController@createTable'
 ]);
-//Пользователь присоединяется к столу
-Route::put('/user_connect_to_battle', [
-    'uses'  => 'Site\SiteGameController@userConnectToBattle'
+//Проверка колоды пользователя
+Route::get('/validate_deck', [
+    'uses' => 'Site\SiteFunctionsController@validateUserDeck'
 ]);
 
 
 //Изменение пользовательских данных
-//Отправка данных настройки пользователя
-Route::put('/settings', [
-    'as' => 'user-settings-change',
-    'uses' => 'Site\UserAuthController@userChangeSettings'
-]);
 //Обновление колоды пользователя
 Route::put('/change_user_deck', [
     'uses' => 'Site\SiteFunctionsController@changeUserDeck'
@@ -164,14 +163,20 @@ Route::put('/change_user_deck', [
 Route::put('/magic_change_status', [
     'uses' => 'Site\SiteFunctionsController@userChangeMagicEffectStatus'
 ]);
-//Пользователь покупает серебро
-Route::put('/user_buying_silver', [
-    'uses' => 'Site\SiteFunctionsController@userBuyingSilver'
+//Отправка данных настройки пользователя
+Route::put('/settings', [
+    'as' => 'user-settings-change',
+    'uses' => 'Site\UserAuthController@userChangeSettings'
 ]);
 //Пользователь покупает энергию
 Route::put('/user_buying_energy', [
     'uses' => 'Site\SiteFunctionsController@userBuyingEnergy'
 ]);
+//Пользователь покупает серебро
+Route::put('/user_buying_silver', [
+    'uses' => 'Site\SiteFunctionsController@userBuyingSilver'
+]);
+
 
 //Внесение пользователем данных в БД
 //Пользователь купил карту
