@@ -18,7 +18,8 @@ class BattleSocket extends BaseSocket
     protected $userBattle;
     private $actionSpecter = [
         0=>'join',  //подключился и прошел проверку новый пользователь
-        1=>'close'  //пользователь покинул стол
+        1=>'close',  //пользователь покинул стол
+        2=>'checkBattle', //проверка статуса битвы
     ];
 
     public function __construct()
@@ -103,28 +104,34 @@ class BattleSocket extends BaseSocket
         $this->userBattle[$user->id.'_'.$battleId] = true;
         $userResp  = [];
         $othersResp = [];
-        
+
+        $sendToBattleMates = true;
         ///main logic
         switch ($action){
             case 'join':
                 $othersResp = ['action'=>$action,'user_id'=>$user->id];
                 $userResp = ['action'=>'welcome','user_id'=>$user->id];
                 break;
+            case 'checkBattle':
+                $sendToBattleMates = false;
+                $userResp = ['action'=>'checkBattle','user_id'=>$user->id];
+                break;
         }
         //--main logic end
 
         //battle info
         $othersResp['battleInfo'] = $userResp['battleInfo'] = $this->getBattleInfo($battleId);
-        $othersResp['battleMembers'] = $userResp['battleMembers'] = $this->getMembersInfo($battleId);
 
         //response
         //to user
         $from->send(json_encode($userResp));
         //to battle members
         $resp = 'some event';
-        foreach ($this->battles[$battleId] as $client){
-            if($client->resourceId != $from->resourceId){
-                $client->send(json_encode($othersResp));
+        if($sendToBattleMates) {
+            foreach ($this->battles[$battleId] as $client) {
+                if ($client->resourceId != $from->resourceId) {
+                    $client->send(json_encode($othersResp));
+                }
             }
         }
     }
@@ -155,6 +162,7 @@ class BattleSocket extends BaseSocket
         return ($user?$user:false);
     }
 
+
     private function getBattleInfo($id){
         /**
          * @var BattleModel $battle
@@ -163,27 +171,51 @@ class BattleSocket extends BaseSocket
         if(!$battle)
             return false;
 
+        $members = BattleMembersModel::where('battle_id','=',$id)->get();
+
+        $time = 0;
+        if(true || $battle->fight_status == 2){
+            if($members){
+                $sec = intval(getenv('GAME_SEC_TIMEOUT'));
+                if($sec<=0)
+                    $sec = 60;
+
+                foreach ($members as $member){
+                    if($member->id == $battle->user_id_turn){
+                        $user = User::find($member->user_id);
+                        if($user){
+                            $time = $sec+$user->updated_at->getTimestamp()-time();
+                            if($time<=0){
+                                $time=0;
+                            }
+                        }
+                        break;
+                    }
+                }
+            }
+        }
         return [
             'id'=>$id,
-            'fightStatus'=>$battle->fight_status
+            'fightStatus'=>$battle->fight_status,
+            'endTime'=>$time,
+            'members'=>$this->getMembersInfo($members,$id)
         ];
     }
 
-    private function getMembersInfo($battleId){
-        $members = BattleMembersModel::where('battle_id','=',$battleId)->get();
-        if(!$members)
-            return false;
-
+    private function getMembersInfo(&$members,$id){
         /**
          * @var BattleMembersModel $member
          */
         $resp = [];
-        foreach ($members as $member){
-            $resp[] = [
-                'user_id'=>$member->user_id,
-                'online'=>(isset($this->userBattle[$member->user_id.'_'.$battleId]))
-            ];
+        if(!empty($members)){
+            foreach ($members as $member){
+                $resp[] = [
+                    'user_id'=>$member->user_id,
+                    'online'=>(isset($this->userBattle[$member->user_id.'_'.$id]))
+                ];
+            }
         }
         return $resp;
     }
+
 }

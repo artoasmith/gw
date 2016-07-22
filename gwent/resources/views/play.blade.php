@@ -15,10 +15,12 @@
 	$players = ['enemy' => [], 'alias' => []];
 	$players_count = 0;
 
+
 	foreach($battle_members as $key => $value){
 		//Создание сторон противников и союзников
         $player_data = \DB::table('users')->select('id','login','img_url')->where('id', '=', $value -> user_id)->get();
         $race_name = \DB::table('tbl_race')->select('slug', 'title')->where('slug', '=', $value -> user_deck_race)->get();
+
 
 		if($user['id'] == $value->user_id){
 			$players['allied'][] = [
@@ -382,7 +384,6 @@
                             </div>
                         </div>
                     </div>
-
                 </div>
 
                 <!-- Карты руки пользователя -->
@@ -622,9 +623,35 @@
             userId: {{ $user->id }},
             hash: "{{$hash}}"
         };
+
         {{-- start soket --}}
         var conn = new WebSocket('ws://{{ $dom }}:8080');
         var stat = false;
+
+        var timeleft = 0; //количество секунд до окончания хода, передавать в таймер (обновляется с battleTimer)
+        var timedeley = {{$timeOut}}*1000;
+        var timer = false;
+
+        function battleTimer(time) { //обновление значения таймера в ходе боя
+            if(typeof timer != "boolean")
+                clearTimeout(timer);
+            timeleft = time;
+
+            time = time*1000;
+            timer = setTimeout(timeOutCheck, time);
+        }
+
+        function timeOutCheck(){ //запускается когда заканчивается время хода, для проверки даннных на сервере
+            conn.send(
+                JSON.stringify(
+                    {
+                        action: 'checkBattle',
+                        ident: ident
+                    }
+                )
+            );
+        }
+
         conn.onopen = function (data) {
             console.log('connected');
             stat = true;
@@ -678,7 +705,7 @@
         };
 
         {{--On response from server--}}
-                conn.onmessage = function (e) {
+        conn.onmessage = function (e) {
             var resp = JSON.parse(e.data);
             if(typeof resp.ERROR != 'undefined')
                 return showPopup(resp.ERROR);
@@ -687,6 +714,30 @@
                 showPopup(resp.MESSAGE);
 
             console.log(resp);
+            var action = 'none';
+            if(typeof resp.action != 'undefined')
+                action = resp.action;
+
+            //battle info logic
+            if(typeof resp.battleInfo != 'undefined'){
+                console.log('battle info logic');
+                switch (resp.battleInfo.fightStatus){
+                    case 0: //логика ожидание других играков
+
+                        break;
+                    case 1: //логика подготовки к бою
+
+                        break;
+                    case 2: //логика хода боя
+                        if(typeof resp.battleInfo.endTime == 'number' && resp.battleInfo.endTime>0) //обновления таймеров хода
+                            battleTimer(resp.battleInfo.endTime);
+
+                        break;
+                    case 3: //логика окончаного боя
+
+                        break
+                }
+            }
         };
 
         function showPopup(ms){

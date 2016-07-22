@@ -93,6 +93,10 @@ class SitePagesController extends BaseController
             return view('play', ['races' => $races])->withErrors(['Данный стол не существует.']);
         }
 
+        $sec = intval(getenv('GAME_SEC_TIMEOUT'));
+        if($sec<=0)
+            $sec = 60;
+        
         $user = Auth::user();
         $hash = md5(getenv('SECRET_MD5_KEY').$user->id);
         return view('play', [
@@ -101,7 +105,7 @@ class SitePagesController extends BaseController
             'hash'=>$hash, 
             'user'=>$user,
             'dom'=>getenv('APP_DOMEN_NAME'),
-            'members'=>[]
+            'timeOut'=>$sec
         ]);
     }
 
