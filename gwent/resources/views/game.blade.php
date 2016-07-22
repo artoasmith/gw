@@ -34,8 +34,7 @@ $errors = $errors->all();
                         Стол №{{ $value->id }}
                         @if($user['id'] != $value->creator_id)
 
-                            @if($value -> fight_status === 0)
-                                <input name="game" type="hidden" value="{{ base64_encode($value->id) }}">
+                            @if($value -> fight_status == '0')
                                 <a class="play-game" href="/play/{{ $value->id }}" id="{{ $value->id }}">Присоединиться</a>
                             @else
                                 <a class="play-game" href="/play/{{ $value->id }}" id="{{ $value->id }}">Вернуться за стол</a>

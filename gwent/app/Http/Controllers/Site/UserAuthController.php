@@ -80,6 +80,10 @@ class UserAuthController extends BaseController
         //Узнаем есть ли в БД пользователь с таким же логином
         $user = User::where('login', '=', $login )->where('password', '=', $password)->count();
 
+        if(!preg_match("/^[a-zA-Z][a-zA-Z0-9_\-]{5,255}$/", $login)){
+            return redirect(route('user-registration'))->withErrors(['Логин пользователя содержит<br>запрещеные символы.<br>Разрешено использовать латинские буквы,<br>цифры, символы "_" и "-"']);
+        }
+
         //Если такого пользователя не существует
         if(0 == $user){
             //Создаем пользователя и заносим его в таблицу с основными данными users

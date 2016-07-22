@@ -86,18 +86,16 @@ class SitePagesController extends BaseController
     //Страница боя
     public function play($id){
         SiteFunctionsController::updateConnention();
-        $races = RaceModel::where('race_type', '=', 'race')->orderBy('position','asc')->get();
 
         $battle_data = BattleModel::find($id);
         if(!$battle_data){
-            return view('play', ['races' => $races])->withErrors(['Данный стол не существует.']);
+            return view('play')->withErrors(['Данный стол не существует.']);
         }
 
         $user = Auth::user();
         $hash = md5(getenv('SECRET_MD5_KEY').$user->id);
         return view('play', [
-            'races' => $races, 
-            'battle_data' => $battle_data, 
+            'battle_data' => $battle_data,
             'hash'=>$hash, 
             'user'=>$user,
             'dom'=>getenv('APP_DOMEN_NAME'),

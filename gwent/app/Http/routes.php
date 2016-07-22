@@ -189,6 +189,14 @@ Route::post('/magic_is_buyed', [
 ]);
 
 
+//Игра
+Route::put('/game_start', [
+    'uses' => 'Site\SiteGameController@startGame'
+]);
+
+
+
+
 
 //ИМИТАЦИЯ CRON
 Route::get('/cron_imitator', [
