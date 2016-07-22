@@ -185,6 +185,66 @@ class SiteGameController extends BaseController
     }
 
 
+    //Подготовка к бою закончена
+    //Выдача колод пользователей
+    protected function startGame(Request $request){
+        $data = $request->all();
+
+        $battle_members = BattleMembersModel::where('battle_id', '=', $data['battle_id'])->get();
+
+        $users_result_data = [];
+        foreach($battle_members as $key => $value){
+            $user = \DB::table('users')->select('id','login','img_url')->where('id', '=', $value -> user_id)->get();
+
+            $current_user_deck_race = \DB::table('tbl_race')->select('title', 'slug')->where('slug','=', $value -> user_deck_race)->get();
+            $user_current_full_deck = unserialize($value -> user_deck);
+
+            $deck = [];
+            foreach($user_current_full_deck as $card_id => $cards_quantity){
+                for($i = 0; $i<$cards_quantity; $i++){
+
+                    $card_data = \DB::table('tbl_card')->select('id','title','slug','card_type','card_strong','img_url','short_description')->where('id', '=', $card_id)->get();
+
+                    $deck[] = [
+                        'id'        => $card_id,
+                        'title'     => $card_data[0]->title,
+                        'slug'      => $card_data[0]->slug,
+                        'type'      => $card_data[0]->card_type,
+                        'strength'  => $card_data[0]->card_strong,
+                        'img_url'   => $card_data[0]->img_url,
+                        'descript'  => $card_data[0]->short_description
+                    ];
+                }
+            }
+
+            $hand = [];
+
+            $deck_card_count = count($deck);
+
+            while(count($hand) != 11){
+                $rand_item = rand(0, $deck_card_count-1);
+                $hand[] = $deck[$rand_item];
+
+                unset($deck[$rand_item]);
+
+                $deck = array_values($deck);
+                $deck_card_count = count($deck);
+            }
+
+            $users_result_data[] = [
+                'login'     => $user[0]->login,
+                'img_url'   => $user[0]->img_url,
+                'deck_slug' => $value -> user_deck_race,
+                'deck_title'=> $current_user_deck_race[0]->title,
+                'deck'      => $deck,
+                'hand'      => $hand,
+                'magic'     => unserialize($value->magic_effets),
+                'energy'    => $value -> user_energy
+            ];
+        }
+
+        return json_encode(['message' => 'success', 'userData' => $users_result_data]);
+    }
 
 
 

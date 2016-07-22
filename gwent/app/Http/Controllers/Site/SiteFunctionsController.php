@@ -738,9 +738,24 @@ class SiteFunctionsController extends BaseController
             $leader_card_quantity = 0;
             $warrior_card_quantity = 0;
             $special_card_quantity = 0;
+
             foreach($current_deck[$request->input('race')] as $key => $value){
 
                 $card = CardsModel::where('id', '=', $key)->get();
+
+                //Проверяем достапна ли карта для данной колоды
+                $card_forbidden_race = unserialize($card[0]->forbidden_races);
+                if(!empty($card_forbidden_race)){
+                    $is_forbidden = 0;
+                    foreach($card_forbidden_race as $i => $race){
+                        if($request->input('race') == $race) $is_forbidden =1;
+                    }
+                    if($is_forbidden != 0){
+                        $error .= '<p>Карта "'.$card[0]['title'].'" недоступна для данной колоды.</p>';
+                    }
+
+                }
+
                 //Проверяем максимальное колличество карт каждого типа
                 if($value > $card[0]->max_quant_in_deck){
                     $error .= '<p>В колоде находится слишком много карт "'.$card[0]->title.'" (Максимальное колличество - '.$card[0]->max_quant_in_deck.').</p>';

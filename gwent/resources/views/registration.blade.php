@@ -121,7 +121,7 @@ $errors = $errors->all();
 
                                             @if(!empty($errors))
                                                 @foreach($errors as $error)
-                                                    <p>{{ $error }}</p>
+                                                    <p>{!! $error !!}</p>
                                                 @endforeach
                                             @endif
 

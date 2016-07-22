@@ -852,7 +852,8 @@ function showUserDecks(){
 				if(res['message'] == 'success'){
 					$('.conteiner-rase #gameForm').submit();
 				}else{
-					alert(res['message']);
+					$('.fancybox-overlay').hide();
+					showErrorMessage(res['message']);
 				}
 			}
 		});

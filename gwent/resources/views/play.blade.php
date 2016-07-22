@@ -105,14 +105,16 @@
         <div class="convert-left-info">
             <!-- Колода и отбой противника -->
             <div class="cards-bet cards-oponent">
-                <ul id="card-give-more-oponent">
+                <ul id="card-give-more-oponent" @if(isset($players['enemy'][0]))data-user="{{ $players['enemy'][0]['user_nickname'] }}"@endif>
+                    <!-- Колода противника -->
                     <li>
                         <div class="card-init">
-                            <div class="card-otboy-counter">
-                                <div class="counter">23<!-- Колличество карт в колоде противника --></div>
+                            <div class="card-otboy-counter deck">
+                                <div class="counter"><!-- Колличество карт в колоде противника --></div>
                             </div>
                         </div>
                     </li>
+                    <!-- Отбой противника -->
                     <li><div class="nothinh-for-swap"></div><!-- nothing-to-swap пустой контейнер отбоя/колоды --></li>
                 </ul>
             </div>
@@ -128,60 +130,37 @@
 
             <div class="cards-bet cards-main">
                 <!-- Колода и отбой игрока-->
-                <ul id="card-give-more-user">
+                <ul id="card-give-more-user" data-user="{{ $players['allied'][0]['user_nickname'] }}">
                     <li>
                         <div class="card-my-init cards-take-more">
                             <!-- Колода игрока -->
                             <div class="convert-otboy-cards">
 
                             </div>
-                            <!-- END OF Отбой игрока -->
+                            <!-- END OF Колода игрока -->
 
                             <!-- Количество карт в колоде -->
-                            <div class="card-take-more-counter">
-                                <div class="counter">24</div>
+                            <div class="card-take-more-counter deck">
+                                <div class="counter"></div>
                             </div>
                             <!--END OF Количество карт в колоде -->
                         </div>
                     </li>
                     <li>
-                        <!-- <div class="nothinh-for-swap"></div> --><!-- Если в отбое нету карт -->
+                        <div class="nothinh-for-swap"></div><!-- Если в отбое нету карт -->
                         <!-- Если в отбое есть карты -->
-                        <div class="card-my-init">
+                        <!--<div class="card-my-init">
 
                             <div class="convert-otboy-cards">
                                 <ul id="otboy-cards-list">
-                                    <li class="content-card-item" data-relative="special" data-power='10' data-cart-id="555">
-                                        <div class="content-card-item-main"><!-- Контейнер с бэкграундом карты -->
-                                            <div class="label-power-card">10</div><!-- Сила карты -->
-                                            <div class="hovered-items">
-                                                <!-- картинки с действиями (кажись не нужно)
-                                                <div class="card-game-status">
-                                                    <img src="/images/kard-property.png" alt="" />
-                                                    <img src="/images/kard-property.png" alt="" />
-                                                    <img src="/images/kard-property.png" alt="" />
-                                                </div>
-                                                -->
-                                                <div class="card-name-property">
-                                                    <p>Дионис Стальной <!-- Название карты (title) --></p>
-                                                </div>
-                                                <div class="block-describe">
-                                                    <div class="block-image-describe"></div>
-                                                    <div class="block-text-describe">
-                                                        <!-- Описание карты (short_description) -->
-                                                        <p>Признай свои ошибки и похорони их как следует. Иначе они придут за тобой sdfg sdf gsdf gsdf hgsdhf </p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </li>
+
                                 </ul>
                             </div>
 
                             <div class="card-otboy-counter">
-                                <div class="counter">1<!-- Количество карт в отбое --></div>
+                                <div class="counter">Количество карт в отбое</div>
                             </div>
-                        </div>
+                        </div>-->
                         <!-- END OF Если в отбое есть карты -->
                     </li>
                 </ul>
@@ -193,7 +172,7 @@
         <!-- Поле битвы -->
         <div class="convert-battle-front">
             <!-- Поле противника -->
-            <div class="convert-cards oponent">
+            <div class="convert-cards oponent" @if(isset($players['enemy'][0]))data-user="{{ $players['enemy'][0]['user_nickname'] }}"@endif>
                 <div class="convert-card-box">
                     <!-- Сверхдальние Юниты противника -->
                     <div class="convert-stuff">
@@ -297,7 +276,7 @@
             <div class="mezdyline"></div>
 
             <!-- Поле пользователя -->
-            <div class="convert-cards user">
+            <div class="convert-cards user" data-user="{{ $players['allied'][0]['user_nickname'] }}">
                 <div class="convert-card-box">
                     <!-- Ближние Юниты пользователя -->
                     <div class="convert-stuff">
@@ -388,54 +367,7 @@
 
                 <!-- Карты руки пользователя -->
                 <ul id="sortable-user-cards" class="can-i-use-useless sort">
-                    <li class="content-card-item">
-                        <!-- Контейнер карты -->
-                        <div class="content-card-item-main card-load-info"><!-- Бекграунд карты -->
 
-                            <div class="label-power-card">
-                                <span class="label-power-card-wrap">
-                                    <span>8</span><!-- Показатель силы карты -->
-                                </span>
-                            </div>
-
-                            <div class="hovered-items">
-                                <!--
-                                <div class="card-game-status">
-
-                                    <div class="card-game-status-role">
-                                        <span class="bow"></span>
-                                    </div>
-
-                                    <div class="card-game-status-wrap">
-
-                                        <span class="hand"></span>
-                                        <span class="wind"></span>
-                                        <span class="heal"></span>
-
-                                    </div>
-                                </div>
-                                -->
-                                <div class="card-name-property">
-                                    <p><!-- Имя карты (title) --></p>
-                                </div>
-                                <!--<div class="block-describe">
-                                    <div class="block-image-describe">
-                                        <img src="/images/content-center-img.png" alt="" />
-                                    </div>
-                                    <div class="block-text-describe">
-                                        <div class="block-text-describe-wrap">
-                                            <div class="block-text-describe-main">
-                                                <div class="block-text-describe-main-wrap">
-                                                    Описанае карты(short_description)
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>-->
-                            </div>
-                        </div>
-                        <!-- END OF Контейнер карты -->
-                    </li>
                 </ul>
                 <!-- END OF Карты руки пользователя -->
 
@@ -456,7 +388,7 @@
 
 	<!-- Правый сайдбар -->
 	<div class="convert-right-info">
-		<div class="oponent-describer" id="@if(isset($players['enemy'][0])){{ $players['enemy'][0]['user_id'] }}@endif">
+		<div class="oponent-describer" @if(isset($players['enemy'][0]))id="{{ $players['enemy'][0]['user_nickname'] }}"@endif>
 
 			<div class="useless-card">
 				<div class="inside-for-some-block" style=""><!-- Активная магия --></div>
@@ -533,39 +465,14 @@
 		<div class="mezhdyblock">
 			<div class="bor-beutifull-box">
 				<ul id="sortable-cards-field-more" class="can-i-use-useless sort">
-					<li class="content-card-item" data-relative="special" data-power="<!--Сила карты-->" data-cart-id="ID карты в base64">
-						<div class="content-card-item-main">
-							<div class="label-power-card"><!--Сила карты--></div>
-							<div class="hovered-items">
-								<!-- Кажись не нужно
-								<div class="card-game-status">
-									<img src="images/kard-property.png" alt="" />
-									<img src="images/kard-property.png" alt="" />
-									<img src="images/kard-property.png" alt="" />
-								</div>
-								-->
 
-								<!-- Блоки ниже срабатывают при наведении -->
-								<div class="card-name-property">
-									<p><!-- Список названий действий --></p>
-								</div>
-								<div class="block-describe">
-									<div class="block-image-describe"></div>
-									<div class="block-text-describe">
-										<p><!-- Список описаний действий --></p>
-									</div>
-								</div>
-
-							</div>
-						</div>
-					</li>
 				</ul>
 
 			</div>
 		</div>
 
 		<!-- Данные пользователя -->
-		<div class="user-describer" id="{{ $players['allied'][0]['user_id'] }}">
+		<div class="user-describer" id="{{ $players['allied'][0]['user_nickname'] }}">
 
 			<div class="stash-about">
 				<div class="power-element">
@@ -713,6 +620,7 @@
             if(typeof resp.MESSAGE != 'undefined')
                 showPopup(resp.MESSAGE);
 
+
             console.log(resp);
             var action = 'none';
             if(typeof resp.action != 'undefined')
@@ -720,13 +628,37 @@
 
             //battle info logic
             if(typeof resp.battleInfo != 'undefined'){
-                console.log('battle info logic');
+                console.log('battle info logic with fight status '+resp.battleInfo.fightStatus);
                 switch (resp.battleInfo.fightStatus){
                     case 0: //логика ожидание других играков
 
                         break;
                     case 1: //логика подготовки к бою
+                        var error = 0;
 
+                        for(var i=0; i<resp.battleInfo.members.length; i++){
+                            if(resp.battleInfo.members[i]['online'] !== true){
+                                error = 1;
+                                break;
+                            }
+                        }
+                        if(error == 0){
+                            var token = $('.market-buy-popup input[name=_token]').val().trim();
+                            console.log('game_start ajax');
+                            $.ajax({
+                                url:    '/game_start',
+                                type:   'PUT',
+                                headers:{'X-CSRF-TOKEN':token},
+                                data:   {battle_id:resp.battleInfo['id']},
+                                success:function(data){
+                                    data = JSON.parse(data);
+                                    if(data['message'] == 'success'){
+                                        window.usersData = data['userData'];
+                                        buildPlayRoomView(window.usersData);
+                                    }
+                                }
+                            });
+                        }
                         break;
                     case 2: //логика хода боя
                         if(typeof resp.battleInfo.endTime == 'number' && resp.battleInfo.endTime>0) //обновления таймеров хода
@@ -740,9 +672,60 @@
             }
         };
 
+
+        function buildPlayRoomView(userData){
+            for(var i=0; i<userData.length; i++){
+                if( $('.convert-right-info #'+userData[i]['login']).length <1){
+                    $('.convert-right-info .oponent-describer').attr('id',userData[i]['login']);
+                    $('.field-battle .cards-bet #card-give-more-oponent').attr('data-user',userData[i]['login']);
+                    $('.convert-battle-front .oponent').attr('data-user',userData[i]['login']);
+                }
+
+                createUserDescriber(userData[i]['login'], userData[i]['img_url'], userData[i]['deck_title']);
+
+                $('.convert-left-info .cards-bet ul[data-user='+userData[i]['login']+'] .deck .counter').text(userData[i]['deck'].length);
+            }
+        }
+
+
+        function createUserDescriber(userLogin, user_img, userRace){
+            if(user_img != ''){
+                $('.convert-right-info #'+userLogin+' .stash-about .image-oponent-ork').css({'background':'url(/img/user_images/'+user_img+') 50% 50% no-repeat'});
+            }
+            $('.convert-right-info #'+userLogin+' .stash-about .naming-oponent .name').text(userLogin);
+            $('.convert-right-info #'+userLogin+' .stash-about .naming-oponent .rasa').text(userRace);
+        }
+
+
+        function createCardWrap(card_data){
+            var strength_tag = '';
+            if(card_data['type'] != 'special'){
+                strength_tag = '<div class="label-power-card">'+card_data['strength']+'</div>';
+            }
+            return '<li class="content-card-item" data-type="'+card_data['type']+'" data-cart-id="'+card_data['id']+'">'+
+                    '<div class="content-card-item-main" style="background-image: url(/img/card_images/'+card_data['img_url']+')">'+
+                    strength_tag+
+                    '<div class="hovered-items">'+
+                        '<div class="card-name-property">'+
+                            '<p>'+card_data['title']+'</p>'+
+                        '</div>'+
+                        '<div class="block-describe">'+
+                            '<div class="block-image-describe"></div>'+
+                                '<div class="block-text-describe">'+
+                                    '<p>'+card_data['descript']+'</p>'+
+                                '</div>'+
+                            '</div>'+
+                        '</div>'+
+                    '</div>'+
+                '</li>';
+        }
+
+
         function showPopup(ms){
             $('#buyingCardOrmagic .popup-content-wrap').html('<p>' + ms + '</p>');
             $('#buyingCardOrmagic').show(300).delay(3000).hide(400);
         }
+
+
     </script>
 @stop
