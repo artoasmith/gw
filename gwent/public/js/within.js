@@ -320,6 +320,7 @@ $(document).ready(function(){
         //Наполнение формы
         formData.append( 'token', token );
         formData.append( 'title', $('input[name=magic_title]').val().trim());
+        formData.append( 'slug', $('input[name=magic_slug]').val().trim());
         formData.append( 'description', $('textarea[name=magic_descr]').val().trim());
         formData.append( 'img_url', $('input[name=magicAddImg]').prop('files')[0] );
         formData.append( 'races', JSON.stringify(races));
@@ -354,6 +355,7 @@ $(document).ready(function(){
         formData.append( '_method', 'PUT' );
         formData.append( 'id', $('input[name=effect_id]').val() );
         formData.append( 'title', $('input[name=magic_title]').val().trim());
+        formData.append( 'slug', $('input[name=magic_slug]').val().trim());
         formData.append( 'description', $('textarea[name=magic_descr]').val().trim());
         formData.append( 'img_url', $('input[name=magicAddImg]').prop('files')[0] );
         formData.append( 'img_old_url', $('img#oldImgUrl').attr('alt'));
@@ -375,6 +377,82 @@ $(document).ready(function(){
         });
     });
 
+
+    /*
+    * Методы страницы Волшебство -> Действия
+    *
+    * Отправка данных для сохранения из Волшебство->Действия->Добавить
+    * в обработчик /admin/magic/actions/add методом POST
+    */
+    $('input[name=magicActionAdd]').click(function(){
+        var token = $('input[name=_token]').val();
+        var title = $('input[name=action_title]').val().trim();
+        var description = $('textarea[name=action_descr]').val().trim();
+
+        var characteristics = [];
+
+        $('#card_action_characteristic_table tr').each(function(){
+            //Собираем данные характеристик
+            var label = $(this).children('td').children('input[name=action_characteristic_label]').val();
+            var value = $(this).children('td').children('textarea[name=action_characteristic_html]').val();
+            //Проверям на пустые значения
+            if((label != '')&&(value != '')){
+                characteristics.push(label.trim());
+                characteristics.push(value.trim());
+            }
+        });
+
+        /*
+         * Собственно, отправка в /admin/magic/actions/add
+         * X-CSRF-TOKEN нужен для избежания кроссайтовой отсылки
+         */
+        $.ajax({
+            url:        '/admin/magic/actions/add',
+            headers:    {'X-CSRF-TOKEN': token},
+            type:       'POST',
+            datatype:   'JSON',
+            data:       {token:token, title:title, description:description, characteristics:characteristics},
+            success:    function(data){
+                if(data == 'success'){
+                    location = '/admin/magic/actions';
+                }
+            }
+        })
+    });
+    /*
+     * Отправка данных для сохранения из Карты->Действия->Изменить
+     * в обработчик /admin/cards/actions/edit методом PUT
+     */
+    $('input[name=magicActionEdit]').click(function(){
+        var id = $('input[name=action_id]').val();
+        var token = $('input[name=_token]').val();
+        var title = $('input[name=action_title]').val().trim();
+        var description = $('textarea[name=action_descr]').val().trim();
+
+        var characteristics = [];
+
+        $('#card_action_characteristic_table tr').each(function(){
+            var label = $(this).children('td').children('input[name=action_characteristic_label]').val();
+            var value = $(this).children('td').children('textarea[name=action_characteristic_html]').val();
+            if((label != '')&&(value != '')){
+                characteristics.push(label.trim());
+                characteristics.push(value.trim());
+            }
+        });
+
+        $.ajax({
+            url:        '/admin/magic/actions/edit',
+            headers:    {'X-CSRF-TOKEN': token},
+            type:       'PUT',
+            datatype:   'JSON',
+            data:       {id:id, token:token, title:title, description:description, characteristics:characteristics},
+            success:    function(data){
+                if(data == 'success'){
+                    location = '/admin/magic/actions';
+                }
+            }
+        });
+    });
 
 
 

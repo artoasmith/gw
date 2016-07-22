@@ -11,7 +11,7 @@
                 <td style="width: 10%;"><label>Название:</label></td>
                 <td><input name="action_title" type="text"></td>
             </tr>
-            <tr>
+             <tr>
                 <td><label>Описание:</label></td>
                 <td><textarea name="action_descr"></textarea></td>
             </tr>

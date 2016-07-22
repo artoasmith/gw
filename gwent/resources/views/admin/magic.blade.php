@@ -14,11 +14,13 @@
                     <th></th>
                     <th></th>
                     <th>Название</th>
+                    <th>Ссылка</th>
                     <th>Изображение</th>
                     <th>Раса</th>
                     <th>Действия</th>
                     <th>Цена в золоте</th>
                     <th>Цена в серебре</th>
+                    <th>Затраты энергии</th>
                     <th>Создан</th>
                     <th>Изменен</th>
                 </tr>
@@ -37,6 +39,7 @@
                             {{ Form::close() }}
                         </td>
                         <td>{{ $effect->title }}</td>
+                        <td>{{ $effect->slug }}</td>
                         <td>
                             @if($effect->img_url != '')
                                 <img src="{{ URL::asset('/img/card_images/'.$effect->img_url) }}" alt="" style="max-width: 100px; max-height: 100px;">
@@ -60,9 +63,10 @@
                             }
                             ?>
                         </td>
-                        <td></td>
-                        <td>{{ number_format($effect->price_gold, 0, '', ' ') }}</td>
-                        <td>{{ number_format($effect->price_silver, 0, '', ' ') }}</td>
+                        <td>{!! $effect->description !!}</td>
+                        <td>{{ $effect->price_gold }}</td>
+                        <td>{{ $effect->price_silver }}</td>
+                        <td>{{ $effect->energy_cost }}</td>
                         <td>{{ date('d/m/Y  H:i', strtotime($effect->created_at)) }}</td>
                         <td>{{ date('d/m/Y  H:i', strtotime($effect->updated_at)) }}</td>
                     </tr>

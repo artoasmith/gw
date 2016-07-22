@@ -416,12 +416,12 @@ Route::group(['middleware' => 'admin'], function(){
         'as'    => 'admin-magic-effects-edit-it',
         'uses'  => 'Admin\AdminMagicEffectsController@magicEffectsEditPage'
     ]);
-    //Роут "Волшебство"->Добавить[Кнопка "Добавить"]"
+    //Роут "Волшебство"->Добавить[Кнопка "Добавить"]
     Route::post('/admin/magic/add', [
         'as'    => 'admin-magic-effects-add',
         'uses'  => 'Admin\AdminMagicEffectsController@addMagicEffects'
     ]);
-    //Роут "Волшебство->Изменить->[Кнопка "Применить"]".
+    //Роут "Волшебство->Изменить->[Кнопка "Применить"]
     Route::put('/admin/magic/edit', [
         'as'    => 'admin-magic-effects-edit',
         'uses'  => 'Admin\AdminMagicEffectsController@editMagicEffects'
@@ -432,6 +432,37 @@ Route::group(['middleware' => 'admin'], function(){
         'uses'  => 'Admin\AdminMagicEffectsController@dropMagicEffect'
     ]);
 
+
+    //Роут "Волшебство" -> "Действия"
+    Route::get('/admin/magic/actions',[
+        'as'    => 'admin-magic-actions',
+        'uses'  => 'Admin\AdminMagicEffectsController@magicActionsPage'
+    ]);
+    //Роут "Волшебство" -> "Действия" -> Добавить
+    Route::get('/admin/magic/actions/add', [
+        'as'    => 'admin-magic-actions-add',
+        'uses'  => 'Admin\AdminMagicEffectsController@magicActionsAddPage'
+    ]);
+    //Роут "Волшебство" -> "Действия" -> Изменить
+    Route::get('/admin/magic/actions/edit/{id}', [
+        'as'    => 'admin-magic-actions-edit-it',
+        'uses'  => 'Admin\AdminMagicEffectsController@magicActionsEditPage'
+    ]);
+    //Роут "Волшебство" -> "Действия" -> Добавить[Кнопка "Добавить"]
+    Route::post('/admin/magic/actions/add', [
+        'as'    => 'admin-magic-actions-add',
+        'uses'  => 'Admin\AdminMagicEffectsController@addMagicAction'
+    ]);
+    //Роут "Волшебство" -> "Действия" -> Изменить->[Кнопка "Применить"]
+    Route::put('/admin/magic/actions/edit', [
+        'as'    => 'admin-magic-actions-edit',
+        'uses'  => 'Admin\AdminMagicEffectsController@editMagicAction'
+    ]);
+    //Роут "Волшебство" -> "Действия" -> Удалить
+    Route::delete('/admin/magic/actions/drop', [
+        'as'    => 'admin-magic-actions-drop',
+        'uses'  => 'Admin\AdminMagicEffectsController@dropMagicAction'
+    ]);
 
 
     

@@ -21,7 +21,11 @@
                 <li><a href="/admin/cards/actions">Действия</a></li>
             </ul>
         </li>
-        <li><a href="/admin/magic">Волшебство</a></li>
+        <li><a href="/admin/magic">Волшебство</a>
+            <ul>
+                <li><a href="/admin/magic/actions">Действия</a></li>
+            </ul>
+        </li>
         <li><a href="/admin/users">Пользователи</a></li>
         <li><a href="/admin/admins">Администраторы</a></li>
         <li><a href="/admin/files">Файлы</a></li>

@@ -135,6 +135,7 @@ class UserAuthController extends BaseController
                     'user_energy'       => $user_begin_data['baseEnergy'],
                     'user_available_deck'=>serialize($available_deck),
                     'user_cards_in_deck'=> serialize($user_card_deck),
+                    'user_magic_effects'=> 'a:0:{}',
                     'user_level'        => '0',
                     'user_rating'       => '0'
                 ]);
