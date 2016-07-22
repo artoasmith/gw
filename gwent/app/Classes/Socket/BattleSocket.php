@@ -26,6 +26,7 @@ class BattleSocket extends BaseSocket
         $this->clients = new \SplObjectStorage;
     }
 
+
     function onOpen(ConnectionInterface $conn)
     {
         //save client
@@ -178,7 +179,7 @@ class BattleSocket extends BaseSocket
          */
         $resp = [];
         foreach ($members as $member){
-            $resp[$member->user_id] = [
+            $resp[] = [
                 'user_id'=>$member->user_id,
                 'online'=>(isset($this->userBattle[$member->user_id.'_'.$battleId]))
             ];
