@@ -163,6 +163,7 @@ class BattleSocket extends BaseSocket
             return false;
 
         return [
+            'id'=>$id,
             'fightStatus'=>$battle->fight_status
         ];
     }
@@ -178,6 +179,7 @@ class BattleSocket extends BaseSocket
         $resp = [];
         foreach ($members as $member){
             $resp[$member->user_id] = [
+                'user_id'=>$member->user_id,
                 'online'=>(isset($this->userBattle[$member->user_id.'_'.$battleId]))
             ];
         }
