@@ -8,9 +8,6 @@ $(document).ready(function(){
         return result;
     }
 
-    /*
-     *   Методы страницы admin/cards
-     */
     //Автозаполнение селекторов групп
     function getViewCardGroups(){
         var token = $('input[name=_token]').val();
@@ -267,7 +264,7 @@ $(document).ready(function(){
             case 'lekar':
                 if (0 == $('input[name=CAhealer_groupOrSingle]:checked').val()) {
                     realActionRow += ', "CAhealer_groupOrSingle": "0"}';
-                    displayActionRow += ' - Дейстует на одиночную;<br>';
+                    displayActionRow += ' - Действует на одиночную;<br>';
                 } else {
 
                     var temp = checkGroupTable($('select[name=CAhealer_group]'));
@@ -509,7 +506,6 @@ $(document).ready(function(){
                 //Условие "Порог силы воинов противника для совершения убийства"
                 realActionRow += ', "CAkiller_enemyStrenghtLimitToKill": "' + $('input[name=CAkiller_enemyStrenghtLimitToKill]').val() + '"';
                 displayActionRow += ' - Порог силы воинов противника для совершения убийства: ' + $('input[name=CAkiller_enemyStrenghtLimitToKill]').val() + ';<br>';
-                ;
 
                 //Условие "Вариация количества убийств"
                 realActionRow += ', "CAkiller_killAllOrSingle": "' + $('input[name=CAkiller_killAllOrSingle]:checked').val() + '"';
@@ -528,9 +524,6 @@ $(document).ready(function(){
                 displayActionRow += ' - Качество убиваемой карты: ' + $('select[name=CAkiller_killedQuality_Selector] option:selected').text();
 
                 realActionRow += '}';
-                console.log(realActionRow);
-                console.log(displayActionRow);
-
                 break;
 
 

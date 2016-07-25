@@ -14,9 +14,9 @@
                     <th></th>
                     <th></th>
                     <th>Название</th>
-                    <th>Ссылка</th>
                     <th>Изображение</th>
                     <th>Раса</th>
+                    <th>Описание</th>
                     <th>Действия</th>
                     <th>Цена в золоте</th>
                     <th>Цена в серебре</th>
@@ -39,9 +39,8 @@
                             {{ Form::close() }}
                         </td>
                         <td>{{ $effect->title }}</td>
-                        <td>{{ $effect->slug }}</td>
                         <td>
-                            @if($effect->img_url != '')
+                            @if(($effect->img_url != '') && ($effect->img_url != 'undefined'))
                                 <img src="{{ URL::asset('/img/card_images/'.$effect->img_url) }}" alt="" style="max-width: 100px; max-height: 100px;">
                             @else
                                 Изображение отсутсвует
@@ -63,7 +62,16 @@
                             }
                             ?>
                         </td>
-                        <td>{!! $effect->description !!}</td>
+                        <td>{!! $effect -> description !!}</td>
+                        <td>
+                            <?php
+                            $actions = unserialize($effect->effect_actions);
+                            foreach($actions as $key => $value){
+                                $current_action  = \DB::table('tbl_magic_actions')->select('id','title')->find($value->action);
+                                echo '<p>'.$current_action->title.'</p>';
+                            }
+                            ?>
+                        </td>
                         <td>{{ $effect->price_gold }}</td>
                         <td>{{ $effect->price_silver }}</td>
                         <td>{{ $effect->energy_cost }}</td>

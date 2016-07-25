@@ -20,7 +20,6 @@
                     <td><textarea name="action_descr">{{ $magic_actions[0]['description'] }}</textarea></td>
                 </tr>
             </table>
-
         </fieldset>
 
         <fieldset>

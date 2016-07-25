@@ -303,87 +303,8 @@ $(document).ready(function(){
     });
 
 
+    /*Волшебство -> Действия -> Добавить*/
 
-    /*
-    * Волшебство
-    */
-    //Добавление
-    $('input[name=magicAdd]').click(function(){
-        var token = $('input[name=_token]').val();
-
-        var races = [];
-        $('#racesToUse input[type=checkbox]:checked').each(function(){
-            races.push($(this).val());
-        });
-        //Имитация отправки данных через форму
-        var formData = new FormData();
-        //Наполнение формы
-        formData.append( 'token', token );
-        formData.append( 'title', $('input[name=magic_title]').val().trim());
-        formData.append( 'slug', $('input[name=magic_slug]').val().trim());
-        formData.append( 'description', $('textarea[name=magic_descr]').val().trim());
-        formData.append( 'img_url', $('input[name=magicAddImg]').prop('files')[0] );
-        formData.append( 'races', JSON.stringify(races));
-        formData.append( 'energyCost', $('input[name=energy_cost]').val());
-        formData.append( 'price_gold', $('input[name=price_gold]').val());
-        formData.append( 'price_silver', $('input[name=price_silver]').val());
-
-        $.ajax({
-            url:        '/admin/magic/add',
-            headers:    {'X-CSRF-TOKEN': token},
-            type:       'POST',
-            processData:false,
-            contentType:false,
-            data:       formData,
-            success:    function(data){
-                if(data == 'success') location = '/admin/magic';
-            }
-        });
-    });
-    //Изменение
-    $('input[name=magicEdit]').click(function(){
-        var token = $('input[name=_token]').val();
-
-        var races = [];
-        $('#racesToUse input[type=checkbox]:checked').each(function(){
-            races.push($(this).val());
-        });
-        //Имитация отправки данных через форму
-        var formData = new FormData();
-        //Наполнение формы
-        formData.append( 'token', token );
-        formData.append( '_method', 'PUT' );
-        formData.append( 'id', $('input[name=effect_id]').val() );
-        formData.append( 'title', $('input[name=magic_title]').val().trim());
-        formData.append( 'slug', $('input[name=magic_slug]').val().trim());
-        formData.append( 'description', $('textarea[name=magic_descr]').val().trim());
-        formData.append( 'img_url', $('input[name=magicAddImg]').prop('files')[0] );
-        formData.append( 'img_old_url', $('img#oldImgUrl').attr('alt'));
-        formData.append( 'races', JSON.stringify(races));
-        formData.append( 'energyCost', $('input[name=energy_cost]').val());
-        formData.append( 'price_gold', $('input[name=price_gold]').val());
-        formData.append( 'price_silver', $('input[name=price_silver]').val());
-
-        $.ajax({
-            url:        '/admin/magic/edit',
-            headers:    {'X-CSRF-TOKEN': token},
-            type:       'POST',
-            processData:false,
-            contentType:false,
-            data:       formData,
-            success:    function(data){
-                if(data == 'success') location = '/admin/magic';
-            }
-        });
-    });
-
-
-    /*
-    * Методы страницы Волшебство -> Действия
-    *
-    * Отправка данных для сохранения из Волшебство->Действия->Добавить
-    * в обработчик /admin/magic/actions/add методом POST
-    */
     $('input[name=magicActionAdd]').click(function(){
         var token = $('input[name=_token]').val();
         var title = $('input[name=action_title]').val().trim();
@@ -403,7 +324,7 @@ $(document).ready(function(){
         });
 
         /*
-         * Собственно, отправка в /admin/magic/actions/add
+         * Собственно, отправка в /admin/cards/actions/add
          * X-CSRF-TOKEN нужен для избежания кроссайтовой отсылки
          */
         $.ajax({
@@ -419,10 +340,9 @@ $(document).ready(function(){
             }
         })
     });
-    /*
-     * Отправка данных для сохранения из Карты->Действия->Изменить
-     * в обработчик /admin/cards/actions/edit методом PUT
-     */
+
+    /*Волшебство -> Действия -> Изменить*/
+
     $('input[name=magicActionEdit]').click(function(){
         var id = $('input[name=action_id]').val();
         var token = $('input[name=_token]').val();
@@ -453,8 +373,6 @@ $(document).ready(function(){
             }
         });
     });
-
-
 
     //Файлы
     $('.main-central-wrap .not-used').click(function(){
@@ -488,8 +406,8 @@ $(document).ready(function(){
 
         }
     });
-    
 });
+
 
 function needban(status,id) {
     if(confirm('Вы уверены в этом действии?')){

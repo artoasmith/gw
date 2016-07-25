@@ -432,6 +432,16 @@ Route::group(['middleware' => 'admin'], function(){
         'uses'  => 'Admin\AdminMagicEffectsController@dropMagicEffect'
     ]);
 
+    //Роут возвращает конкретное действие волшебства
+    Route::get('/admin/magic/get_params_by_action/', [
+        'uses'  => 'AdminViews@magicViewActionsList'
+    ]);
+
+    //Роут возвращает селектор всех карт
+    Route::get('/admin/get_all_cards_selector', [
+        'uses'  => 'AdminViews@getAllCardsSelectorView'
+    ]);
+
 
     //Роут "Волшебство" -> "Действия"
     Route::get('/admin/magic/actions',[

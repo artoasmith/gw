@@ -15,16 +15,19 @@ class AdminMagicEffectsController extends BaseController
     public function magicEffectsPage(){
         //Выборка из БД магических еффектов
         $effects = MagicEffectsModel::orderBy('race','asc')->orderBy('energy_cost','asc')->get();
+
         //Выборка из БД доступных рас
         $races = RaceModel::orderBy('title','asc')->get();
         return view('admin.magic', ['effects'=> $effects, 'races' => $races]);
     }
 
+
     //Страница добавления волшебства
     public function magicEffectsAddPage(){
         //Выборка из БД доступных рас
         $races = RaceModel::orderBy('title','asc')->get();
-        return view('admin.layout.adds.magic', ['races' => $races]);
+        $magic_actions = MagicActionsModel::orderBy('title', 'asc')->get();
+        return view('admin.layout.adds.magic', ['races' => $races, 'magic_actions' => $magic_actions]);
     }
 
     //Страница редактирования магических еффектов
@@ -33,7 +36,8 @@ class AdminMagicEffectsController extends BaseController
         $effect = MagicEffectsModel::where('id', '=', $id)->get();
         //Выборка из БД доступных рас
         $races = RaceModel::orderBy('title','asc')->get();
-        return view('admin.layout.edits.magic', ['effect'=> $effect->all(), 'races' => $races]);
+        $magic_actions = MagicActionsModel::orderBy('title', 'asc')->get();
+        return view('admin.layout.edits.magic', ['effect'=> $effect->all(), 'races' => $races, 'magic_actions' => $magic_actions]);
     }
 
     //Добавление в БД магического еффекта
@@ -41,6 +45,9 @@ class AdminMagicEffectsController extends BaseController
         if( csrf_token() == $request->input('token')){
             $data = $request->all();
 
+            if($data['title'] == ''){
+                return 'Не указано название карты.';
+            }
             //создание ссылки для магического еффекта
             $slug = AdminFunctions::str2url($data['title']);
 
@@ -57,6 +64,8 @@ class AdminMagicEffectsController extends BaseController
                 $img_file  = '';
             }
 
+            $magic_actions = serialize(json_decode($data['magic_actions'])); //Массив Действий волшебства
+
             $races = serialize(json_decode($data['races']));
 
             $result = MagicEffectsModel::create([
@@ -67,7 +76,7 @@ class AdminMagicEffectsController extends BaseController
                 'energy_cost'   => $data['energyCost'],
                 'price_gold'    => $data['price_gold'],
                 'price_silver'  => $data['price_silver'],
-                'effect_actions'=> 'a:0:{}',
+                'effect_actions'=> $magic_actions,
                 'race'          => $races
             ]);
 
@@ -100,6 +109,8 @@ class AdminMagicEffectsController extends BaseController
 
             $races = serialize(json_decode($data['races']));
 
+            $magic_actions = serialize(json_decode($data['magic_actions'])); //Массив Действий волшебства
+
             //Находим в БД текущий магический еффект
             $currentMagicEffect = MagicEffectsModel::find($data['id']);
             //Вносим изменения
@@ -111,6 +122,7 @@ class AdminMagicEffectsController extends BaseController
             $currentMagicEffect->price_gold     = $data['price_gold'];
             $currentMagicEffect->price_silver   = $data['price_silver'];
             $currentMagicEffect->race           = $races;
+            $currentMagicEffect->effect_actions = $magic_actions;
 
             //Применяем изменения
             $result = $currentMagicEffect -> save();

@@ -1,5 +1,6 @@
 @extends('admin.layout.default')
 @section('content')
+    <script src="{{ URL::asset('js/within_magic.js') }}"></script>
 
     <div class="main-central-wrap">
         <input name="_token" type="hidden" value="{{ csrf_token() }}">
@@ -18,7 +19,12 @@
                 </tr>
                 <tr>
                     <td><label>Фон:</label></td>
-                    <td><input name="magicAddImg" type="file"><img id="oldImgUrl" src="/img/card_images/{{ $effect[0]['img_url'] }}" alt="{{ $effect[0]['img_url'] }}"></td>
+                    <td>
+                        <input name="magicAddImg" type="file">
+                        @if(($effect[0]['img_url'] != '') && ($effect[0]['img_url'] != 'undefined'))
+                        <img id="oldImgUrl" src="/img/card_images/{{ $effect[0]['img_url'] }}" alt="{{ $effect[0]['img_url'] }}">
+                        @endif
+                    </td>
                 </tr>
                 <tr>
                     <td><label>Расы которые могут использовать:</label></td>
@@ -46,7 +52,41 @@
                     </td>
                 </tr>
             </table>
+        </fieldset>
 
+        <fieldset>
+            <legend>Действия</legend>
+
+            <table class="edition" id="magicCurrentActions">
+                <tbody>
+                {!! App\Http\Controllers\AdminViews::cardsViewGetMagicActions($effect[0]['effect_actions']) !!}
+                </tbody>
+            </table>
+
+            <table class="actions" id="tableMagicActionList">
+                <thead>
+                <tr>
+                    <td><strong>Выбрать действие:</strong></td>
+                    <td>
+                        <select name="magic_actions_select">
+                            @foreach($magic_actions as $action)
+                                <option value="{{ $action['id'] }}" data-title="{{ $action['slug'] }}">{{ $action['title'] }}</option>
+                            @endforeach
+                        </select>
+                    </td>
+                    <td>
+                    </td>
+                </tr>
+                </thead>
+
+                <tbody>
+                </tbody>
+
+            </table>
+
+            <div style="padding: 5px 20px 5px 2%;">
+                <input type="button" name="addMoreMagicActions" value="Добавить действие">
+            </div>
         </fieldset>
 
         <fieldset>

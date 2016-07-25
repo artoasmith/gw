@@ -13,7 +13,6 @@
                 <th></th>
                 <th></th>
                 <th>Название</th>
-                <th>Ссылка</th>
                 <th>Описание</th>
                 <th>HTML</th>
                 <th>Создан</th>
@@ -32,7 +31,6 @@
                         {{ Form::close() }}
                     </td>
                     <td>{{ $action -> title }}</td>
-                    <td>{{ $action -> slug }}</td>
                     <td>{{ Str::limit($action -> description, 50, '...') }}</td>
                     <td class="tal">
                         <?php

@@ -5,6 +5,7 @@ use App\CardActionsModel;
 use App\CardGroupsModel;
 use App\CardsModel;
 use App\MagicEffectsModel;
+use App\MagicActionsModel;
 use Illuminate\Routing\Controller as BaseController;
 use Illuminate\Http\Request;
 
@@ -196,9 +197,9 @@ class AdminViews extends BaseController
 
         $result = '';
 
-        foreach ($actions as $action) {
-            $current_action = CardActionsModel::where('id', '=', $action->action)->get();
-            $result .= $current_action[0]['title'].', ';
+        foreach ($actions as $key => $value) {
+            $current_action = \DB::table('tbl_card_actions')->select('id','title')->find($value->action);
+            $result .= $current_action->title.', ';
         }
 
         return substr($result, 0, -2);
@@ -449,8 +450,6 @@ class AdminViews extends BaseController
                 }else{
                     $result .= 'Да<br>';
                 }
-
-
             }
 
 
@@ -537,6 +536,190 @@ class AdminViews extends BaseController
         }
         $out .= '</select>';
         return $out;
+    }
+
+    //Функция возвращает действие волшебства в виде array('html_data' => 'html код действий карты', 'descr' => 'Описание действия')
+    public static function magicViewActionsList(Request $request){
+        if(csrf_token() == $request->input('token')){
+            $data = $request->all();
+
+            //Выборка из БД действия волшебства
+            $action_data = $card_actions = MagicActionsModel::find($data['action']);
+
+            return json_encode(array('html_data' => unserialize($action_data->html_options), 'descr' => $action_data['description']));
+        }
+    }
+
+
+    //Функция возвращает список действий волшебства
+    public static function cardsViewGetMagicActions($actions){
+        $actions = unserialize($actions);
+
+        $result = '';
+
+        foreach($actions as $action){
+            $current_action = MagicActionsModel::where('id', '=', $action->action)->get();
+            $result .= '
+            <tr>
+                <td><a class="drop" href="#"></a></td>
+                <td>
+                    <ins>'.$current_action[0]['title'].'</ins>:<br>
+            '; // Вывод названия действия
+
+            //Воодушевление
+            if(isset($action -> MAinspiration_ActionRow)){
+                $result .= ' - Дальность: '. self::createActionsRowRange($action -> MAinspiration_ActionRow);
+
+                $result .= ' - Модификатор силы: ';
+                if(0 == $action -> MAinspiration_modificator){
+                    $result .= 'Умножение<br>';
+                }else{
+                    $result .= 'Добавление<br>';
+                }
+
+                $result .= ' - Значение: '.$action -> MAinspiration_multValue;
+            }
+
+            //Добавить силы
+            if(isset($action -> MAaddStrengthValue)){
+                $result .= ' - Значение повышения силы на: '.$action->MAaddStrengthValue.' единиц;<br>';
+                $result .= ' - Ряд действия: '. self::createActionsRowRange($action -> MAaddStrength_ActionRow);
+            }
+
+            //Забрать карты в руку
+            if(isset($action -> MAgetCardsFromBtlField)){
+                $result .= ' - Количество карт: '.$action -> MAgetCardsFromBtlField.'<br>';
+
+                $result .= ' - Карты берутся из: ';
+                foreach ($action -> MAgetCardsSource as $source) {;
+                    switch($source){
+                        case '0': $result.= ' поля; '; break;
+                        case '1': $result.= ' колоды; '; break;
+                        case '2': $result.= ' отбоя; '; break;
+                    }
+                }
+                $result .= '<br>';
+
+                if( 0 == $action -> MAgetCardsSourceOwn){
+                    $result .= ' - Используются свои карты<br>';
+                }else{
+                    $result .= ' - Карты берутся у противника<br>';
+                }
+
+                if( 'true' == $action -> MAgetCardsPlayIt){
+                    $result .= ' - Карты играются немедленно.<br>';
+                }else{
+                    $result .= ' - Карты остаются в руке.<br>';
+                }
+
+                if( 0 == $action -> MAgetCardsMethod){
+                    $result .= ' - Карты выбираются вручную.<br>';
+                }else{
+                    $result .= ' - Карты выбираются случайно.<br>';
+                }
+            }
+
+            //Отменить воодушевление
+            if(isset($action -> MAcancelInspir_ActionRow)){
+                $result .= ' - Дальность: '. self::createActionsRowRange($action -> MAcancelInspir_ActionRow);
+            }
+
+            //Посмотреть карты противника
+            if(isset($action -> MAlookToEnemyHand)){
+                $result .=' - Количество карт: '.$action->MAlookToEnemyHand.' единиц;<br>';
+            }
+
+            //Получить из колоды карты и сыграть их
+            if(isset($action -> MAplayCardsFromDeck_cardType)){
+                if( 0 == $action -> MAplayCardsFromDeck_cardType){
+                    $result .= ' - Получить из колоды карты: ';
+                    foreach($action -> currentCard as $card_id){
+                        $card = \DB::table('tbl_card')->select('id','title')->where('id','=', $card_id)->get();
+                        $result .= $card[0]->title .', ';
+                    }
+                    $result = substr($result,0, -2).'<br>';
+                }else{
+                    $result .= ' - Получить случайную карту из рядов: '.self::createActionsRowRange($action -> MAplayCardsFromDeck_ActionRow);
+                }
+            }
+
+            //Понизить силу у противника
+            if(isset($action -> MAdecrStrength_ActionRow)){
+                $result .= ' - Ряд действия: '.self::createActionsRowRange($action -> MAdecrStrength_ActionRow);
+                $result .= ' - Значение силы: '.$action -> MAdecrStrengthValue.'<br>';
+            }
+
+            //Сброс и поднятие карт из колоды
+            if(isset($action -> MAthrowCardToRetreat)){
+                $result .= ' - Сколько карт сбросить: '.$action -> MAthrowCardToRetreat.'<br>';
+                $result .= ' - Сколько взять с колоды: '.$action -> MAthrowCardToGetFormDeck.'<br>';
+                if( 0 == $action -> MAthrowCardAllowCase){
+                    $result .= ' - Карты из колоды беруться случайно<br>';
+                }else{
+                    $result .= ' - Карты из колоды выбираются игроком<br>';
+                }
+            }
+
+            //Сброс карт противника в отбой
+            if(isset($action -> MAkickOutEnemyCards)){
+                $result .= ' - Количество карт: '.$action -> MAkickOutEnemyCards;
+            }
+
+
+            //Убийство
+            if(isset($action -> MAkiller_ActionRow)){
+                $result .= ' - Ряд действия: '. self::createActionsRowRange($action -> MAkiller_ActionRow);
+
+                if(0 != $action ->MAkiller_recomendedTeamateForceAmount_OnOff){
+                    $result .= ' - Количество силы необходимое для совершения убийства воинов: '. $action -> MAkiller_recomendedTeamateForceAmount_OnOff;
+                    switch($action -> MAkiller_recomendedTeamateForceAmount_Selector){
+                        case '0': $result .= ' (Больше указанного значения)<br>'; break;
+                        case '1': $result .= ' (Меньше указанного значения)<br>'; break;
+                        case '2': $result .= ' (Равно указанному значению)<br>'; break;
+                    }
+                }
+
+                $result .= ' - Порог силы воинов противника для совершения убийства: '.$action -> MAkiller_enemyStrenghtLimitToKill.'<br>';
+
+                if(isset($action->MAkiller_killedQuality_Selector)){
+                    $result .= ' - Качество "Убиваемой" карты: ';
+                    switch($action->MAkiller_killedQuality_Selector){
+                        case '0': $result .= 'Самая слабая<br>'; break;
+                        case '1': $result .= 'Самая сильная<br>'; break;
+                        case '2': $result .= 'Случайно<br>'; break;
+                    }
+                }
+
+                $result .= ' - Вариация количества убийств: ';
+                if(0 == $action -> MAkiller_killAllOrSingle){
+                    $result .= 'Одиночная<br>';
+                }else{
+                    $result .= 'Всех<br>';
+                }
+
+                $result .= ' - Может бить своих юнитов по указаным выше параметрах: ';
+                if(0 == $action -> MAkiller_atackTeamate){
+                    $result .= 'Нет<br>';
+                }else{
+                    $result .= 'Да<br>';
+                }
+
+                $result .= ' - Игнорирует иммунитет к убийству: ';
+                if(0 == $action -> MAkiller_ignoreKillImmunity){
+                    $result .= 'Нет<br>';
+                }else{
+                    $result .= 'Да<br>';
+                }
+            }
+
+            $result .='
+                </td>
+                <td style="display: none;">'.json_encode($action).'</td>
+            </tr>
+            ';
+        }
+
+        return $result;
     }
 
 }
