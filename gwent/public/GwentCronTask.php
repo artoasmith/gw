@@ -8,30 +8,43 @@ try{
 }
 
 
-$q = $pdo -> query("SELECT id, user_online, updated_at FROM users WHERE user_online = 1");
-$r = $q -> fetchAll(PDO::FETCH_ASSOC);
+$q_user_online = $pdo -> query("SELECT id, user_online, updated_at FROM users WHERE user_online = 1");
+$r_user_online = $q_user_online -> fetchAll(PDO::FETCH_ASSOC);
 
-foreach($r as $key => $user){
+foreach($r_user_online as $key => $user){
     $time_diff = time() - strtotime($user['updated_at']);
     if($time_diff > 180){
         $online = 0;
-        $q = $pdo -> prepare("UPDATE users SET user_online = :online WHERE id = :id");
+        $q  = $pdo -> prepare("UPDATE users SET user_online = :online WHERE id = :id");
         $q -> bindParam(':id', $user['id']);
         $q -> bindParam(':online', $online);
         $q -> execute();
     }
 }
 
-$q = $pdo -> query("SELECT id, created_at, fight_status FROM tbl_battles WHERE fight_status = 0");
-$r = $q -> fetchAll(PDO::FETCH_ASSOC);
+$q_battle = $pdo -> query("SELECT id, created_at, fight_status FROM tbl_battles WHERE fight_status < 2");
+$r_battle = $q_battle -> fetchAll(PDO::FETCH_ASSOC);
+var_dump($r_battle);
 
-foreach($r as $key => $battle){
+foreach($r_battle as $key => $battle){
     if(strtotime($battle['created_at']) < (time() - 60*30)){
-        $q = $pdo -> prepare("DELETE FROM tbl_battles WHERE id = :id");
+
+        $q_battle_members = $pdo -> query("SELECT user_id, battle_id FROM tbl_battle_members WHERE battle_id = ".$battle['id']);
+        $r_battle_members= $q_battle_members ->fetchAll(PDO::FETCH_ASSOC);
+
+        $playing_status = 0;
+        foreach ($_battle_members as $i => $user){
+            $q_user  = $pdo -> prepare("UPDATE users SET user_user_is_playing = :playing_status WHERE id = :id");
+            $q_user -> bindParam(':id', $user['user_id']);
+            $q_user -> bindParam(':playing_status', $playing_status);
+            $q_user -> execute();
+        }
+
+        $q  = $pdo -> prepare("DELETE FROM tbl_battles WHERE id = :id");
         $q -> bindParam(':id', $battle['id']);
         $q -> execute();
 
-        $q = $pdo -> prepare("DELETE FROM tbl_battle_members WHERE battle_id = :id");
+        $q  = $pdo -> prepare("DELETE FROM tbl_battle_members WHERE battle_id = :id");
         $q -> bindParam(':id', $battle['id']);
         $q -> execute();
     }

@@ -39,7 +39,14 @@ class SiteGameController extends BaseController
 
         foreach ($magic_effects as $key => $value){
             if($value['active'] == 1){
-                $user_magic[$key] = $value['used_times'];
+
+                $current_magic_effect = \DB::table('tbl_magic_effects')->select('id', 'race')->where('id', '=', $key)->get();
+
+                $current_magic_effect_races = unserialize($current_magic_effect[0]->race);
+                if(in_array($current_deck, $current_magic_effect_races, true)){
+                    $user_magic[$key] = $value['used_times'];
+                }
+
             }
         }
 
@@ -55,16 +62,20 @@ class SiteGameController extends BaseController
                 'battle_id'     => $battle_id,
                 'user_deck_race'=> $user_deck_race,
                 'user_deck'     => $user_deck,
+                'user_hand'     => 'a:0:{}',
                 'magic_effects' => $user_magic,
-                'user_energy'   => $user_energy
+                'user_energy'   => $user_energy,
+                'user_ready'    => 0
             ]);
         }else{
             $user_battle = BattleMembersModel::find($user_is_battle_member[0]->id);
             $user_battle -> battle_id       = $battle_id;
             $user_battle -> user_deck_race  = $user_deck_race;
             $user_battle -> user_deck       = $user_deck;
+            $user_battle -> user_hand       = 'a:0:{}';
             $user_battle -> magic_effects   = $user_magic;
             $user_battle -> user_energy     = $user_energy;
+            $user_battle -> user_ready      = 0;
             $result =  $user_battle -> save();
         }
         return $result;
@@ -190,19 +201,23 @@ class SiteGameController extends BaseController
     protected function startGame(Request $request){
         $data = $request->all();
 
-        $battle_members = BattleMembersModel::where('battle_id', '=', $data['battle_id'])->get();
+        $current_user = Auth::user(); //Данные текущего пользователя
+
+        $battle_members = BattleMembersModel::where('battle_id', '=', $data['battle_id'])->get(); //Данніе текущей битвы
 
         $users_result_data = [];
+
         foreach($battle_members as $key => $value){
-            $user = \DB::table('users')->select('id','login','img_url')->where('id', '=', $value -> user_id)->get();
+            $user = \DB::table('users')->select('id','login','img_url')->where('id', '=', $value -> user_id)->get();// Пользователи участвующие в битве
 
             $current_user_deck_race = \DB::table('tbl_race')->select('title', 'slug')->where('slug','=', $value -> user_deck_race)->get();
             $user_current_full_deck = unserialize($value -> user_deck);
 
             $deck = [];
+            $hand = [];
+
             foreach($user_current_full_deck as $card_id => $cards_quantity){
                 for($i = 0; $i<$cards_quantity; $i++){
-
                     $card_data = \DB::table('tbl_card')->select('id','title','slug','card_type','card_strong','img_url','short_description')->where('id', '=', $card_id)->get();
 
                     $deck[] = [
@@ -217,8 +232,6 @@ class SiteGameController extends BaseController
                 }
             }
 
-            $hand = [];
-
             $deck_card_count = count($deck);
 
             while(count($hand) != 11){
@@ -231,15 +244,42 @@ class SiteGameController extends BaseController
                 $deck_card_count = count($deck);
             }
 
+            if($current_user['id'] != $user[0]->id){
+                $deck = [];
+                $hand = [];
+            }
+            if($value -> user_deck_race == 'highlander'){
+                $available_to_change = 4;
+            }else{
+                $available_to_change = 2;
+            }
+
+            $user_magic_effect_data = [];
+            $magic_effects = unserialize($value->magic_effects);
+
+            foreach($magic_effects as $id => $actions){
+                $magic_effect_data = \DB::table('tbl_magic_effects')->select('id', 'title', 'slug', 'img_url', 'description', 'energy_cost')->where('id', '=', $id)->get();
+                $user_magic_effect_data[] = [
+                    'id'            => $id,
+                    'title'         => $magic_effect_data[0]->title,
+                    'slug'          => $magic_effect_data[0]->slug,
+                    'img_url'       => $magic_effect_data[0]->img_url,
+                    'description'   => $magic_effect_data[0]->description,
+                    'energy_cost'   => $magic_effect_data[0]->energy_cost,
+                ];
+            }
+
             $users_result_data[] = [
                 'login'     => $user[0]->login,
                 'img_url'   => $user[0]->img_url,
                 'deck_slug' => $value -> user_deck_race,
                 'deck_title'=> $current_user_deck_race[0]->title,
+                'deck_count'=> $deck_card_count,
                 'deck'      => $deck,
                 'hand'      => $hand,
-                'magic'     => unserialize($value->magic_effets),
-                'energy'    => $value -> user_energy
+                'magic'     => $user_magic_effect_data,
+                'energy'    => $value -> user_energy,
+                'can_change_cards'  => $available_to_change
             ];
         }
 

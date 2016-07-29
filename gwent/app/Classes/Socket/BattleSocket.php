@@ -12,14 +12,17 @@ use Illuminate\Session\SessionManager;
 class BattleSocket extends BaseSocket
 {
     protected $clients;
-    protected $battles;
-    protected $resoursesInBattle;
-    protected $resoursesInUsers;
-    protected $userBattle;
+    protected $battles;//tbl_battles
+    protected $resoursesInBattle; //arr connect[battles]
+    protected $resoursesInUsers; //arr connect[users(DB.users)]
+    protected $userBattle; //user in  tbl_battle_members
+    /*
+     * Доступные действия
+     * */
     private $actionSpecter = [
-        0=>'join',  //подключился и прошел проверку новый пользователь
-        1=>'close',  //пользователь покинул стол
-        2=>'checkBattle', //проверка статуса битвы
+        'join',  //подключился и прошел проверку новый пользователь
+        'close',  //пользователь покинул стол
+        'checkBattle', //проверка статуса битвы
     ];
 
     public function __construct()
@@ -54,7 +57,7 @@ class BattleSocket extends BaseSocket
                     unset($this->userBattle[$userInfo->id.'_'.$this->resoursesInBattle[$conn->resourceId]]);
                 unset($this->resoursesInUsers[$conn->resourceId]);
             }
-            
+
             echo count($this->battles[$this->resoursesInBattle[$conn->resourceId]]).' in battle '.$this->resoursesInBattle[$conn->resourceId]."\n";
 
             if($userInfo && count($this->battles[$this->resoursesInBattle[$conn->resourceId]])>0){
@@ -84,26 +87,38 @@ class BattleSocket extends BaseSocket
         //get params
         $incom = json_decode($msg,true);
 
-        //check action
-        if(!isset($incom['action']) || !in_array($incom['action'],$this->actionSpecter))
-            return $from->send($this->getErrorJson('Ошибка передачи действия'));
-        $action = $incom['action'];
-
         //chech auth
         $user = $this->getUser($incom);
         if(!$user)
             return $from->send($this->getErrorJson('Ошибка авторизации'));
+
+        //check action
+        if(!isset($incom['action']) || !in_array($incom['action'],$this->actionSpecter))
+            return $from->send($this->getErrorJson('Ошибка передачи действия'));
+
+        $action = $incom['action'];
+
 
         $battleId = intval($incom['ident']['battleId']);
 
         //update params
         if(!isset($this->battles[$battleId]))
             $this->battles[$battleId] = new \SplObjectStorage;
+
+        //проверка есть ли пользователь в массиве данной битвы
         if(!$this->battles[$battleId]->contains($from))
             $this->battles[$battleId]->attach($from);
+
         $this->resoursesInBattle[$from->resourceId] = $battleId;
         $this->resoursesInUsers[$from->resourceId] = $user;
         $this->userBattle[$user->id.'_'.$battleId] = true;
+
+        /*
+         * action - действие пользователя из private $actionSpecter
+         *      join - присоединеие пользователя
+         *      checkBattle - получить инфо о битве
+         *
+         * */
         $userResp  = [];
         $othersResp = [];
 

@@ -391,7 +391,11 @@
 		<div class="oponent-describer" @if(isset($players['enemy'][0]))id="{{ $players['enemy'][0]['user_nickname'] }}"@endif>
 
 			<div class="useless-card">
-				<div class="inside-for-some-block" style=""><!-- Активная магия --></div>
+				<div class="inside-for-some-block" style="">
+                    <ul class="magic-effects-wrap">
+                        <!-- Активная магия -->
+                    </ul>
+                </div>
 			</div>
 
 			<!-- Данные попротивника -->
@@ -518,7 +522,11 @@
 			</div>
 		</div>
 		<div class="useless-card">
-			<div class="inside-for-some-block"><!-- Активная магия --></div>
+			<div class="inside-for-some-block">
+                <ul class="magic-effects-wrap">
+                    <!-- Активная магия -->
+                </ul>
+            </div>
 		</div>
 	</div>
 </div>
@@ -673,7 +681,11 @@
         };
 
 
+        //Пользователь
         function buildPlayRoomView(userData){
+
+            $('#selecthandCardsPopup #userSelectCardsToHand').empty();
+
             for(var i=0; i<userData.length; i++){
                 if( $('.convert-right-info #'+userData[i]['login']).length <1){
                     $('.convert-right-info .oponent-describer').attr('id',userData[i]['login']);
@@ -683,7 +695,12 @@
 
                 createUserDescriber(userData[i]['login'], userData[i]['img_url'], userData[i]['deck_title']);
 
-                $('.convert-left-info .cards-bet ul[data-user='+userData[i]['login']+'] .deck .counter').text(userData[i]['deck'].length);
+                $('.convert-left-info .cards-bet ul[data-user='+userData[i]['login']+'] .deck .counter').text(userData[i]['deck_count']);
+
+                if(userData[i]['magic'].length > 0){
+                    createUserMagicFieldCards(userData[i]['login'], userData[i]['magic']);
+                }
+                //console.log(userData[i]['magic']);
             }
         }
 
@@ -696,30 +713,17 @@
             $('.convert-right-info #'+userLogin+' .stash-about .naming-oponent .rasa').text(userRace);
         }
 
-
-        function createCardWrap(card_data){
-            var strength_tag = '';
-            if(card_data['type'] != 'special'){
-                strength_tag = '<div class="label-power-card">'+card_data['strength']+'</div>';
+        function createUserMagicFieldCards(userLogin, magicData){
+            for(var i=0; i<magicData.length; i++){
+                $('.convert-right-info #' + userLogin).parent().children('.useless-card').children().children('.magic-effects-wrap').append(createMagicEffectView(magicData[i]));
             }
-            return '<li class="content-card-item" data-type="'+card_data['type']+'" data-cart-id="'+card_data['id']+'">'+
-                    '<div class="content-card-item-main" style="background-image: url(/img/card_images/'+card_data['img_url']+')">'+
-                    strength_tag+
-                    '<div class="hovered-items">'+
-                        '<div class="card-name-property">'+
-                            '<p>'+card_data['title']+'</p>'+
-                        '</div>'+
-                        '<div class="block-describe">'+
-                            '<div class="block-image-describe"></div>'+
-                                '<div class="block-text-describe">'+
-                                    '<p>'+card_data['descript']+'</p>'+
-                                '</div>'+
-                            '</div>'+
-                        '</div>'+
-                    '</div>'+
-                '</li>';
         }
 
+        function createMagicEffectView(magicData){
+            return  '<li>' +
+                        '<img src="/img/card_images/' + magicData['img_url']+'" alt="' + magicData['title'] +'" title="' + magicData['title'] +'">'+
+                    '</li>';
+        }
 
         function showPopup(ms){
             $('#buyingCardOrmagic .popup-content-wrap').html('<p>' + ms + '</p>');

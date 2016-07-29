@@ -1626,3 +1626,17 @@
   text-align: center;
 }
 .market-buy-popup .popup-energy-exchanges-wrap>div{position: relative;}
+
+
+ul.magic-effects-wrap{
+  width: 100%;
+}
+
+ul.magic-effects-wrap li{
+  display: inline;
+}
+ul.magic-effects-wrap li img{
+  max-height: 90px;
+  max-width: 90px;
+  cursor: pointer;
+}

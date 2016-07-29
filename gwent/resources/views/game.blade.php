@@ -44,7 +44,7 @@ $errors = $errors->all();
                             <a class="play-game" href="/play/{{ $value->id }}" id="{{ $value->id }}">Вернуться за стол</a>
                         @endif
 
-                        Количество игроков -> {{ $value-> players_quantity}}
+                        Количество игроков за столом -> {{ \DB::table('tbl_battle_members')->select('battle_id')->where('battle_id', '=', $value->id)->count()}}
                     </p>
                 @endforeach
 

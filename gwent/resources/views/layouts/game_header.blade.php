@@ -53,7 +53,6 @@ $user = Auth::user();
 
     <script type="text/javascript" src="{{ URL::asset('js/scenario.js') }}"></script>
     <script type="text/javascript" src="{{ URL::asset('js/game.js') }}"></script>
-    <script type="text/javascript" src="{{ URL::asset('js/cron_imitator.js') }}"></script>
     <!-- endbuild -->
 
 <!-- <script src="@{{ URL::asset('js/validate_script.js') }}"></script>-->
@@ -72,13 +71,15 @@ $user = Auth::user();
 
 <body>
 <div class="hidden-block">
-    <!-- Окно покупки карт/волшебства -->
-    <div class="market-buy-popup" id="buyingCardOrmagic">
-        <div class="close-popup">X</div>
+    <!-- Окно выбора карт -->
+    <div class="market-buy-popup" id="selecthandCardsPopup">
+        <!--<div class="close-popup">X</div>-->
         <input name="_token" type="hidden" value="{{ csrf_token() }}">
 
         <div class="popup-content-wrap">
+            <ul class="can-i-use-useless cfix" id="userSelectCardsToHand">
 
+            </ul>
         </div>
     </div>
 </div>

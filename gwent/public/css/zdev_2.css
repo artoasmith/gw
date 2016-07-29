@@ -553,7 +553,7 @@ body {
   min-width: 1170px; }
 
 .convert-left-info {
-  width: 300px;
+  width: 299px;
   display: inline-block; }
   .convert-left-info .cards-bet {
     padding: 10px 0 10px 25px;
@@ -998,7 +998,7 @@ body {
           width: 14px; }
 
 .convert-right-info {
-  width: 313px;
+  width: 311px;
   display: inline-block;
   height: 300px;
   vertical-align: top; }

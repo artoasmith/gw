@@ -18,8 +18,10 @@ class CreateBattleMembers extends Migration
             $table->integer('battle_id')->unsigned();
             $table->string('user_deck_race');
             $table->text('user_deck');
+            $table->text('user_hand');
             $table->text('magic_effects');
             $table->integer('user_energy')->unsigned();
+            $table->tinyInteger('user_ready')->unsigned();
             $table->timestamps();
         });
     }

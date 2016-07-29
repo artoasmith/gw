@@ -195,15 +195,6 @@ Route::put('/game_start', [
 ]);
 
 
-
-
-
-//ИМИТАЦИЯ CRON
-Route::get('/cron_imitator', [
-    'uses'  => 'Site\SiteFunctionsController@cronTask'
-]);
-
-
 //Admin
 
 //Authorisation
