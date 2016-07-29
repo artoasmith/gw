@@ -52,7 +52,6 @@ $user = Auth::user();
 
 
     <script type="text/javascript" src="{{ URL::asset('js/scenario.js') }}"></script>
-    <script type="text/javascript" src="{{ URL::asset('js/cron_imitator.js') }}"></script>
     <!-- endbuild -->
 
     <!-- <script src="@{{ URL::asset('js/validate_script.js') }}"></script>-->

@@ -47,12 +47,14 @@ class BattleSocket extends BaseSocket
             $this->battles[$this->resoursesInBattle[$conn->resourceId]]->detach($conn);
 
             $userInfo = false;
+
             if(isset($this->resoursesInUsers[$conn->resourceId])) {
                 $userInfo = $this->resoursesInUsers[$conn->resourceId];
                 if(isset($this->userBattle[$userInfo->id.'_'.$this->resoursesInBattle[$conn->resourceId]]))
                     unset($this->userBattle[$userInfo->id.'_'.$this->resoursesInBattle[$conn->resourceId]]);
                 unset($this->resoursesInUsers[$conn->resourceId]);
             }
+            
             echo count($this->battles[$this->resoursesInBattle[$conn->resourceId]]).' in battle '.$this->resoursesInBattle[$conn->resourceId]."\n";
 
             if($userInfo && count($this->battles[$this->resoursesInBattle[$conn->resourceId]])>0){

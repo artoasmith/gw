@@ -283,7 +283,7 @@ class SiteFunctionsController extends BaseController
 	protected function getUserData(Request $request){
 		$data = $request->all();
 
-		if(empty($data)){
+		if(empty($data['login'])){
 			//если просматриваем свои данные
 			$user = Auth::user();
 			$login = $user['login'];
@@ -309,7 +309,7 @@ class SiteFunctionsController extends BaseController
 				'energy'    => $user_data[0] -> user_energy,
 			];
 
-			if(empty($data)) {
+			if(empty($data['login'])) {
 				foreach ($etc_data as $key => $value) {
 					$result[$value->meta_key] = $value->meta_value;
 				}
@@ -802,29 +802,4 @@ class SiteFunctionsController extends BaseController
         }
     }
 
-
-
-
-
-
-	//Задача для cron
-	protected function cronTask(){
-        //Если пользователь не был активен 3 минуты - записываем в БД то, что он не активен
-		$users = \DB::table('users')->select('id','user_online','updated_at')->where('user_online', '=', '1')->get();
-		foreach($users as $user){
-			$time_diff = time() - strtotime($user->updated_at);
-			if($time_diff > 180){
-				User::where('id', '=', $user->id)->update(['user_online' => 0]);
-			}
-		}
-
-		//Если стол не был активен в течении получаса
-        $battles = \DB::table('tbl_battles')->select('id','updated_at')->get();
-        foreach ($battles as $key => $value) {
-            if(strtotime($value -> updated_at) < (time()-60*60*24*90) ){
-                $battle = BattleModel::find($value->id);
-                $battle -> delete();
-            }
-        }
-	}
 }

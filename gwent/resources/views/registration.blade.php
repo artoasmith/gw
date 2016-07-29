@@ -87,13 +87,15 @@ $errors = $errors->all();
 
                                                             @if($key->race_type == 'race')
 
-                                                                @if( (isset($_GET['fraction'])) && ($_GET['fraction'] == $key->slug) )
-                                                                    {{ $selected = 'selected="selected"' }}
-                                                                @else
-                                                                    {{ $selected = '' }}
-                                                                @endif
+                                                                <?php
+                                                                if( (isset($_GET['fraction'])) && ($_GET['fraction'] == $key->slug) ){
+                                                                    $selected = 'selected="selected"';
+                                                                }else{
+                                                                    $selected = '';
+                                                                }
+                                                                ?>
 
-                                                                <option value="{{ $key->slug }}" {{ $selected }}>{{ $key->title }}</option>
+                                                                <option value="{{ $key->slug }}" {!! $selected !!}>{{ $key->title }}</option>
 
                                                             @endif
 
