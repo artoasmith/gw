@@ -24,7 +24,6 @@ foreach($r_user_online as $key => $user){
 
 $q_battle = $pdo -> query("SELECT id, created_at, fight_status FROM tbl_battles WHERE fight_status < 2");
 $r_battle = $q_battle -> fetchAll(PDO::FETCH_ASSOC);
-var_dump($r_battle);
 
 foreach($r_battle as $key => $battle){
     if(strtotime($battle['created_at']) < (time() - 60*30)){
@@ -33,8 +32,8 @@ foreach($r_battle as $key => $battle){
         $r_battle_members= $q_battle_members ->fetchAll(PDO::FETCH_ASSOC);
 
         $playing_status = 0;
-        foreach ($_battle_members as $i => $user){
-            $q_user  = $pdo -> prepare("UPDATE users SET user_user_is_playing = :playing_status WHERE id = :id");
+        foreach ($r_battle_members as $i => $user){
+            $q_user  = $pdo -> prepare("UPDATE users SET user_is_playing = :playing_status WHERE id = :id");
             $q_user -> bindParam(':id', $user['user_id']);
             $q_user -> bindParam(':playing_status', $playing_status);
             $q_user -> execute();

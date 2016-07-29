@@ -208,6 +208,7 @@ class SiteGameController extends BaseController
         $users_result_data = [];
 
         foreach($battle_members as $key => $value){
+
             $user = \DB::table('users')->select('id','login','img_url')->where('id', '=', $value -> user_id)->get();// Пользователи участвующие в битве
 
             $current_user_deck_race = \DB::table('tbl_race')->select('title', 'slug')->where('slug','=', $value -> user_deck_race)->get();
@@ -244,15 +245,18 @@ class SiteGameController extends BaseController
                 $deck_card_count = count($deck);
             }
 
-            if($current_user['id'] != $user[0]->id){
-                $deck = [];
-                $hand = [];
-            }
             if($value -> user_deck_race == 'highlander'){
                 $available_to_change = 4;
             }else{
                 $available_to_change = 2;
             }
+
+            if($current_user['id'] != $user[0]->id){
+                $deck = [];
+                $hand = [];
+                $available_to_change = 0;
+            }
+
 
             $user_magic_effect_data = [];
             $magic_effects = unserialize($value->magic_effects);

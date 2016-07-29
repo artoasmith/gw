@@ -1569,6 +1569,16 @@
   min-height: 40px;
   z-index: 1000;
 }
+.hand-select-popup{
+  background-color: #fff;
+  display: none;
+  position: fixed;
+  width: 80%;
+  left: 10%;
+  top: 15%;
+  min-height: 40px;
+  z-index: 1000;
+}
 .market-buy-popup .close-popup{
     position: absolute;
     cursor: pointer;
@@ -1580,7 +1590,7 @@
     text-align: center;
     z-index: 100;
 }
-.market-buy-popup .popup-content-wrap{
+.market-buy-popup .popup-content-wrap, .hand-select-popup .popup-content-wrap{
     font-size: 24px;
     padding: 20px 40px;
     text-align: center;
@@ -1628,15 +1638,43 @@
 .market-buy-popup .popup-energy-exchanges-wrap>div{position: relative;}
 
 
-ul.magic-effects-wrap{
-  width: 100%;
+.hand-select-popup .popup-content-wrap .button-wrap{
+  text-align: center;
+  position: relative;
 }
 
-ul.magic-effects-wrap li{
-  display: inline;
+.hand-select-popup .popup-content-wrap .cards-select-message-wrap{
+  position: relative;
+  margin: 10px;
 }
+.hand-select-popup .popup-content-wrap .button-wrap input[type=button]{
+  font-size: 18px;
+  padding: 5px 10px;
+  position: relative;
+  margin-top: 10px;
+}
+
+ul.magic-effects-wrap{width: 100%;}
+ul.magic-effects-wrap li{display: inline;}
 ul.magic-effects-wrap li img{
   max-height: 90px;
   max-width: 90px;
   cursor: pointer;
+}
+
+ul.cards-select-wrap{
+  width: 100%;
+  background-color: #234343;
+}
+
+ul.cards-select-wrap li{float: left;}
+ul.cards-select-wrap li img{
+  opacity: 0.7;
+  cursor: pointer;
+}
+ul.cards-select-wrap li img:hover{opacity: 1}
+ul.cards-select-wrap li img.disactive{
+  -webkit-filter: grayscale(80%);
+  filter: grayscale(100%);
+  opacity: 1;
 }

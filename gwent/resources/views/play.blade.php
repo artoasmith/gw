@@ -8,6 +8,16 @@
 	@endif
 
 	<?php
+
+    /*
+     * Для готовой модели
+     * Нужно зашифровать все поля:
+     *      $players['enemy'][0]['user_nickname']
+     *      $card[id]
+     *      $magic_effect[id]
+    */
+
+
 	$user = Auth::user();
 
 	$battle_members = \App\BattleMembersModel::where('battle_id','=',$battle_data->id)->get();
@@ -681,27 +691,54 @@
         };
 
 
-        //Пользователь
+        //Формирование данных пользователя
         function buildPlayRoomView(userData){
 
+            //очищение списков поп-апа выбора карт
             $('#selecthandCardsPopup #userSelectCardsToHand').empty();
+            $('#selecthandCardsPopup .cards-select-wrap').empty();
 
+            //Читаем данніе пользователя
             for(var i=0; i<userData.length; i++){
+                //Если присоединился противник
                 if( $('.convert-right-info #'+userData[i]['login']).length <1){
+                    //Установить никнейм оппонета
                     $('.convert-right-info .oponent-describer').attr('id',userData[i]['login']);
+                    //Установить логин оппонента
                     $('.field-battle .cards-bet #card-give-more-oponent').attr('data-user',userData[i]['login']);
+                    //Установить логин оппонента в его поле битвы
                     $('.convert-battle-front .oponent').attr('data-user',userData[i]['login']);
                 }
 
+                //Создать описание пользователей
                 createUserDescriber(userData[i]['login'], userData[i]['img_url'], userData[i]['deck_title']);
 
+                //Количество карт в колоде
                 $('.convert-left-info .cards-bet ul[data-user='+userData[i]['login']+'] .deck .counter').text(userData[i]['deck_count']);
 
+                //Если у пользователя есть магические способности
                 if(userData[i]['magic'].length > 0){
+                    //Вывод текущей магии пользователей
                     createUserMagicFieldCards(userData[i]['login'], userData[i]['magic']);
                 }
-                //console.log(userData[i]['magic']);
+
+                if(userData[i]['hand'].length > 0){
+                    //Вывод карт руки и колоды
+                    createUserCardSelect(userData[i]['hand'], userData[i]['deck'], userData[i]['can_change_cards']);
+
+                    //Появление поп-апа выбора карт руки
+                    $('#selecthandCardsPopup').show(300, function() {
+                        changeDeckCardsWidth('#handCards');
+                        changeDeckCardsWidth('#deckCards');
+                    });
+                }
             }
+
+            //Нажатие на карту в руке при выборе карт руки
+            $('#selecthandCardsPopup #handCards li img').click(function(e){
+                e.preventDefault();
+                $(this).toggleClass('disactive');
+            });
         }
 
 
@@ -713,17 +750,52 @@
             $('.convert-right-info #'+userLogin+' .stash-about .naming-oponent .rasa').text(userRace);
         }
 
+
         function createUserMagicFieldCards(userLogin, magicData){
             for(var i=0; i<magicData.length; i++){
                 $('.convert-right-info #' + userLogin).parent().children('.useless-card').children().children('.magic-effects-wrap').append(createMagicEffectView(magicData[i]));
             }
         }
 
+
         function createMagicEffectView(magicData){
             return  '<li>' +
                         '<img src="/img/card_images/' + magicData['img_url']+'" alt="' + magicData['title'] +'" title="' + magicData['title'] +'">'+
                     '</li>';
         }
+
+
+        function createUserCardSelect(handDeck, userDeck, cardsToSelectQuantity){
+            $('#selecthandCardsPopup .cards-select-message-wrap span').text(cardsToSelectQuantity);
+
+            for(var i=0; i<handDeck.length; i++){
+                $('#selecthandCardsPopup #handCards').append(createUserCardToSelectView(handDeck[i]));
+            }
+
+            for(var i=0; i<userDeck.length; i++){
+                $('#selecthandCardsPopup #deckCards').append(createUserCardToSelectView(userDeck[i]));
+            }
+        }
+
+
+        function changeDeckCardsWidth(handler){
+            var cardsSelectBlockWidth = $('#selecthandCardsPopup '+handler).width();
+
+            var cardsCount = $('#selecthandCardsPopup '+handler+' li').length;
+
+            var singleCardBlockLength = Math.floor(cardsSelectBlockWidth/cardsCount);
+            var cardsSelectBlockMargin = Math.floor((cardsSelectBlockWidth - singleCardBlockLength*cardsCount)/2 - 0.5);
+            $('#selecthandCardsPopup '+handler+' li').width(singleCardBlockLength);
+            $('#selecthandCardsPopup '+handler).css({'padding-left': cardsSelectBlockMargin+'px', 'padding-right': cardsSelectBlockMargin+'px'})
+        }
+
+
+        function createUserCardToSelectView(card){
+            return  '<li>' +
+                        '<img src="/img/card_images/' + card['img_url']+'" alt="' + card['title'] +'" title="' + card['title'] +'">' +
+                    '</li>';
+        }
+
 
         function showPopup(ms){
             $('#buyingCardOrmagic .popup-content-wrap').html('<p>' + ms + '</p>');

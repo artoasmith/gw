@@ -71,15 +71,36 @@ $user = Auth::user();
 
 <body>
 <div class="hidden-block">
-    <!-- Окно выбора карт -->
-    <div class="market-buy-popup" id="selecthandCardsPopup">
-        <!--<div class="close-popup">X</div>-->
+
+    <div class="market-buy-popup">
+        <div class="close-popup">X</div>
         <input name="_token" type="hidden" value="{{ csrf_token() }}">
 
         <div class="popup-content-wrap">
-            <ul class="can-i-use-useless cfix" id="userSelectCardsToHand">
+
+        </div>
+    </div>
+
+    <!-- Окно выбора карт -->
+    <div class="hand-select-popup" id="selecthandCardsPopup">
+        <div class="popup-content-wrap">
+            <div class="cards-select-message-wrap">Вы можете заменить <span></span> карты</div>
+
+            <div class="cards-select-message-wrap">Карты Руки</div>
+            <ul class="cards-select-wrap cfix" id="handCards">
 
             </ul>
+
+            <div class="cards-select-message-wrap">&uArr;&dArr;</div>
+
+            <div class="cards-select-message-wrap">Карты Колоды</div>
+            <ul class="cards-select-wrap cfix" id="deckCards">
+
+            </ul>
+
+            <div class="button-wrap">
+                <input name="accpetHandDeck" type="button" value="Готово">
+            </div>
         </div>
     </div>
 </div>
