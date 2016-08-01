@@ -23,6 +23,11 @@ class UserAuthController extends BaseController
 
         if(1 == $user_isset){
             $user = User::where('login', '=', $login )->where('password', '=', $password)->get();
+
+            if($user[0]->is_activated == 0){
+                return redirect(route('user-home'))->withErrors(['Вы не подтвердили регистрацию по почте.']);
+            }
+
             $auth = Auth::loginUsingId($user[0]->id);
             if(!$auth){
                 return redirect(route('user-home'))->withErrors(['Ошибка авторизации']);
@@ -88,7 +93,7 @@ class UserAuthController extends BaseController
         //Если такого пользователя не существует
         if(0 == $user){
             //Создаем пользователя и заносим его в таблицу с основными данными users
-            $user = User::create([
+            $new_user = User::create([
                 'login'         => $login,
                 'email'         => $email,
                 'password'      => $password,
@@ -101,7 +106,7 @@ class UserAuthController extends BaseController
             ]);
 
             //Если пользователь создан успешно
-            if($user !== false){
+            if($new_user !== false){
 
                 //Базовые значения ресурсов пользователя
                 $base_fields = EtcDataModel::where('label_data', '=', 'base_user_fields')->get();
@@ -126,7 +131,7 @@ class UserAuthController extends BaseController
                 }
                 //Вносим в tbl_user_data дополнительные данные пользователя
                 $result = UserAdditionalDataModel::create([
-                    'user_id'           => $user->id,
+                    'user_id'           => $new_user->id,
                     'login'             => $login,
                     'email'             => $email,
                     'user_base_race'    => $data['fraction_select'],
@@ -141,19 +146,12 @@ class UserAuthController extends BaseController
                 ]);
 
                 if($result !== false){
-                    \Mail::send('email.welcome', ['code' => $activation_code], function($u) use ($user){
+                    \Mail::send('email.welcome', ['code' => $activation_code], function($u) use ($new_user){
                         $u -> from('dragon_heart@xmail.com');
-                        $u -> to($user->email);
-                        $ud -> subject('Подтвердите регистрацию');
+                        $u -> to($new_user->email);
+                        $u -> subject('Подтвердите регистрацию');
                     });
-
-
-                }
-
-                if(!$auth){
-                    return redirect(route('user-home'))->withErrors(['Ошибка Авторизацции.']);
-                }else{
-                    return redirect(route('user-home'))->withErrors(['Регистрация почти завершена.<br>Вам необходимо подтвердить e-mail,<br>указанный при регистрации, перейдя по ссылке в письме.']);
+                    return redirect(route('user-home'))->withErrors(['Регистрация почти завершена.<br>Вам необходимо подтвердить e-mail, указанный при регистрации, перейдя по ссылке в письме.']);
                 }
             }
         }else{
@@ -233,6 +231,34 @@ class UserAuthController extends BaseController
 
             }
 
+        }
+    }
+
+
+    protected function confirmAccessToken($token){
+        $token = strip_tags(htmlspecialchars(trim($token)));
+        $user = \DB::table('users')->select('id','is_activated','activation_code')->where('is_activated', '=', 0)->where('activation_code', '=', $token)->get();
+
+        if($user){
+
+            if($user[0]->is_activated == 1){
+                return redirect(route('user-home')->withErrors(['Вы уже активировали данный аккаунт.']));
+            }
+
+            $uset_to_activate = User::find($user[0] -> id);
+            $uset_to_activate -> is_activated = 1;
+            $uset_to_activate -> save();
+
+            $auth = Auth::loginUsingId($user[0]->id);
+            if(!$auth){
+                return redirect(route('user-home'))->withErrors(['Ошибка авторизации']);
+            }else{
+                User::where('id', '=', $user[0]->id)->update(['user_online' => 1]);
+                return redirect(route('user-home'));
+            }
+
+        }else{
+            return redirect(route('user-home'))->withErrors(['Произошел сбой в подтверждении регистрации. Обратитесь в тех. поддержку.']);
         }
     }
 }
