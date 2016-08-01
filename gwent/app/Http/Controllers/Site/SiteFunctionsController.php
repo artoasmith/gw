@@ -774,10 +774,6 @@ class SiteFunctionsController extends BaseController
                 }
             }
 
-            if( ($warrior_card_quantity + $special_card_quantity) > $deck_rules['maxCardQuantity']){
-                $error .= '<p>Количество карт в колоде должно быть не больше '.$deck_rules['maxCardQuantity'].' штук</p>';
-            }
-
             if($warrior_card_quantity < $deck_rules['minWarriorQuantity']) {
                 $error .= '<p>Количество карт воинов в  колоде должно быть не меньше '.$deck_rules['minWarriorQuantity'].' штук</p>';
             }

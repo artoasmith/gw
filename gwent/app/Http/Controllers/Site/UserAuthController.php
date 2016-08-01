@@ -84,23 +84,24 @@ class UserAuthController extends BaseController
             return redirect(route('user-registration'))->withErrors(['Логин пользователя содержит<br>запрещеные символы.<br>Разрешено использовать латинские буквы,<br>цифры, символы "_" и "-"']);
         }
 
+        $activation_code = str_random(32);
         //Если такого пользователя не существует
         if(0 == $user){
             //Создаем пользователя и заносим его в таблицу с основными данными users
-            $result = User::create([
-                'login'     => $login,
-                'email'     => $email,
-                'password'  => $password,
-                'is_banned' => '0',
-                'ban_time'  => '0000-00-00 00:00:00',
-                'user_role' => '0',
-                'user_online' => '1'
+            $user = User::create([
+                'login'         => $login,
+                'email'         => $email,
+                'password'      => $password,
+                'is_banned'     => '0',
+                'ban_time'      => '0000-00-00 00:00:00',
+                'user_role'     => '0',
+                'user_online'   => '1',
+                'is_activated'  => 0,
+                'activation_code' => $activation_code
             ]);
 
             //Если пользователь создан успешно
-            if($result !== false){
-                //Проводим логинизацию
-                $auth = Auth::loginUsingId($result->id);
+            if($user !== false){
 
                 //Базовые значения ресурсов пользователя
                 $base_fields = EtcDataModel::where('label_data', '=', 'base_user_fields')->get();
@@ -123,10 +124,9 @@ class UserAuthController extends BaseController
                 foreach($race_deck as $key => $value){
                     $available_deck[$value->id] = $value -> q;
                 }
-
                 //Вносим в tbl_user_data дополнительные данные пользователя
                 $result = UserAdditionalDataModel::create([
-                    'user_id'           => $result->id,
+                    'user_id'           => $user->id,
                     'login'             => $login,
                     'email'             => $email,
                     'user_base_race'    => $data['fraction_select'],
@@ -140,10 +140,20 @@ class UserAuthController extends BaseController
                     'user_rating'       => '0'
                 ]);
 
+                if($result !== false){
+                    \Mail::send('email.welcome', ['code' => $activation_code], function($u) use ($user){
+                        $u -> from('dragon_heart@xmail.com');
+                        $u -> to($user->email);
+                        $ud -> subject('Подтвердите регистрацию');
+                    });
+
+
+                }
+
                 if(!$auth){
                     return redirect(route('user-home'))->withErrors(['Ошибка Авторизацции.']);
                 }else{
-                    return redirect(route('user-home'));
+                    return redirect(route('user-home'))->withErrors(['Регистрация почти завершена.<br>Вам необходимо подтвердить e-mail,<br>указанный при регистрации, перейдя по ссылке в письме.']);
                 }
             }
         }else{

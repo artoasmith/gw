@@ -281,12 +281,14 @@ function underDragCardFix() {
 
 //пересчет коллоды
 function recalculateDeck(){
+	var cardsCount = 0;
 	var warriorsQuantity = 0;   //Количество воинов
 	var specialQuantity = 0;    //Количество спец карт
 	var deckWeight = 0;         //Вес колоды
 	var league = '';            //Лига колоды (уровень)
 	var leaderQuantity = 0;     //Количество карт лидеров
 	$('#sortableOne .content-card-item ').each(function(){
+		cardsCount++;
         //Перечет карт воинов и спец карт
 		if($(this).children('.content-card-item-main').attr('data-type') != 'special'){
 			warriorsQuantity++;
@@ -308,6 +310,7 @@ function recalculateDeck(){
 		}
 	}
 
+	$('.content-card-center-block .content-card-center-description-block .deck-card-sum').text(cardsCount);
 	$('.content-card-center-block .deck-warriors .current-value').text(warriorsQuantity);
 	$('.content-card-center-block .deck-special .current-value').text(specialQuantity);
 	$('.content-card-center-block .deck-cards-power').text(deckWeight);

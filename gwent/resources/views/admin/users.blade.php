@@ -20,22 +20,22 @@
                         <th>Изображение</th>
                         <th>Логин</th>
                         <th>Email</th>
-                        <?php /*<th>Сила карты</th>
-                        <th>Вес карты</th>
-                        <th>Лидер</th>
-                        <th>Находится в группах</th>
-                        <th>Действия</th>
-                        <th>Цена Общая</th>
-                        <th>Цена "Только Золото"</th>*/?>
+                        <th>Золото</th>
+                        <th>Серебро</th>
+                        <th>Энергия</th>
                         <th>Создан</th>
                         <th>Активность</th>
                         <th>Бан</th>
+                        <th></th>
                     </tr>
                     </thead>
                     <tbody>
                     @foreach($users as $user)
+                        <?php
+                        $user_data = \DB::table('tbl_user_data')->select('user_id', 'user_gold', 'user_silver', 'user_energy')->where('user_id', '=', $user->id)->get();
+                        ?>
                         <tr>
-                            <td><a class="list-icon" href="{{ URL::asset(sprintf('admin/users/view/%d',$user->id)) }}"></a></td>
+                            <td><a class="edit" href="{{ URL::asset(sprintf('admin/users/view/%d',$user->id)) }}"></a></td>
                             <td>
                                 {{ Form::open(['route' => 'admin-users-delete', 'method' => 'POST']) }}
                                 {{ Form::hidden('_method', 'DELETE') }}
@@ -53,6 +53,9 @@
                             </td>
                             <td>{{ $user->login }}</td>
                             <td>{{ $user->email }}</td>
+                            <td>{{ $user_data[0]->user_gold }}</td>
+                            <td>{{ $user_data[0]->user_silver }}</td>
+                            <td>{{ $user_data[0]->user_energy }}</td>
                             <td>{{ date('d/m/Y  H:i', strtotime($user->created_at)) }}</td>
                             <td>{{ date('d/m/Y  H:i', strtotime($user->updated_at)) }}</td>
                             @if($user->is_banned)
@@ -61,9 +64,16 @@
                                 </td>
                             @else
                                 <td  title="Заблокировать" onclick="needban(true,{{$user->id}});">
-                                    {!! sprintf('<img src="%s" alt="" style="max-width: 25px; max-height: 25px;">',URL::asset('/img/ban.png')) !!}
+                                    Забанить
                                 </td>
                             @endif
+                            <td>
+                                @if($user->user_role)
+                                    Администратор
+                                @else
+                                    Пользователь
+                                @endif
+                            </td>
                         </tr>
                     @endforeach
                     </tbody>

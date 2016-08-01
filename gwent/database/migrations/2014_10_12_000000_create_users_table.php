@@ -32,6 +32,10 @@ class CreateUsersTable extends Migration
             $table->tinyInteger('user_online')->unsigned();
             $table->tinyInteger('user_is_playing')->unsigned();
             $table->string('user_current_deck', 16);
+
+            $table->tinyInteger('is_activated')->unsigned();
+            $table->text('activation_code');
+
             $table->rememberToken();
             $table->timestamps();
         });

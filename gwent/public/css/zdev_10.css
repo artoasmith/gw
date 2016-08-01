@@ -1667,14 +1667,29 @@ ul.cards-select-wrap{
   background-color: #234343;
 }
 
-ul.cards-select-wrap li{float: left;}
+ul.cards-select-wrap li{float: left; position: relative;}
 ul.cards-select-wrap li img{
   opacity: 0.7;
   cursor: pointer;
+  position: relative;
 }
 ul.cards-select-wrap li img:hover{opacity: 1}
 ul.cards-select-wrap li img.disactive{
   -webkit-filter: grayscale(80%);
   filter: grayscale(100%);
   opacity: 1;
+}
+
+ul.cards-select-wrap li .card-strength-wrap{
+  background: url('/images/logo-label-card.png') no-repeat;
+  position: absolute;
+  background-size: 30px 37px;
+  font-size: 12px;
+  font-family: "indisplay",sans-serif;
+  padding-top: 8px;
+  height: 37px;
+  width: 27px;
+  left: 10px;
+  text-align: center;
+  top: 0;
 }

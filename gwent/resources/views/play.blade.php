@@ -673,7 +673,9 @@
                                     console.log(data);
                                     if(data['message'] == 'success'){
                                         window.usersData = data['userData'];
+                                        //Формирование данных пользователей и окна выбора карт
                                         buildPlayRoomView(window.usersData);
+
                                     }
                                 }
                             });
@@ -735,6 +737,13 @@
                 }
             }
 
+
+            userChangeDeck();
+
+        }
+
+
+        function userChangeDeck(){
             //Нажатие на карту в руке при выборе карт руки
             $('#selecthandCardsPopup #handCards li img').click(function(e){
                 e.preventDefault();
@@ -765,6 +774,13 @@
                     '</li>';
         }
 
+        function createUserCardToSelectView(card){
+            return  '<li>' +
+                        '<img src="/img/card_images/' + card['img_url']+'" alt="' + card['title'] +'" title="' + card['title'] +'">' +
+                        '<div class="card-strength-wrap">' + card['strength'] + '</div>' +
+                    '</li>';
+        }
+
 
         function createUserCardSelect(handDeck, userDeck, cardsToSelectQuantity){
             $('#selecthandCardsPopup .cards-select-message-wrap span').text(cardsToSelectQuantity);
@@ -787,15 +803,11 @@
             var singleCardBlockLength = Math.floor(cardsSelectBlockWidth/cardsCount);
             var cardsSelectBlockMargin = Math.floor((cardsSelectBlockWidth - singleCardBlockLength*cardsCount)/2 - 0.5);
             $('#selecthandCardsPopup '+handler+' li').width(singleCardBlockLength);
-            $('#selecthandCardsPopup '+handler).css({'padding-left': cardsSelectBlockMargin+'px', 'padding-right': cardsSelectBlockMargin+'px'})
+            $('#selecthandCardsPopup '+handler).css({'padding-left': cardsSelectBlockMargin+'px', 'padding-right': cardsSelectBlockMargin+'px'});
         }
 
 
-        function createUserCardToSelectView(card){
-            return  '<li>' +
-                        '<img src="/img/card_images/' + card['img_url']+'" alt="' + card['title'] +'" title="' + card['title'] +'">' +
-                    '</li>';
-        }
+
 
 
         function showPopup(ms){

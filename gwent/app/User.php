@@ -14,7 +14,7 @@ class User extends Authenticatable
     protected $fillable = [
         'login', 'email', 'password', 'nickname', 'name', 'birth_date', 'user_gender',
         'address', 'img_url', 'is_banned', 'ban_time', 'user_role', 'user_online',
-        'user_is_playing', 'user_current_deck'
+        'user_is_playing', 'user_current_deck', 'is_activated', 'activation_code'
     ];
 
     /**

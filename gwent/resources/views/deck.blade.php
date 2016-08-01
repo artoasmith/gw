@@ -82,7 +82,7 @@ $errors = $errors->all();
                                             </div>
                                             <div class="content-card-center-description-block">
                                                 <div class="content-card-center-description-key">Всего карт в колоде</div>
-                                                <div class="content-card-center-description-value deck-card-sum"><?= $deck['maxCardQuantity'] ?></div>
+                                                <div class="content-card-center-description-value deck-card-sum"></div>
                                             </div>
                                             <div class="content-card-center-description-block">
                                                 <div class="content-card-center-description-key">Карты воинов</div>

@@ -53,11 +53,20 @@ class SiteGameController extends BaseController
         return ['deck' => $user_deck, 'magic_effects' => $user_magic];
     }
 
-    public static function updateBattleMembers($user_id, $battle_id, $user_deck_race, $user_deck, $user_magic, $user_energy){
+
+
+    //Изменение данных пользовотеля об участии в столах
+    protected static function updateBattleMembers($user_id, $battle_id, $user_deck_race, $user_deck, $user_magic, $user_energy){
+        //Ищем пользователя в таблице tbl_battle_memebers
         $user_is_battle_member = BattleMembersModel::where('user_id', '=', $user_id)->get();
 
+        //Настройки колоды
+        $maxCardDeck = \DB::table('tbl_etc_data')->select('meta_key', 'meta_value')->where('meta_key', '=', 'maxCardQuantity')->get();
+
+        //Колода пользователя
         $user_deck = unserialize($user_deck);
 
+        //Создание массива всех карт в колоде по отдельности (без указания колличества)
         $real_card_array = [];
         foreach ($user_deck as $card_id => $cards_quantity){
             for($i = 0; $i<$cards_quantity; $i++){
@@ -65,25 +74,51 @@ class SiteGameController extends BaseController
             }
         }
 
-        $user_hand = [];
+
         $deck_card_count = count($real_card_array);
-
-        while(count($user_hand) != 11){
+        //Создание масива игральной колоды
+        $user_deck = [];
+        while(count($user_deck) != $maxCardDeck[0]->meta_value){
+            //Случайный индекс карты колоды
             $rand_item = rand(0, $deck_card_count-1);
-            $user_hand[] = $real_card_array[$rand_item];
-
+            //Перенос карты в колоду
+            $user_deck[] = $real_card_array[$rand_item];
+            //Убираем данную карту из массива всех карт
             unset($real_card_array[$rand_item]);
 
             $real_card_array = array_values($real_card_array);
             $deck_card_count = count($real_card_array);
         }
 
+        //Настройки колоды "Руки"
+        $maxHandCardQuantity = \DB::table('tbl_etc_data')->select('meta_key', 'meta_value')->where('meta_key', '=', 'maxHandCardQuantity')->get();
+
+        //Карты руки пользователя
+        $user_hand = [];
+        //Количество карт в колоде
+        $deck_card_count = count($user_deck);
+
+        //Создание массива карт руки (случайный выбор)
+        while(count($user_hand) != $maxHandCardQuantity[0] -> meta_value){
+            //Случайный индекс карты колоды
+            $rand_item = rand(0, $deck_card_count-1);
+            //Перенос карты в колоду руки
+            $user_hand[] = $user_deck[$rand_item];
+
+            //Убираем данную карту из колоды
+            unset($user_deck[$rand_item]);
+
+            //Пересчет колоды
+            $user_deck = array_values($user_deck);
+            $deck_card_count = count($user_deck);
+        }
+        //Если пользователя не сучествует в табице tbl_battle_members
         if( 1 > count($user_is_battle_member) ){
             $result = BattleMembersModel::create([
                 'user_id'       => $user_id,
                 'battle_id'     => $battle_id,
                 'user_deck_race'=> $user_deck_race,
-                'user_deck'     => serialize($real_card_array),
+                'user_deck'     => serialize($user_deck),
                 'user_hand'     => serialize($user_hand),
                 'magic_effects' => $user_magic,
                 'user_energy'   => $user_energy,
@@ -103,14 +138,19 @@ class SiteGameController extends BaseController
         return $result;
     }
 
+
+    //Создание стола
     protected function createTable(Request $request){
         SiteFunctionsController::updateConnention();
         $data = $request->all();
 
+        //Проверка: количество играков >= 2 и <= 8; количество играков парное
         if (($data['players'] % 2 == 0) && ($data['players'] <= 8) && ($data['players'] >= 2)) {
             $user = Auth::user();
 
+            //Силиа колоды
             $deck_weight = base64_decode($data['deck_weight']);
+            //Лига
             $league = base64_decode($data['league']);
 
             //Вторичные данные пользователя
@@ -132,6 +172,7 @@ class SiteGameController extends BaseController
                 return json_encode(['message' => 'Не удалось создать стол']);
             }
 
+            //Создание данных об участниках битвы
             $battle_members = self::updateBattleMembers(
                 $user['id'],
                 $result->id,
@@ -147,6 +188,7 @@ class SiteGameController extends BaseController
                 return json_encode(['message' => 'Не удалось настройки стола']);
             }
 
+            //Лог боя
             $battle_log_result = BattleLogModel::create([
                 'battle_id' => $result -> id,
                 'fight_log' => '<p>Стол № '.$result -> id.' создан плльзователем '.$user['login'].'(ID = '.$user['id'].') </p>'
@@ -163,11 +205,14 @@ class SiteGameController extends BaseController
         }
     }
 
+
+    //Пользователь присоединился к столу
     protected function userConnectToBattle(Request $request){
         SiteFunctionsController::updateConnention();
         $data = $request->all();
 
         $user = Auth::user();
+        //Данные о столе
         $battle_data = BattleModel::find($data['id']);
 
         if($battle_data->creator_id == $user['id']){
@@ -197,6 +242,8 @@ class SiteGameController extends BaseController
             $user_data[0]->user_energy
         );
 
+        dd($battle_members);
+
         if ($battle_members === false) {
             return json_encode(['message' => 'Не удалось подключится к столу.']);
         }
@@ -218,6 +265,7 @@ class SiteGameController extends BaseController
     }
 
 
+    //Создание колод по id карт
     protected static function buildCardDeck($deck, $result_array){
         foreach($deck as $key => $card_id){
             $card_data = \DB::table('tbl_card')->select('id','title','slug','card_type','card_strong','img_url','short_description')->where('id', '=', $card_id)->get();
@@ -258,14 +306,16 @@ class SiteGameController extends BaseController
             $deck = [];
             $hand = [];
 
+            //Если участник битвы - противник
             if($current_user['id'] != $user[0]->id){
-                $deck_card_count = count($user_current_deck);
-                $available_to_change = 0;
+                $deck_card_count = count($user_current_deck); //Колличелство карт колоды
+                $available_to_change = 0; //Количество карт, что может заменить
             }else{
-                $deck = self::buildCardDeck($user_current_deck, $deck);
-                $hand = self::buildCardDeck($user_current_hand, $hand);
-                $deck_card_count = count($deck);
+                $deck = self::buildCardDeck($user_current_deck, $deck); //Создание массива карт колоды
+                $hand = self::buildCardDeck($user_current_hand, $hand); //Создание массива карт руки
+                $deck_card_count = count($deck);//Колличелство карт колоды
 
+                //Если пользователь принадлежит к расе гномов
                 if($value -> user_deck_race == 'highlander'){
                     $available_to_change = 4;
                 }else{
@@ -273,6 +323,7 @@ class SiteGameController extends BaseController
                 }
             }
 
+            //Магические эффекты пользователя (волшебство)
             $user_magic_effect_data = [];
             $magic_effects = unserialize($value->magic_effects);
 

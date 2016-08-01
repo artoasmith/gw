@@ -297,7 +297,7 @@ $(document).ready(function(){
             type:       'PUT',
             data:       {token:token, deckType:deckType, deckArray:deckArray},
             success: function(data){
-                if(data == 'success') location = '/admin';
+                if(data == 'success') alert('Данные успешно изменены.');
             }
         })
     });

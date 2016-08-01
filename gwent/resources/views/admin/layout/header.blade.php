@@ -27,7 +27,6 @@
             </ul>
         </li>
         <li><a href="/admin/users">Пользователи</a></li>
-        <li><a href="/admin/admins">Администраторы</a></li>
         <li><a href="/admin/files">Файлы</a></li>
     </ul>
     

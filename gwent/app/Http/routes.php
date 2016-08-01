@@ -27,6 +27,10 @@ Route::post('/registration', [
     'as'    => 'user-register-me',
     'uses'  => 'Site\UserAuthController@userRegistration'
 ]);
+//Получение подтверждения регистрации
+Route::get('/confirm/{token}',[
+    'uses'  => 'Site\UserAuthController@confirmAccessToken'
+]);
 
 //Авторизация пользователя
 Route::post('/login', [
@@ -486,38 +490,10 @@ Route::group(['middleware' => 'admin'], function(){
         'as'    => 'admin-users-delete',
         'uses'  => 'Admin\AdminUsersController@deleteUser'
     ]);
-
-
-    //Роут "Администраторы"
-    Route::get('/admin/admins', [
-        'as'    => 'admin-managers',
-        'uses'  => 'Admin\AdminManagersController@index'
-    ]);
-    //Роут "Администраторы->Добавить"
-    Route::get('/admin/admins/add', [
-        'as'    => 'admin-manager-add',
-        'uses'  => 'Admin\AdminManagersController@addPage'
-    ]);
-    //Роут "Администраторы->Изменить". Входным параметром есть id БД
-    Route::get('/admin/admins/edit/{id}', [
-        'as'    => 'admin-manager-edit-it',
-        'uses'  => 'Admin\AdminManagersController@editPage'
-    ]);
-
-    //Роут "Администраторы->Добавить[Кнопка "Добавить"]"
-    Route::post('/admin/admins/add', [
-        'as'    => 'admin-manager-add',
-        'uses'  => 'Admin\AdminManagersController@addAdmin'
-    ]);
-    //Роут "Администраторы->Изменить->[Кнопка "Применить"]".
+    //Роут "Пользователи->Изменить->[Кнопка "Применить"]".
     Route::put('/admin/admins/edit_success', [
         'as'    => 'admin-manager-edit',
-        'uses'  => 'Admin\AdminManagersController@editAdmin'
-    ]);
-    //Роут "Администраторы->Удалить
-    Route::delete('/admin/admins/drop', [
-        'as'    => 'admin-manager-drop',
-        'uses'  => 'Admin\AdminManagersController@dropAdmin'
+        'uses'  => 'Admin\AdminUsersController@editAdmin'
     ]);
 
 
