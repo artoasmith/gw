@@ -670,6 +670,7 @@
                                 data:   {battle_id:resp.battleInfo['id']},
                                 success:function(data){
                                     data = JSON.parse(data);
+                                    console.log(data);
                                     if(data['message'] == 'success'){
                                         window.usersData = data['userData'];
                                         buildPlayRoomView(window.usersData);

@@ -56,13 +56,35 @@ class SiteGameController extends BaseController
     public static function updateBattleMembers($user_id, $battle_id, $user_deck_race, $user_deck, $user_magic, $user_energy){
         $user_is_battle_member = BattleMembersModel::where('user_id', '=', $user_id)->get();
 
+        $user_deck = unserialize($user_deck);
+
+        $real_card_array = [];
+        foreach ($user_deck as $card_id => $cards_quantity){
+            for($i = 0; $i<$cards_quantity; $i++){
+                $real_card_array[] = ['id' => $card_id];
+            }
+        }
+
+        $user_hand = [];
+        $deck_card_count = count($real_card_array);
+
+        while(count($user_hand) != 11){
+            $rand_item = rand(0, $deck_card_count-1);
+            $user_hand[] = $real_card_array[$rand_item];
+
+            unset($real_card_array[$rand_item]);
+
+            $real_card_array = array_values($real_card_array);
+            $deck_card_count = count($real_card_array);
+        }
+
         if( 1 > count($user_is_battle_member) ){
             $result = BattleMembersModel::create([
                 'user_id'       => $user_id,
                 'battle_id'     => $battle_id,
                 'user_deck_race'=> $user_deck_race,
-                'user_deck'     => $user_deck,
-                'user_hand'     => 'a:0:{}',
+                'user_deck'     => serialize($real_card_array),
+                'user_hand'     => serialize($user_hand),
                 'magic_effects' => $user_magic,
                 'user_energy'   => $user_energy,
                 'user_ready'    => 0
@@ -71,8 +93,8 @@ class SiteGameController extends BaseController
             $user_battle = BattleMembersModel::find($user_is_battle_member[0]->id);
             $user_battle -> battle_id       = $battle_id;
             $user_battle -> user_deck_race  = $user_deck_race;
-            $user_battle -> user_deck       = $user_deck;
-            $user_battle -> user_hand       = 'a:0:{}';
+            $user_battle -> user_deck       = serialize($real_card_array);
+            $user_battle -> user_hand       = serialize($user_hand);
             $user_battle -> magic_effects   = $user_magic;
             $user_battle -> user_energy     = $user_energy;
             $user_battle -> user_ready      = 0;
@@ -196,6 +218,23 @@ class SiteGameController extends BaseController
     }
 
 
+    protected static function buildCardDeck($deck, $result_array){
+        foreach($deck as $key => $card_id){
+            $card_data = \DB::table('tbl_card')->select('id','title','slug','card_type','card_strong','img_url','short_description')->where('id', '=', $card_id)->get();
+            $result_array[] = [
+                'id'        => $card_id,
+                'title'     => $card_data[0]->title,
+                'slug'      => $card_data[0]->slug,
+                'type'      => $card_data[0]->card_type,
+                'strength'  => $card_data[0]->card_strong,
+                'img_url'   => $card_data[0]->img_url,
+                'descript'  => $card_data[0]->short_description
+            ];
+        }
+        return $result_array;
+    }
+
+
     //Подготовка к бою закончена
     //Выдача колод пользователей
     protected function startGame(Request $request){
@@ -203,7 +242,7 @@ class SiteGameController extends BaseController
 
         $current_user = Auth::user(); //Данные текущего пользователя
 
-        $battle_members = BattleMembersModel::where('battle_id', '=', $data['battle_id'])->get(); //Данніе текущей битвы
+        $battle_members = BattleMembersModel::where('battle_id', '=', $data['battle_id'])->get(); //Данные текущей битвы
 
         $users_result_data = [];
 
@@ -211,52 +250,28 @@ class SiteGameController extends BaseController
 
             $user = \DB::table('users')->select('id','login','img_url')->where('id', '=', $value -> user_id)->get();// Пользователи участвующие в битве
 
-            $current_user_deck_race = \DB::table('tbl_race')->select('title', 'slug')->where('slug','=', $value -> user_deck_race)->get();
-            $user_current_full_deck = unserialize($value -> user_deck);
+            $current_user_deck_race = \DB::table('tbl_race')->select('title', 'slug')->where('slug','=', $value -> user_deck_race)->get(); //Название колоды
+
+            $user_current_deck = unserialize($value -> user_deck); //Карты колоды пользователя
+            $user_current_hand = unserialize($value -> user_hand); //Карты руки пользователя
 
             $deck = [];
             $hand = [];
 
-            foreach($user_current_full_deck as $card_id => $cards_quantity){
-                for($i = 0; $i<$cards_quantity; $i++){
-                    $card_data = \DB::table('tbl_card')->select('id','title','slug','card_type','card_strong','img_url','short_description')->where('id', '=', $card_id)->get();
+            if($current_user['id'] != $user[0]->id){
+                $deck_card_count = count($user_current_deck);
+                $available_to_change = 0;
+            }else{
+                $deck = self::buildCardDeck($user_current_deck, $deck);
+                $hand = self::buildCardDeck($user_current_hand, $hand);
+                $deck_card_count = count($deck);
 
-                    $deck[] = [
-                        'id'        => $card_id,
-                        'title'     => $card_data[0]->title,
-                        'slug'      => $card_data[0]->slug,
-                        'type'      => $card_data[0]->card_type,
-                        'strength'  => $card_data[0]->card_strong,
-                        'img_url'   => $card_data[0]->img_url,
-                        'descript'  => $card_data[0]->short_description
-                    ];
+                if($value -> user_deck_race == 'highlander'){
+                    $available_to_change = 4;
+                }else{
+                    $available_to_change = 2;
                 }
             }
-
-            $deck_card_count = count($deck);
-
-            while(count($hand) != 11){
-                $rand_item = rand(0, $deck_card_count-1);
-                $hand[] = $deck[$rand_item];
-
-                unset($deck[$rand_item]);
-
-                $deck = array_values($deck);
-                $deck_card_count = count($deck);
-            }
-
-            if($value -> user_deck_race == 'highlander'){
-                $available_to_change = 4;
-            }else{
-                $available_to_change = 2;
-            }
-
-            if($current_user['id'] != $user[0]->id){
-                $deck = [];
-                $hand = [];
-                $available_to_change = 0;
-            }
-
 
             $user_magic_effect_data = [];
             $magic_effects = unserialize($value->magic_effects);
