@@ -60,8 +60,7 @@ class SiteFunctionsController extends BaseController
                 return $user_plying_status;
             }
 
-            $user_data = \DB::table('tbl_user_data')->select('user_id', 'user_available_deck', 'user_cards_in_deck')->where('user_id', '=', $user['id'])->get();
-
+            $user_data = \DB::table('tbl_user_data')->select('id', 'user_id', 'user_available_deck', 'user_cards_in_deck')->where('user_id', '=', $user['id'])->get();
             //Доступные карт
             $available_deck = unserialize($user_data[0]->user_available_deck);
 
@@ -87,8 +86,9 @@ class SiteFunctionsController extends BaseController
                 $card_deck = serialize($card_deck);
                 $available_deck = serialize($decks['deck_to']);
             }
+
             //Сохраняем колоды в БД
-            $user_data_to_save = UserAdditionalDataModel::find($user['id']);
+            $user_data_to_save = UserAdditionalDataModel::find($user_data[0] -> id);
             $user_data_to_save -> user_available_deck = $available_deck;
             $user_data_to_save -> user_cards_in_deck = $card_deck;
             $user_data_to_save -> save();

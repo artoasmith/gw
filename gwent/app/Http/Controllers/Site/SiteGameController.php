@@ -242,8 +242,6 @@ class SiteGameController extends BaseController
             $user_data[0]->user_energy
         );
 
-        dd($battle_members);
-
         if ($battle_members === false) {
             return json_encode(['message' => 'Не удалось подключится к столу.']);
         }

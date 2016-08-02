@@ -647,7 +647,9 @@
             //battle info logic
             if(typeof resp.battleInfo != 'undefined'){
                 console.log('battle info logic with fight status '+resp.battleInfo.fightStatus);
-                switch (resp.battleInfo.fightStatus){
+
+                var fightStatus = parseInt(resp.battleInfo.fightStatus);
+                switch (fightStatus){
                     case 0: //логика ожидание других играков
 
                         break;

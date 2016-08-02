@@ -69,7 +69,7 @@ $errors = $errors->all();
                                                     <select>
                                                     <?php
                                                     foreach($races as $race){
-                                                        if($user['last_user_deck']){
+                                                        if($user['last_user_deck'] == $race['slug']){
                                                             $selected = 'selected="selected"';
                                                         }else{
                                                             $selected = '';
