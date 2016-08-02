@@ -67,9 +67,18 @@ $errors = $errors->all();
                                             <div class="content-card-select">
                                                 <div class="content-card-select-wrap">
                                                     <select>
-                                                        @foreach($races as $race)
-                                                            <option value="{{ $race['slug'] }}">{{ $race['title'] }}</option>
-                                                        @endforeach
+                                                    <?php
+                                                    foreach($races as $race){
+                                                        if($user['last_user_deck']){
+                                                            $selected = 'selected="selected"';
+                                                        }else{
+                                                            $selected = '';
+                                                        }
+                                                    ?>
+                                                        <option value="{{ $race['slug'] }}" {{ $selected }}>{{ $race['title'] }}</option>
+                                                    <?php
+                                                    }
+                                                    ?>
                                                     </select>
                                                 </div>
                                             </div>

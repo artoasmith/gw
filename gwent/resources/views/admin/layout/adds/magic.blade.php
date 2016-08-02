@@ -73,6 +73,10 @@
 
             <table class="edition" style="width: 100%;">
                 <tr>
+                    <td><label>Начальное количество использований:</label></td>
+                    <td><input name="usage_count" type="number" min="0"></td>
+                </tr>
+                <tr>
                     <td style="width: 10%;"><label>Затраты энергии:</label></td>
                     <td><input name="energy_cost" type="number" min="0"></td>
                 </tr>
@@ -84,6 +88,7 @@
                     <td><label>Цена серебро:</label></td>
                     <td><input name="price_silver" type="number" min="0"></td>
                 </tr>
+
             </table>
 
         </fieldset>

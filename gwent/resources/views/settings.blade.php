@@ -89,7 +89,46 @@ $errors = $errors->all();
                                         <div class="form-wrap-key">Подтверждение</div>
                                         <div class="form-wrap-value">
                                             <div class="form-wrap-input form_input">
-                                                <input value="" type="password" name="settings_pass_confirm"/>
+                                                <input value="" type="text" name="settings_pass_confirm"/>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="form-wrap-row form_row">
+                                        <div class="form-wrap-key">Имя, фамилия</div>
+                                        <div class="form-wrap-value">
+                                            <div class="form-wrap-input form_input">
+                                                <input type="text" name="settings_name" value="{{ $user['name'] }}" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="form-wrap-row form_row">
+                                        <div class="form-wrap-key">Дата рождения</div>
+                                        <div class="form-wrap-value">
+                                            <div class="form-wrap-input form_input">
+                                                <input type="date" name="settings_birth_date" value="{{ $user['birth_date'] }}" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="form-wrap-row form_row">
+                                        <div class="form-wrap-key">Пол</div>
+                                        <div class="form-wrap-value">
+                                            <div class="form-wrap-input form_input">
+                                                <select name="settings_gender" style="width: 100%;">
+                                                <?php
+                                                $gender_array = ['male' => 'Мужской', 'female' => 'Женский', 'other' => 'Другой'];
+
+                                                foreach($gender_array as $en => $ru){
+                                                    if($user['user_gender'] == $en){
+                                                        $selected = 'selected="selected"';
+                                                    }else{
+                                                        $selected = '';
+                                                    }
+
+                                                    echo '<option value="'.$en.'" '.$selected.'>'.$ru.'</option>';
+                                                }
+                                                ?>
+
+                                                </select>
                                             </div>
                                         </div>
                                     </div>

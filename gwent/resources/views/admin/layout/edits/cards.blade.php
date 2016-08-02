@@ -257,7 +257,7 @@
             </tr>
             <tr><td style="padding: 15px;"></td><td></td></tr>
             <tr>
-                <td><label>Цена <strong>Только золото</strong>:</label></td>
+                <td><label>Цена <strong>Только серебро</strong>:</label></td>
                 <td><input name="cardPriceGoldOnly" type="number" min="0" value="{{ $card[0]['price_only_gold'] }}"></td>
             </tr>
         </table>

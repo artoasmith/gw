@@ -21,6 +21,7 @@ class CreateMagicEffectsTable extends Migration
             $table->integer('energy_cost');
             $table->integer('price_gold')->unsigned();
             $table->integer('price_silver')->unsigned();
+            $table->integer('usage_count')->unsigned();
             $table->text('effect_actions');
             $table->string('race');
             $table->timestamps();

@@ -112,6 +112,9 @@ function applySettings(){
         formData.append( 'settings_pass', $('.form-wrap-value input[name=settings_pass]').val().trim());
         formData.append( 'settings_pass_confirm', $('.form-wrap-value input[name=settings_pass_confirm]').val().trim());
         formData.append( 'image_user', $('.form-description-settings-inp input[name=image_user]').prop('files')[0] );
+		formData.append( 'user_name', $('.form-wrap-item input[name=settings_name]').val().trim() );
+		formData.append( 'birth_date', $('.form-wrap-item input[name=settings_birth_date]').val().trim() );
+		formData.append( 'gender', $('.form-wrap-item select[name=settings_gender]').val().trim() );
         formData.append( 'action', 'user_settings' );
 
         $.ajax({
@@ -164,6 +167,9 @@ function buildCardDeckView(cardData, wraper){
 	var result = '' +
 		'<div class="content-card-item-main" style="background-image: url(/img/card_images/'+cardData['img_url']+')" data-leader="'+cardData['is_leader']+'" data-type="'+cardData['type']+'" data-weight="'+cardData['weight']+'">' +
 			'<div class="content-card-item-main card-load-info card-popup">' +
+				'<div class="maxCountInDeck-wrap">' +
+					'<span class="current-card-type-count"></span>/<span class="current-max-card-count">'+cardData['max_quant']+'</span>' +
+				'</div>' +
 				'<div class="label-power-card"><span class="label-power-card-wrap"><span>'+cardData['strength']+'</span></span></div>' +
 				'<div class="hovered-items">' +
 					'<div class="card-game-status">' +
@@ -208,19 +214,21 @@ function buildCardDeckView(cardData, wraper){
 			result += '' +
 						'<div class="marker-price-silver">'+cardData['silver']+'</div>';
 		}
-		result += '' +
-					'</div>'+
+		if((cardData['silver'] != 0) || (cardData['gold'] != 0)) {
+			result += '' +
+					'</div>' +
 				'</div>' +
 				'<div class="market-card-item-buy"><a href="#" class="button-buy" id="simpleBuy">КУПИТЬ</a></div>';
+		}
 
 		if(cardData['only_gold'] != 0){
 			result += '' +
-				'<div class="market-card-item-price">ТОЛЬКО ЗОЛОТО' +
+				'<div class="market-card-item-price">ТОЛЬКО СЕРЕБРО' +
 					'<div class="cfix">' +
-						'<div class="marker-price-gold">'+cardData['only_gold']+'</div>' +
+						'<div class="marker-price-silver">'+cardData['only_gold']+'</div>' +
 					'</div>' +
 				'</div>' +
-				'<div class="market-card-item-buy"><a href="#" class="button-buy" id="goldOnlyBuy">КУПИТЬ ЗА ЗОЛОТО</a></div>';
+				'<div class="market-card-item-buy"><a href="#" class="button-buy" id="goldOnlyBuy">КУПИТЬ ЗА СЕРЕБРО</a></div>';
 		}
 		result += '' +
 			'</div>';
@@ -287,7 +295,15 @@ function recalculateDeck(){
 	var deckWeight = 0;         //Вес колоды
 	var league = '';            //Лига колоды (уровень)
 	var leaderQuantity = 0;     //Количество карт лидеров
-	$('#sortableOne .content-card-item ').each(function(){
+	var cardsDeck = {};
+	$('#sortableOne .content-card-item').each(function(){
+
+		if(cardsDeck[$(this).attr('data-cardid')] === undefined){
+			cardsDeck[$(this).attr('data-cardid')] = 1;
+		}else{
+			cardsDeck[$(this).attr('data-cardid')]++;
+		}
+
 		cardsCount++;
         //Перечет карт воинов и спец карт
 		if($(this).children('.content-card-item-main').attr('data-type') != 'special'){
@@ -303,12 +319,25 @@ function recalculateDeck(){
 		deckWeight += parseInt($(this).children('.content-card-item-main').attr('data-weight'));
 	});
 
+	for(var key in cardsDeck){
+		var currentCardCount = $('#sortableOne .content-card-item[data-cardid='+key+'] .card-load-info .maxCountInDeck-wrap .current-card-type-count');
+		var maxCardCount = parseInt($('#sortableOne .content-card-item[data-cardid='+key+'] .card-load-info .maxCountInDeck-wrap .current-max-card-count').text());
+		currentCardCount.text(cardsDeck[key]);
+		if( parseInt(currentCardCount.text()) > maxCardCount ){
+			currentCardCount.parent().css({'color':'#e00'});
+		}else{
+			currentCardCount.parent().css({'color':'#ef0'});
+		}
+	}
+
     //Подсчет лиги
 	for(var i=0; i<window.leagues.length; i++){
 		if(deckWeight > window.leagues[i]['min_lvl']){
 			league = window.leagues[i]['title'];
 		}
 	}
+
+
 
 	$('.content-card-center-block .content-card-center-description-block .deck-card-sum').text(cardsCount);
 	$('.content-card-center-block .deck-warriors .current-value').text(warriorsQuantity);
@@ -519,7 +548,7 @@ function buildMagicEffectsView(data){
 		'<td class="gold-tableCell">' + data['gold'] + '</td>' +
 		'<td class="silver-tableCell">' + data['silver'] + '</td>' +
 		'<td class="market-status-wrap done"><div class="market-status ' + data['status'] + '"><span></span></div></td>' +
-		'<td class="effect-date">' + data['expire'] + data['used_times'] + '</td>' +
+		'<td class="effect-date">' + data['used_times'] + '</td>' +
 		'</tr>';
 }
 
@@ -885,6 +914,15 @@ function userConnectToGame(){
 			}
 		});
 	});
+}
+
+function array_unique( inputArr ) {
+	var result = [];
+	$.each(inputArr, function(i, el){
+		if($.inArray(el, result) === -1) result.push(el);
+	});
+
+	return result;
 }
 
 

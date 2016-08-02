@@ -160,7 +160,7 @@ class UserAuthController extends BaseController
 
     }
 
-    //пользователь меняет свои данніе
+    //пользователь меняет свои данные
     protected function userChangeSettings(Request $request){
         if( csrf_token() == $request->input('token')){
             $data = $request->all();
@@ -170,6 +170,10 @@ class UserAuthController extends BaseController
                 $old_pass = htmlspecialchars(strip_tags(trim($data['current_password'])));
                 $new_pass = htmlspecialchars(strip_tags(trim($data['settings_pass'])));
                 $new_conf_pass = htmlspecialchars(strip_tags(trim($data['settings_pass_confirm'])));
+
+                $name = htmlspecialchars(strip_tags(trim($data['user_name'])));
+                $birth_date = htmlspecialchars(strip_tags(trim($data['birth_date'])));
+                $gender = htmlspecialchars(strip_tags(trim($data['gender'])));
 
                 $user = Auth::user();
 
@@ -225,6 +229,18 @@ class UserAuthController extends BaseController
                             User::where('id','=',$user['id'])->update(['img_url' => $img_file]);
                         }
                     }
+                }
+
+                if(!empty($name)){
+                    User::where('id','=',$user['id'])->update(['name' => $name]);
+                }
+
+                if(!empty($birth_date)){
+                    User::where('id','=',$user['id'])->update(['birth_date' => $birth_date]);
+                }
+
+                if(!empty($gender)){
+                    User::where('id','=',$user['id'])->update(['user_gender' => $gender]);
                 }
 
                 return 'success';

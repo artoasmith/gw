@@ -1548,6 +1548,18 @@
 
 
 /*ADDED BY Kirill*/
+
+
+#sortableOne .card-load-info .maxCountInDeck-wrap{display: block;}
+#sortableTwo .card-load-info .maxCountInDeck-wrap{display: none;}
+.connected-sortable .card-load-info .maxCountInDeck-wrap{
+  position: absolute;
+  bottom: 30px;
+  left: 10px;
+  color: #ef0;
+  font-size: 12px;
+}
+
 .marker-price-gold{
   padding: 5px 20px;
   background: url(/images/header_logo_gold.png) center left no-repeat;

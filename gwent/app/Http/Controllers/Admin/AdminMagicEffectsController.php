@@ -76,6 +76,7 @@ class AdminMagicEffectsController extends BaseController
                 'energy_cost'   => $data['energyCost'],
                 'price_gold'    => $data['price_gold'],
                 'price_silver'  => $data['price_silver'],
+                'usage_count'   => $data['usage_count'],
                 'effect_actions'=> $magic_actions,
                 'race'          => $races
             ]);
@@ -121,6 +122,7 @@ class AdminMagicEffectsController extends BaseController
             $currentMagicEffect->energy_cost    = $data['energyCost'];
             $currentMagicEffect->price_gold     = $data['price_gold'];
             $currentMagicEffect->price_silver   = $data['price_silver'];
+            $currentMagicEffect->usage_count    = $data['usage_count'];
             $currentMagicEffect->race           = $races;
             $currentMagicEffect->effect_actions = $magic_actions;
 

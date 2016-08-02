@@ -75,7 +75,7 @@ $errors = $errors->all();
                                                     </table>
                                                 </th>
                                                 <th>Статус</th>
-                                                <th>Дата окончания</th>
+                                                <th>Осталось использований</th>
 
                                             </tr>
                                             </thead>

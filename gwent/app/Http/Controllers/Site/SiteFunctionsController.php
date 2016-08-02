@@ -208,7 +208,6 @@ class SiteFunctionsController extends BaseController
                     if( 0 == $user_magic[$value->id]['used_times'] ){
 
                         $status = 'disabled';		//статус "отсутствует"
-                        $expire = '&mdash;&mdash;'; //Дата окончания
                         $used_times = '';			//Осталось использований
 
                     }else{
@@ -219,14 +218,12 @@ class SiteFunctionsController extends BaseController
                             $status = 'active';		//статус "активен"
                         }
 
-                        $expire = date('Y-m-d H:i',strtotime($user_magic[$value->id]['expire_date']));		//Дата окончания
-                        $used_times = '<p>Осталось '.$user_magic[$value->id]['used_times'].' использований</p>';
+                        $used_times = '<p>'.$user_magic[$value->id]['used_times'].'</p>';
 
                     }
 
                 }else{
                     $status = 'disabled';
-                    $expire = '&mdash;&mdash;';
                     $used_times = '';
                 }
 
@@ -254,7 +251,6 @@ class SiteFunctionsController extends BaseController
                     'silver'    => $silver,
                     'status'    => $status,
                     'used_times'=> $used_times,
-                    'expire'    => $expire
                 ];
             }
         }
@@ -334,19 +330,21 @@ class SiteFunctionsController extends BaseController
         //Обновление активности пользователя
         self::updateConnention();
         $data = $request->all();
+        //Текущая колода
+        $deck = htmlspecialchars(strip_tags(trim($data['deck'])));
 
         //Если не указан логин - используем данные текущего пользователя
         if(empty($data['login'])){
             $user = Auth::user();
             $login = $user['login'];
+
+            User::where('id', '=', $user['id'])->update(['last_user_deck' => $deck]);
         }else{
             $login = htmlspecialchars(strip_tags(trim($data['login'])));
         }
 
         //Если логин не пустой
         if((!empty($login)) && ($login != '')){
-            //Текущая колода
-            $deck = htmlspecialchars(strip_tags(trim($data['deck'])));
 
             $user_data = \DB::table('tbl_user_data')->select('login','user_available_deck', 'user_cards_in_deck')->where('login', '=', $login)->get();
 
@@ -371,6 +369,7 @@ class SiteFunctionsController extends BaseController
                         'is_leader' => $card[0]->is_leader,
                         'img_url'   => $card[0]->img_url,
                         'descr'     => $card[0]->short_description,
+                        'max_quant' => $card[0]->max_quant_in_deck,
                         'quantity'  => $value
                     ];
 
@@ -396,10 +395,12 @@ class SiteFunctionsController extends BaseController
                         'is_leader' => $card[0]->is_leader,
                         'img_url'   => $card[0]->img_url,
                         'descr'     => $card[0]->short_description,
+                        'max_quant' => $card[0]->max_quant_in_deck,
                         'quantity'  => $value
                     ];
                 }
             }
+
             return json_encode($result_array);
         }
     }
@@ -460,8 +461,14 @@ class SiteFunctionsController extends BaseController
                 $user_silver = $user_data[0]->user_silver - $card[0]->price_silver;
                 break;
             case 'goldOnlyBuy':
-                $user_gold = $user_data[0]->user_gold - $card[0]->price_only_gold;
-                $user_silver = $user_data[0]->user_silver;
+                $user_gold = $user_data[0]->user_gold;
+                /*
+                 * !!! Важно
+                 * Ниже $card[0]->price_only_gold - цена ТОЛЬКО СЕРЕБРО см. правки от 01.08.2016
+                 * Указано данное поле, дабы не изменять его в базе
+                */
+
+                $user_silver = $user_data[0]->user_silver - $card[0]->price_only_gold;
                 break;
             default:
                 return json_encode(['message' => 'Неизвестный тип операции.']);
@@ -603,13 +610,12 @@ class SiteFunctionsController extends BaseController
 		//Если существует текущий маг. эффект
 		if( isset($user_magic_effects[$request->input('magic_id')]) ){
 			//Добавляет +100 использований
-			$user_magic_effects[$request->input('magic_id')]['used_times'] += 100;
+			$user_magic_effects[$request->input('magic_id')]['used_times'] += $magic[0]->usage_count;
 			//Обновляем дату окончания
-			$user_magic_effects[$request->input('magic_id')]['expire_date'] = date('Y-m-d H:i:s',time()+ 31*24*60*60);
 
 		}else{
 			//Если не существует - создаем его
-			$user_magic_effects[$request->input('magic_id')] = ['used_times' => 100, 'expire_date' => date('Y-m-d H:i:s',time()+ 31*24*60*60), 'active' => 0];
+			$user_magic_effects[$request->input('magic_id')] = ['used_times' => $magic[0]->usage_count, 'active' => 0];
 		}
 
         $user_data_to_save = UserAdditionalDataModel::find($user['id']);
@@ -621,7 +627,7 @@ class SiteFunctionsController extends BaseController
 		if($result !== false){
 			return json_encode([
                 'message'   => 'success',
-                'date'      => date('Y-m-d H:i',time()+ 31*24*60*60).'<p>Осталось '.$user_magic_effects[$request->input('magic_id')]['used_times'].' использований</p>',
+                'date'      => '<p>'.$user_magic_effects[$request->input('magic_id')]['used_times'].'</p>',
                 'gold'      => $user_gold,
                 'silver'    => $user_silver,
                 'title'     => $magic[0]->title

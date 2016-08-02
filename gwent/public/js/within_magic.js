@@ -352,6 +352,7 @@ $(document).ready(function(){
         formData.append( 'energyCost', $('input[name=energy_cost]').val());
         formData.append( 'price_gold', $('input[name=price_gold]').val());
         formData.append( 'price_silver', $('input[name=price_silver]').val());
+        formData.append( 'usage_count', $('input[name=usage_count]').val());
 
         $.ajax({
             url:        '/admin/magic/add',
@@ -393,6 +394,7 @@ $(document).ready(function(){
         formData.append( 'energyCost', $('input[name=energy_cost]').val());
         formData.append( 'price_gold', $('input[name=price_gold]').val());
         formData.append( 'price_silver', $('input[name=price_silver]').val());
+        formData.append( 'usage_count', $('input[name=usage_count]').val());
 
         $.ajax({
             url:        '/admin/magic/edit',

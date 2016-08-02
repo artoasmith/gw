@@ -94,6 +94,10 @@
 
             <table class="edition" style="width: 100%;">
                 <tr>
+                    <td><label>Начальное количество использований:</label></td>
+                    <td><input name="usage_count" type="number" min="0" value="{{ $effect[0]['usage_count'] }}"></td>
+                </tr>
+                <tr>
                     <td style="width: 10%;"><label>Затраты энергии:</label></td>
                     <td><input name="energy_cost" type="number" min="0" value="{{ $effect[0]['energy_cost'] }}"></td>
                 </tr>
