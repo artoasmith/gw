@@ -529,6 +529,7 @@
 						<div class="name">{{$players['allied'][0]['user_nickname']}}<!-- Имя игрока --></div>
 						<div class="rasa">{{$players['allied'][0]['user_deck_race']}}<!-- Колода игрока --></div>
 					</div>
+
 				</div>
 				<div class="user-stats">
 					<div class="stats-power">
@@ -540,14 +541,15 @@
 					<div class="stats-shit">{{$players['allied'][0]['user_energy']}}<!-- Количество Энергии игрока --></div>
 				</div>
 			</div>
-		</div>
-		<div class="useless-card">
-			<div class="inside-for-some-block">
-                <ul class="magic-effects-wrap">
-                    <!-- Активная магия -->
-                </ul>
+            <div class="useless-card">
+                <div class="inside-for-some-block">
+                    <ul class="magic-effects-wrap">
+                        <!-- Активная магия -->
+                    </ul>
+                </div>
             </div>
 		</div>
+
 	</div>
 </div>
 
@@ -784,7 +786,9 @@
                     data:   {cards:cardsToChange},
                     success:function(data){
                         data = JSON.parse(data);
+                        //console.log(data);
                         for(var key in data){
+                            console.log(window.usersData);
                             window.usersData[key]['deck'] = data[key]['deck'];
                             window.usersData[key]['hand'] = data[key]['hand'];
                             window.usersData[key]['deck_count'] = data[key]['deck_count'];
@@ -824,7 +828,7 @@
 
         function createUserMagicFieldCards(userLogin, magicData){
             for(var i=0; i<magicData.length; i++){
-                $('.convert-right-info #' + userLogin).parent().children('.useless-card').children().children('.magic-effects-wrap').append(createMagicEffectView(magicData[i]));
+                $('.convert-right-info #' + userLogin + ' .useless-card').children().children('.magic-effects-wrap').append(createMagicEffectView(magicData[i]));
             }
         }
 

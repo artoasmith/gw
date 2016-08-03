@@ -114,6 +114,7 @@ class SiteGameController extends BaseController
 
         $user_deck = self::buildCardDeck($user_deck, []);
         $user_hand = self::buildCardDeck($user_hand, []);
+
         //Если пользователя не сучествует в табице tbl_battle_members
         if( 1 > count($user_is_battle_member) ){
             $result = BattleMembersModel::create([
@@ -130,7 +131,7 @@ class SiteGameController extends BaseController
             $user_battle = BattleMembersModel::find($user_is_battle_member[0]->id);
             $user_battle -> battle_id       = $battle_id;
             $user_battle -> user_deck_race  = $user_deck_race;
-            $user_battle -> user_deck       = serialize($real_card_array);
+            $user_battle -> user_deck       = serialize($user_deck);
             $user_battle -> user_hand       = serialize($user_hand);
             $user_battle -> magic_effects   = $user_magic;
             $user_battle -> user_energy     = $user_energy;
@@ -346,6 +347,7 @@ class SiteGameController extends BaseController
                 'img_url'   => $user[0]->img_url,
                 'deck_slug' => $value -> user_deck_race,
                 'deck_title'=> $current_user_deck_race[0]->title,
+                'deck'      => [],
                 'deck_count'=> $deck_card_count,
                 'hand'      => $hand,
                 'magic'     => $user_magic_effect_data,
