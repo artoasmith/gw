@@ -803,7 +803,7 @@ body {
     background-color: rgba(255, 213, 0, 0.75);
     margin-bottom: 15px; }
   .convert-battle-front .user-card-stash {
-    height: 120px;
+    height: 150px;
     vertical-align: top;
     text-align: center; }
 
@@ -899,7 +899,7 @@ body {
 .user-card-stash {
   width: 100%; }
   .user-card-stash .timer-for-play {
-    width: 130px;
+    width: 15%;
     float: left; }
     .user-card-stash .timer-for-play .title-timer {
       color: #e90c01;
@@ -910,7 +910,7 @@ body {
       line-height: 20px;
       padding-bottom: 10px; }
     .user-card-stash .timer-for-play .timer-tic-tac-convert {
-      width: 130px;
+      width: 100%;
       margin: 0 auto;
       padding: 3px;
       border: 2px solid transparent;
@@ -936,7 +936,7 @@ body {
           width: 100%;
           text-align: center; }
   .user-card-stash .buttons-block-play {
-    width: 124px;
+    width: 15.5%;
     float: right; }
     .user-card-stash .buttons-block-play .button-push {
       display: block;

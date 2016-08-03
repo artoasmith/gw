@@ -1687,12 +1687,12 @@ ul.cards-select-wrap li img{
 }
 ul.cards-select-wrap li img:hover{opacity: 1}
 ul.cards-select-wrap li img.disactive{
-  -webkit-filter: grayscale(80%);
-  filter: grayscale(100%);
   opacity: 1;
+  -webkit-filter: grayscale(100%);
+  filter: grayscale(100%);
 }
 
-ul.cards-select-wrap li .card-strength-wrap{
+ul.cards-select-wrap li .card-strength-wrap, ul.user-hand-cards-wrap li .card-strength-wrap{
   background: url('/images/logo-label-card.png') no-repeat;
   position: absolute;
   background-size: 30px 37px;
@@ -1704,4 +1704,33 @@ ul.cards-select-wrap li .card-strength-wrap{
   left: 10px;
   text-align: center;
   top: 0;
+}
+
+ul.user-hand-cards-wrap{
+  height: 100%;
+  text-align: center;
+  position: relative;
+  z-index: 5;
+  float: left;
+  width: 69%;
+}
+
+ul.user-hand-cards-wrap li{
+  cursor: pointer;
+  position: absolute;
+  left: 0;
+  top: 0;
+}
+
+ul.user-hand-cards-wrap li .card-name-property{
+  background-image: url("/images/plashka-for-name.png");
+  background-size: 145px 20px;
+  color: #fff;
+  height: auto;
+  padding: 5px 0 7px;
+  position: relative;
+  text-align: center;
+  width: 100%;
+  position: absolute;
+  bottom: 0;
 }

@@ -74,7 +74,6 @@ class SiteGameController extends BaseController
             }
         }
 
-
         $deck_card_count = count($real_card_array);
         //Создание масива игральной колоды
         $user_deck = [];
@@ -112,6 +111,9 @@ class SiteGameController extends BaseController
             $user_deck = array_values($user_deck);
             $deck_card_count = count($user_deck);
         }
+
+        $user_deck = self::buildCardDeck($user_deck, []);
+        $user_hand = self::buildCardDeck($user_hand, []);
         //Если пользователя не сучествует в табице tbl_battle_members
         if( 1 > count($user_is_battle_member) ){
             $result = BattleMembersModel::create([
@@ -171,6 +173,8 @@ class SiteGameController extends BaseController
             if($result === false){
                 return json_encode(['message' => 'Не удалось создать стол']);
             }
+
+            BattleMembersModel::where('user_id', '=', $user['id'])->update(['user_ready' => 0]);
 
             //Создание данных об участниках битвы
             $battle_members = self::updateBattleMembers(
@@ -266,9 +270,10 @@ class SiteGameController extends BaseController
     //Создание колод по id карт
     protected static function buildCardDeck($deck, $result_array){
         foreach($deck as $key => $card_id){
-            $card_data = \DB::table('tbl_card')->select('id','title','slug','card_type','card_strong','img_url','short_description')->where('id', '=', $card_id)->get();
+            $card_data = \DB::table('tbl_card')->select('id','title','slug','card_type','card_strong','img_url','short_description')->where('id', '=', $card_id['id'])->get();
+
             $result_array[] = [
-                'id'        => $card_id,
+                'id'        => $card_data[0]->id,
                 'title'     => $card_data[0]->title,
                 'slug'      => $card_data[0]->slug,
                 'type'      => $card_data[0]->card_type,
@@ -337,16 +342,15 @@ class SiteGameController extends BaseController
                 ];
             }
 
-            $users_result_data[] = [
-                'login'     => $user[0]->login,
+            $users_result_data[$user[0]->login] = [
                 'img_url'   => $user[0]->img_url,
                 'deck_slug' => $value -> user_deck_race,
                 'deck_title'=> $current_user_deck_race[0]->title,
                 'deck_count'=> $deck_card_count,
-                'deck'      => $deck,
                 'hand'      => $hand,
                 'magic'     => $user_magic_effect_data,
                 'energy'    => $value -> user_energy,
+                'ready'     => $value -> user_ready,
                 'can_change_cards'  => $available_to_change
             ];
         }
@@ -354,6 +358,68 @@ class SiteGameController extends BaseController
         return json_encode(['message' => 'success', 'userData' => $users_result_data]);
     }
 
+
+    protected function userChangeCards(Request $request){
+        $data = $request->all();
+
+        $user = Auth::user();
+
+        $cards_to_change = json_decode($data['cards']); //Карты что будут заменены
+        $cards_to_change_count = count($cards_to_change); //Количество карт для замены
+
+        $user_battle = \DB::table('tbl_battle_members')->select('id', 'user_id', 'user_deck', 'user_hand')->where('user_id', '=', $user['id'])->get(); //Данные текущей битвы пользователя
+
+        $user_hand = unserialize($user_battle[0]->user_hand); //Карты руки пользователя
+
+        for($i=0; $i<$cards_to_change_count; $i++){
+            foreach($user_hand as $key => $value){
+                if($value['id'] == $cards_to_change[$i]){
+                    unset($user_hand[$key]); //Удаляем заменяемые карты из руки
+                    break;
+                }
+            }
+        }
+
+        $user_hand = array_values($user_hand);
+
+        $user_deck = unserialize($user_battle[0]->user_deck); //Колода игрока
+        $deck_card_count = count($user_deck);
+
+        for($i=0; $i<$cards_to_change_count; $i++){ //перемещаем N рандомных карт из колоды в руку
+            $rand_item = rand(0, $deck_card_count-1);
+            $user_hand[] = $user_deck[$rand_item];
+
+            unset($user_deck[$rand_item]);
+
+            $user_deck = array_values($user_deck);
+            $deck_card_count = count($user_deck);
+        }
+
+        for($i=0; $i<$cards_to_change_count; $i++){ //Заменяемые карты возвращаем обратко в колоду
+            $user_deck[] = ['id' => $cards_to_change[$i]];
+        }
+        $deck_card_count = count($user_deck);
+
+        $hand = self::buildCardDeck($user_hand, []);
+        $deck = self::buildCardDeck($user_deck, []);
+
+        $users_result_data[$user['login']] = [
+            'deck_count'=> $deck_card_count,
+            'hand'      => $hand,
+            'deck'      => $deck
+        ];
+
+        $hand = serialize($hand);
+        $deck = serialize($deck);
+
+        $user_battle_to_update = BattleMembersModel::find($user_battle[0]->id); //Сохраняем колоды
+        $user_battle_to_update -> user_hand = $hand;
+        $user_battle_to_update -> user_deck = $deck;
+        $user_battle_to_update -> user_ready = 1;
+        $user_battle_to_update -> save();
+
+        return json_encode($users_result_data);
+    }
 
 
 

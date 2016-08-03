@@ -23,6 +23,7 @@ class BattleSocket extends BaseSocket
         'join',  //подключился и прошел проверку новый пользователь
         'close',  //пользователь покинул стол
         'checkBattle', //проверка статуса битвы
+        'userReady' //пользователь готов
     ];
 
     public function __construct()
@@ -132,6 +133,8 @@ class BattleSocket extends BaseSocket
             case 'checkBattle':
                 $sendToBattleMates = false;
                 $userResp = ['action'=>'checkBattle','user_id'=>$user->id];
+                break;
+            case 'userReady':
                 break;
         }
         //--main logic end

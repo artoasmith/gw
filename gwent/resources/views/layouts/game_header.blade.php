@@ -91,13 +91,6 @@ $user = Auth::user();
 
             </ul>
 
-            <div class="cards-select-message-wrap">&uArr;&dArr;</div>
-
-            <div class="cards-select-message-wrap">Карты Колоды</div>
-            <ul class="cards-select-wrap cfix" id="deckCards">
-
-            </ul>
-
             <div class="button-wrap">
                 <input name="accpetHandDeck" type="button" value="Готово">
             </div>

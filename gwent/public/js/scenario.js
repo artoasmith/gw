@@ -337,8 +337,6 @@ function recalculateDeck(){
 		}
 	}
 
-
-
 	$('.content-card-center-block .content-card-center-description-block .deck-card-sum').text(cardsCount);
 	$('.content-card-center-block .deck-warriors .current-value').text(warriorsQuantity);
 	$('.content-card-center-block .deck-special .current-value').text(specialQuantity);

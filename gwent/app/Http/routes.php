@@ -197,6 +197,9 @@ Route::post('/magic_is_buyed', [
 Route::put('/game_start', [
     'uses' => 'Site\SiteGameController@startGame'
 ]);
+Route::put('/game_user_change_cards', [
+    'uses' => 'Site\SiteGameController@userChangeCards'
+]);
 
 
 //Admin

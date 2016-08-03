@@ -22,7 +22,7 @@
 
 	$battle_members = \App\BattleMembersModel::where('battle_id','=',$battle_data->id)->get();
 
-	$players = ['enemy' => [], 'alias' => []];
+	$players = ['enemy' => [], 'allied' => []];
 	$players_count = 0;
 
 
@@ -36,11 +36,13 @@
 			$players['allied'][] = [
 				'user_id'       => $value -> user_id,
 				'user_deck'     => unserialize($value -> user_deck),
+				'user_hand'     => unserialize($value -> user_hand),
 				'magic_effects' => unserialize($value -> magic_effects),
 				'user_energy'   => $value -> user_energy,
                 'user_img'      => $player_data[0] -> img_url,
                 'user_nickname' => $player_data[0] -> login,
-                'user_deck_race'=> $race_name[0] -> title
+                'user_deck_race'=> $race_name[0] -> title,
+                'user_ready'         => $value -> user_ready
 			];
 		}else{
 			$players['enemy'][] = [
@@ -198,31 +200,31 @@
                                     <!-- Список сверхдальних карт-->
                                     <ul id="sortable-oponent-cards-field-super-renge" class="can-i-use-useless sort">
 
-                                        <li class="content-card-item" data-relative="special" data-power='10' data-cart-id="555">
-                                            <div class="content-card-item-main"><!-- Бекграунд карты -->
+                                        <!--<li class="content-card-item" data-relative="special" data-power='10' data-cart-id="555">
+                                            <div class="content-card-item-main">Бекграунд карты
 
-                                                <div class="label-power-card">10<!-- Сила карты --></div>
+                                                <div class="label-power-card">10Сила карты</div>
                                                 <div class="hovered-items">
-                                                    <!--
+
                                                     <div class="card-game-status">
                                                         <img src="images/kard-property.png" alt="" />
                                                         <img src="images/kard-property.png" alt="" />
                                                         <img src="images/kard-property.png" alt="" />
                                                     </div>
-                                                    -->
+
                                                     <div class="card-name-property">
-                                                        <p>Дионис Стальной <!-- Название карты --></p>
+                                                        <p>Дионис Стальной Название карты</p>
                                                     </div>
                                                     <div class="block-describe">
                                                         <div class="block-image-describe"></div>
                                                         <div class="block-text-describe">
-                                                            <!-- Описание карты (short_description) -->
+                                                            Описание карты (short_description)
                                                             <p>Признай свои ошибки и похорони их как следует. Иначе они придут за тобой sdfg sdf gsdf gsdf hgsdhf </p>
                                                         </div>
                                                     </div>
                                                 </div>
                                             </div>
-                                        </li>
+                                        </li>-->
 
                                     </ul>
                                     <!-- END OF Список сверхдальних карт-->
@@ -376,8 +378,16 @@
                 </div>
 
                 <!-- Карты руки пользователя -->
-                <ul id="sortable-user-cards" class="can-i-use-useless sort">
-
+                <ul id="sortableUserCards" class="user-hand-cards-wrap cfix">
+                    @if($players['allied'][0]['user_ready'])
+                        @foreach($players['allied'][0]['user_hand'] as $i => $card_data)
+                            <li data-cartid="{{ $card_data['id'] }}" data-relative="{{ $card_data['type'] }}">
+                                <img title="'{{ $card_data['title'] }}" alt="{{ $card_data['slug'] }}" src="/img/card_images/{{ $card_data['img_url'] }}">
+                                <div class="card-strength-wrap">{{ $card_data['strength'] }}</div>
+                                <div class="card-name-property"><p>{{ $card_data['title'] }}</p></div>
+                            </li>
+                        @endforeach
+                    @endif
                 </ul>
                 <!-- END OF Карты руки пользователя -->
 
@@ -672,12 +682,10 @@
                                 data:   {battle_id:resp.battleInfo['id']},
                                 success:function(data){
                                     data = JSON.parse(data);
-                                    console.log(data);
-                                    if(data['message'] == 'success'){
+                                     if(data['message'] == 'success'){
                                         window.usersData = data['userData'];
                                         //Формирование данных пользователей и окна выбора карт
                                         buildPlayRoomView(window.usersData);
-
                                     }
                                 }
                             });
@@ -704,52 +712,103 @@
             $('#selecthandCardsPopup .cards-select-wrap').empty();
 
             //Читаем данніе пользователя
-            for(var i=0; i<userData.length; i++){
-                //Если присоединился противник
-                if( $('.convert-right-info #'+userData[i]['login']).length <1){
+
+            for(var key in userData){
+                if( $('.convert-right-info #'+key).length <1){
                     //Установить никнейм оппонета
-                    $('.convert-right-info .oponent-describer').attr('id',userData[i]['login']);
+                    $('.convert-right-info .oponent-describer').attr('id',key);
                     //Установить логин оппонента
-                    $('.field-battle .cards-bet #card-give-more-oponent').attr('data-user',userData[i]['login']);
+                    $('.field-battle .cards-bet #card-give-more-oponent').attr('data-user', key);
                     //Установить логин оппонента в его поле битвы
-                    $('.convert-battle-front .oponent').attr('data-user',userData[i]['login']);
+                    $('.convert-battle-front .oponent').attr('data-user', key);
                 }
 
                 //Создать описание пользователей
-                createUserDescriber(userData[i]['login'], userData[i]['img_url'], userData[i]['deck_title']);
+                createUserDescriber(key, userData[key]['img_url'], userData[key]['deck_title']);
 
                 //Количество карт в колоде
-                $('.convert-left-info .cards-bet ul[data-user='+userData[i]['login']+'] .deck .counter').text(userData[i]['deck_count']);
+                $('.convert-left-info .cards-bet ul[data-user='+key+'] .deck .counter').text(userData[key]['deck_count']);
 
                 //Если у пользователя есть магические способности
-                if(userData[i]['magic'].length > 0){
+                if(userData[key]['magic'].length > 0){
                     //Вывод текущей магии пользователей
-                    createUserMagicFieldCards(userData[i]['login'], userData[i]['magic']);
+                    createUserMagicFieldCards(key, userData[key]['magic']);
                 }
 
-                if(userData[i]['hand'].length > 0){
-                    //Вывод карт руки и колоды
-                    createUserCardSelect(userData[i]['hand'], userData[i]['deck'], userData[i]['can_change_cards']);
+                if( 0 == parseInt(userData[key]['ready'])){
+                    if (userData[key]['hand'].length > 0) {
+                        //Вывод карт руки и колоды
+                        createUserCardSelect(userData[key]['hand'], userData[key]['deck'], userData[key]['can_change_cards']);
 
-                    //Появление поп-апа выбора карт руки
-                    $('#selecthandCardsPopup').show(300, function() {
-                        changeDeckCardsWidth('#handCards');
-                        changeDeckCardsWidth('#deckCards');
-                    });
+                        //Появление поп-апа выбора карт руки
+
+                        $('#selecthandCardsPopup').show(300, function () {
+                            changeDeckCardsWidth('#selecthandCardsPopup', '#handCards', 0);
+                        });
+
+                        userChangeDeck(userData[key]['can_change_cards']);
+                    }
                 }
             }
-
-
-            userChangeDeck();
-
         }
 
 
-        function userChangeDeck(){
-            //Нажатие на карту в руке при выборе карт руки
-            $('#selecthandCardsPopup #handCards li img').click(function(e){
-                e.preventDefault();
-                $(this).toggleClass('disactive');
+        function userChangeDeck(can_change_cards){
+            $('#handCards li').click(function(){
+                if($(this).children('img').hasClass('disactive')){
+                    $(this).children('img').removeClass('disactive');
+                }else{
+                    if($('#handCards li .disactive').length < can_change_cards){
+                        $(this).children('img').addClass('disactive');
+                    }
+                }
+            });
+
+            $('#selecthandCardsPopup input[name=accpetHandDeck]').click(function(){
+                var token = $('.market-buy-popup input[name=_token]').val().trim();
+                var n = $('#handCards li .disactive').length;
+                var cardsToChange = [];
+
+                if(n > can_change_cards) n = can_change_cards;
+
+                for(var i = 0; i < n; i++){
+                    cardsToChange.push($('#handCards li .disactive:eq('+i+')').parent().attr('data-cardid'));
+                }
+
+                cardsToChange = JSON.stringify(cardsToChange);
+
+                $.ajax({
+                    url:    '/game_user_change_cards',
+                    type:   'PUT',
+                    headers:{'X-CSRF-TOKEN':token},
+                    data:   {cards:cardsToChange},
+                    success:function(data){
+                        data = JSON.parse(data);
+                        for(var key in data){
+                            window.usersData[key]['deck'] = data[key]['deck'];
+                            window.usersData[key]['hand'] = data[key]['hand'];
+                            window.usersData[key]['deck_count'] = data[key]['deck_count'];
+                        }
+
+                        $('.user-card-stash #sortableUserCards').empty();
+                        for(var i=0; i< window.usersData[key]['hand'].length; i++){
+                            $('.user-card-stash #sortableUserCards').append(createUserHandView(window.usersData[key]['hand'][i]));
+                        }
+                        changeDeckCardsWidth('.user-card-stash', '#sortableUserCards');
+
+                        handReformDeck(key);
+
+                        $('#selecthandCardsPopup').hide(300);
+                        $('#selecthandCardsPopup #handCards').empty();
+
+                        conn.send(
+                            JSON.stringify({
+                                    action: 'userReady',
+                                    ident: ident
+                            })
+                        );
+                    }
+                });
             });
         }
 
@@ -771,14 +830,14 @@
 
 
         function createMagicEffectView(magicData){
-            return  '<li>' +
-                        '<img src="/img/card_images/' + magicData['img_url']+'" alt="' + magicData['title'] +'" title="' + magicData['title'] +'">'+
+            return  '<li data-cardid="' + magicData['id'] + '">' +
+                        '<img src="/img/card_images/' + magicData['img_url']+'" alt="' + magicData['slug'] +'" title="' + magicData['title'] +'">'+
                     '</li>';
         }
 
         function createUserCardToSelectView(card){
-            return  '<li>' +
-                        '<img src="/img/card_images/' + card['img_url']+'" alt="' + card['title'] +'" title="' + card['title'] +'">' +
+            return  '<li data-cardid="' + card['id'] + '">' +
+                        '<img src="/img/card_images/' + card['img_url']+'" alt="' + card['slug'] +'" title="' + card['title'] +'">' +
                         '<div class="card-strength-wrap">' + card['strength'] + '</div>' +
                     '</li>';
         }
@@ -790,26 +849,81 @@
             for(var i=0; i<handDeck.length; i++){
                 $('#selecthandCardsPopup #handCards').append(createUserCardToSelectView(handDeck[i]));
             }
-
-            for(var i=0; i<userDeck.length; i++){
-                $('#selecthandCardsPopup #deckCards').append(createUserCardToSelectView(userDeck[i]));
-            }
         }
 
 
-        function changeDeckCardsWidth(handler){
-            var cardsSelectBlockWidth = $('#selecthandCardsPopup '+handler).width();
+        function changeDeckCardsWidth(parent, handler){
+            var cardsSelectBlockWidth = $(parent+' '+handler).width();
 
-            var cardsCount = $('#selecthandCardsPopup '+handler+' li').length;
+            var cardsCount = $(parent+' '+handler+' li').length;
 
             var singleCardBlockLength = Math.floor(cardsSelectBlockWidth/cardsCount);
             var cardsSelectBlockMargin = Math.floor((cardsSelectBlockWidth - singleCardBlockLength*cardsCount)/2 - 0.5);
-            $('#selecthandCardsPopup '+handler+' li').width(singleCardBlockLength);
-            $('#selecthandCardsPopup '+handler).css({'padding-left': cardsSelectBlockMargin+'px', 'padding-right': cardsSelectBlockMargin+'px'});
+            $(parent+' '+handler+' li').width(singleCardBlockLength);
+            $(parent+' '+handler).css({'padding-left': cardsSelectBlockMargin+'px', 'padding-right': cardsSelectBlockMargin+'px'});
+
         }
 
 
+        function createUserHandView(cardData){
+            return  '' +
+            '<li data-cartid="'+cardData['id']+'" data-relative="'+cardData['type']+'">'+
+                '<img title="'+cardData['title']+'" alt="'+cardData['slug']+'" src="/img/card_images/'+cardData['img_url']+'">'+
+                '<div class="card-strength-wrap">'+cardData['strength']+'</div>' +
+                '<div class="card-name-property"><p>'+cardData['title']+'</p></div>'+
+            '</li>';
+        }
 
+
+        function handReformDeck(user){
+            var shift = 0;
+            $('.user-card-stash #sortableUserCards li').each(function(){
+                $(this).width($(this).width()+45);
+                $(this).css({'left':shift+'%'});
+                shift += 8;
+            });
+
+            $('#sortableUserCards').on('mouseover', 'li', function(){
+                $(this).css({'top': '-80px', 'z-index': '300'});
+                var _this = $(this);
+                $(this).mouseout(function(){
+                    _this.css({'top': '0px', 'z-index': '6'});
+                });
+            });
+
+            $('#sortableUserCards').on('click', 'li', function(){
+                var cardData = [];
+                for(var i=0; i<window.usersData[user]['hand'].length; i++){
+                    if( $(this).attr('data-cartid') == window.usersData[user]['hand'][i]['id']){
+                        cardData = window.usersData[user]['hand'][i];
+                    }
+                }
+                $('#notSortableOne').animate({'opacity':'1'}, 500);
+
+                $('#notSortableOne').empty().append('<li class="content-card-item chossen-card">' +
+                    '<div class="content-card-item-main" style="background-image: url(/img/card_images/'+cardData['img_url']+')">' +
+                        '<div class="label-power-card">' +
+                            '<span class="label-power-card-wrap"><span>'+cardData['strength']+'</span></span>' +
+                        '</div>' +
+                        '<div class="hovered-items">' +
+                            '<div class="card-name-property"><p>'+cardData['title']+'</p></div>' +
+                            '<div class="block-describe">' +
+                                '<div class="block-text-describe">' +
+                                    '<div class="block-text-describe-wrap">' +
+                                        '<div class="block-text-describe-main">' +
+                                            '<div class="block-text-describe-main-wrap"><p>'+cardData['descript']+'</p></div>' +
+                                        '</div>' +
+                                    '</div>' +
+                                '</div>' +
+                            '</div>' +
+                        '</div>' +
+                    '</div>' +
+                '</li>');
+            });
+        }
+
+        changeDeckCardsWidth('.user-card-stash', '#sortableUserCards');
+        handReformDeck($('.convert-battle-front .user').attr('data-user'));
 
 
         function showPopup(ms){
