@@ -58,8 +58,9 @@ $(window).load(function(){
                         break;
 
                     case 'AllUsersAreReady':
+                        console.log(result);
                         if(result.login == $('.user-describer').attr('id')){
-
+                            alert('Ваша очередь ходить');
                             userMakeAction();
 
                         }
@@ -179,6 +180,7 @@ $(window).load(function(){
                                     ident: ident
                                 })
                             );
+                            console.log('block has sended Ready');
                         }
                     });
                 });

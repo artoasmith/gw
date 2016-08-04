@@ -81,7 +81,7 @@ class JotSocket extends BaseSocket
 
                     if($ready_players_count == $battle->players_quantity){
                         $battle -> fight_status = 2;
-                        if($battle -> user_id != 0){
+                        if($battle -> user_id_turn == 0){
                             $battle -> user_id_turn = $players_turn;
                         }
                         $battle -> save();
@@ -97,10 +97,10 @@ class JotSocket extends BaseSocket
             case 'userPassedTurn':
                 if($battle -> fight_status == 2) {
                     foreach($battle_members as $key => $value){
-                        if($value -> user_id == $battle -> user_id_turn){
+                        /*if($value -> user_id == $battle -> user_id_turn){
                             $next_turn_user = next($battle_members);
                             var_dump($next_turn_user);
-                        }
+                        }*/
                     }
                 }
                 break;
