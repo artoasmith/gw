@@ -953,7 +953,7 @@ body {
         font-weight: bold;
         color: #573204;
         font-size: 14px;
-        padding-top: 17px; }
+        padding-top: 7px; }
   .user-card-stash #sortable-user-cards {
     width: -webkit-calc(100% - 260px);
     width: -moz-calc(100% - 260px);
@@ -1051,7 +1051,7 @@ body {
       padding-top: 4px; }
   .stash-about .oponent-discribe {
     display: inline-block;
-    width: 220px;
+    width: 215px;
     height: 100%;
     padding-left: 60px;
     padding-top: 40px;

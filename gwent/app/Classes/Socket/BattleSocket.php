@@ -118,13 +118,14 @@ class BattleSocket extends BaseSocket
          * action - действие пользователя из private $actionSpecter
          *      join - присоединеие пользователя
          *      checkBattle - получить инфо о битве
-         *
+         *      userReady - пользователь готов к битве
          * */
         $userResp  = [];
         $othersResp = [];
 
         $sendToBattleMates = true;
         ///main logic
+
         switch ($action){
             case 'join':
                 $othersResp = ['action'=>$action,'user_id'=>$user->id];
@@ -135,6 +136,7 @@ class BattleSocket extends BaseSocket
                 $userResp = ['action'=>'checkBattle','user_id'=>$user->id];
                 break;
             case 'userReady':
+
                 break;
         }
         //--main logic end

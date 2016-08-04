@@ -52,7 +52,7 @@ $user = Auth::user();
 
 
     <script type="text/javascript" src="{{ URL::asset('js/scenario.js') }}"></script>
-    <script type="text/javascript" src="{{ URL::asset('js/game.js') }}"></script>
+    <script type="text/javascript" src="{{ URL::asset('js/game2.js') }}"></script>
     <!-- endbuild -->
 
 <!-- <script src="@{{ URL::asset('js/validate_script.js') }}"></script>-->

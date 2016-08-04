@@ -194,6 +194,9 @@ Route::post('/magic_is_buyed', [
 
 
 //Игра
+Route::get('/get_socket_settings', [
+    'uses'  => 'Site\SiteGameController@socketSettings'
+]);
 Route::put('/game_start', [
     'uses' => 'Site\SiteGameController@startGame'
 ]);

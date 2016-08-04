@@ -369,7 +369,7 @@ class SiteGameController extends BaseController
         $cards_to_change = json_decode($data['cards']); //Карты что будут заменены
         $cards_to_change_count = count($cards_to_change); //Количество карт для замены
 
-        $user_battle = \DB::table('tbl_battle_members')->select('id', 'user_id', 'user_deck', 'user_hand')->where('user_id', '=', $user['id'])->get(); //Данные текущей битвы пользователя
+        $user_battle = \DB::table('tbl_battle_members')->select('id', 'user_id', 'battle_id', 'user_deck', 'user_hand')->where('user_id', '=', $user['id'])->get(); //Данные текущей битвы пользователя
 
         $user_hand = unserialize($user_battle[0]->user_hand); //Карты руки пользователя
 
@@ -411,6 +411,10 @@ class SiteGameController extends BaseController
             'deck'      => $deck
         ];
 
+        $battle_log = BattleLogModel::where('battle_id', '=', $user_battle[0] -> battle_id)->get();
+        $fight_log = $battle_log[0]->fight_log.'<p>Пользователь '.$user['login'].'(ID='.$user['id'].' Сел за стол № '.$user_battle[0] -> battle_id.' с колодой: '.json_encode($deck).')</p>';
+        BattleLogModel::where('battle_id', '=', $user_battle[0] -> battle_id)->update(['fight_log' => $fight_log]);
+
         $hand = serialize($hand);
         $deck = serialize($deck);
 
@@ -425,8 +429,22 @@ class SiteGameController extends BaseController
 
 
 
-    public function test(Request $request){
-        $races = RaceModel::where('race_type', '=', 'race')->orderBy('position','asc')->get();
-        return view('playtest',['races'=>$races]);
+    public function socketSettings(){
+        $user = Auth::user();
+
+        $battle_member = \DB::table('tbl_battle_members')->select('battle_id','user_id')->where('user_id', '=', $user['id'])->get();
+
+        $sec = intval(getenv('GAME_SEC_TIMEOUT'));
+        if($sec<=0){
+            $sec = 60;
+        }
+
+        return json_encode([
+            'battle'    => $battle_member[0]->battle_id,
+            'user'      => $user['id'],
+            'hash'      => md5(getenv('SECRET_MD5_KEY').$user['id']),
+            'dom'       => getenv('APP_DOMEN_NAME'),
+            'timeOut'   => $sec
+        ]);
     }
 }
