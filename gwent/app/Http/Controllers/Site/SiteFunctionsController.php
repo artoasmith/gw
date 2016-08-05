@@ -426,14 +426,11 @@ class SiteFunctionsController extends BaseController
 
     //Если пользователь начал проявлять активность - делаем его активным (Force метод)
 	public static function updateUserInBattleConnection($user_id = 0){
+        $user = Auth::user();
 	    if($user_id == 0){
-            $user = Auth::user();
             $user_id = $user['id'];
         }
-        $user = Auth::user();
-        if($user){
-            User::where('id', '=', $user_id)->update(['updated_at' => date('Y-m-d H:i:s'), 'user_online' => '1']);
-        }
+        User::where('id', '=', $user_id)->update(['updated_at' => date('Y-m-d H:i:s'), 'user_online' => '1']);
     }
 
 

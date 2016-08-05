@@ -1,6 +1,8 @@
 $(window).load(function(){
     $.get('/get_socket_settings', function(data) {
 
+        window.allowActions = 0;
+        
         var socketResult = JSON.parse(data);
 
         var ident = {
@@ -32,7 +34,6 @@ $(window).load(function(){
                 showPopup('Socket error');
             };
 
-
             conn.onmessage = function (e) {
                 var result = JSON.parse(e.data);
 
@@ -61,8 +62,17 @@ $(window).load(function(){
                         console.log(result);
                         if(result.login == $('.user-describer').attr('id')){
                             alert('Ваша очередь ходить');
+                            window.allowActions = 1;
                             userMakeAction();
+                        }
+                        break;
 
+                    case 'turnChanged':
+                        console.log(result);
+                        if(result.login == $('.user-describer').attr('id')){
+                            alert('Ваша очередь ходить');
+                            window.allowActions = 1;
+                            userMakeAction();
                         }
                         break;
                 }
@@ -300,14 +310,17 @@ $(window).load(function(){
             function userMakeAction(){
 
                 $('.buttons-block-play button[name=userPassed]').click(function(){
-                    var result = confirm('Вы действительно хотите спасовать?');
-                    if(result === true){
-                        conn.send(
-                            JSON.stringify({
-                                action: 'userPassedTurn',
-                                ident: ident
-                            })
-                        )
+                    if(window.allowActions == 1){
+                        var result = confirm('Вы действительно хотите спасовать?');
+                        if(result === true){
+                            conn.send(
+                                JSON.stringify({
+                                    action: 'userPassedTurn',
+                                    ident: ident
+                                })
+                            )
+                            window.allowActions = 0;
+                        }
                     }
                 });
             }
