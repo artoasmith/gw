@@ -22,6 +22,8 @@ class CreateBattleMembers extends Migration
             $table->text('magic_effects');
             $table->integer('user_energy')->unsigned();
             $table->tinyInteger('user_ready')->unsigned();
+            $table->tinyInteger('round_passed')->unsigned();
+            $table->tinyInteger('rounds_won')->unsigned();
             $table->timestamps();
         });
     }

@@ -125,7 +125,9 @@ class SiteGameController extends BaseController
                 'user_hand'     => serialize($user_hand),
                 'magic_effects' => $user_magic,
                 'user_energy'   => $user_energy,
-                'user_ready'    => 0
+                'user_ready'    => 0,
+                'round_passed'  => 0,
+                'rounds_won'    => 0
             ]);
         }else{
             $user_battle = BattleMembersModel::find($user_is_battle_member[0]->id);
@@ -136,6 +138,8 @@ class SiteGameController extends BaseController
             $user_battle -> magic_effects   = $user_magic;
             $user_battle -> user_energy     = $user_energy;
             $user_battle -> user_ready      = 0;
+            $user_battle -> round_passed    = 0;
+            $user_battle -> rounds_won      = 0;
             $result =  $user_battle -> save();
         }
         return $result;
@@ -271,7 +275,7 @@ class SiteGameController extends BaseController
     //Создание колод по id карт
     protected static function buildCardDeck($deck, $result_array){
         foreach($deck as $key => $card_id){
-            $card_data = \DB::table('tbl_card')->select('id','title','slug','card_type','card_strong','img_url','short_description')->where('id', '=', $card_id['id'])->get();
+            $card_data = \DB::table('tbl_card')->select('id','title','slug','card_type','card_strong','img_url','short_description', 'allowed_rows')->where('id', '=', $card_id['id'])->get();
 
             $result_array[] = [
                 'id'        => $card_data[0]->id,
@@ -280,7 +284,8 @@ class SiteGameController extends BaseController
                 'type'      => $card_data[0]->card_type,
                 'strength'  => $card_data[0]->card_strong,
                 'img_url'   => $card_data[0]->img_url,
-                'descript'  => $card_data[0]->short_description
+                'descript'  => $card_data[0]->short_description,
+                'action_row'=> unserialize($card_data[0]->allowed_rows)
             ];
         }
         return $result_array;

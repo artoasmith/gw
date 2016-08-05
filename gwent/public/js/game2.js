@@ -2,7 +2,7 @@ $(window).load(function(){
     $.get('/get_socket_settings', function(data) {
 
         window.allowActions = 0;
-        
+
         var socketResult = JSON.parse(data);
 
         var ident = {
@@ -36,6 +36,7 @@ $(window).load(function(){
 
             conn.onmessage = function (e) {
                 var result = JSON.parse(e.data);
+                console.log(result);
 
                 switch(result.message){
                     case 'usersAreJoined':
@@ -56,25 +57,31 @@ $(window).load(function(){
                             }
                         });
 
-                        break;
-
-                    case 'AllUsersAreReady':
-                        console.log(result);
-                        if(result.login == $('.user-describer').attr('id')){
-                            alert('Ваша очередь ходить');
+                        if(result.userTurn == $('.user-describer').attr('id')){
+                            showPopup('Ваша очередь ходить');
                             window.allowActions = 1;
                             userMakeAction();
                         }
+
                         break;
 
-                    case 'turnChanged':
-                        console.log(result);
+                    case 'allUsersAreReady':
                         if(result.login == $('.user-describer').attr('id')){
-                            alert('Ваша очередь ходить');
+                            showPopup('Ваша очередь ходить');
                             window.allowActions = 1;
                             userMakeAction();
+                        }else{
+                            window.allowActions = 0;
+                            showPopup('Ход игрока '+result.login);
                         }
+                        console.log('allowActions = '+window.allowActions);
                         break;
+
+                    case 'UserMadeMove':
+
+                        break;
+
+
                 }
             }
 
@@ -251,36 +258,34 @@ $(window).load(function(){
             function createUserHandView(cardData){
                 return  '' +
                     '<li data-cartid="'+cardData['id']+'" data-relative="'+cardData['type']+'">'+
-                    '<img title="'+cardData['title']+'" alt="'+cardData['slug']+'" src="/img/card_images/'+cardData['img_url']+'">'+
-                    '<div class="card-strength-wrap">'+cardData['strength']+'</div>' +
-                    '<div class="card-name-property"><p>'+cardData['title']+'</p></div>'+
+                        '<img title="'+cardData['title']+'" alt="'+cardData['slug']+'" src="/img/card_images/'+cardData['img_url']+'">'+
+                        '<div class="card-strength-wrap">'+cardData['strength']+'</div>' +
+                        '<div class="card-name-property"><p>'+cardData['title']+'</p></div>'+
                     '</li>';
+            }
+
+            function handReformCardLayers(handler){
+                var shift = 0;
+                var zIndex = 6;
+                console.log(handler);
+                handler.each(function() {
+                    $(this).css({'left': shift + '%', 'z-index': zIndex});
+                    shift += 19 - handler.length;
+                    zIndex++;
+                });
             }
 
 
             function handReformDeck(user){
-                var shift = 0;
+
                 $('.user-card-stash #sortableUserCards li').each(function(){
                     $(this).width($(this).width()+45);
-                    $(this).css({'left':shift+'%'});
-                    shift += 8;
-                });
-
-                $('#sortableUserCards').on('mouseover', 'li', function(){
-                    $(this).css({'top': '-80px', 'z-index': '300'});
-                    var _this = $(this);
-                    $(this).mouseout(function(){
-                        _this.css({'top': '0px', 'z-index': '6'});
-                    });
+                    handReformCardLayers($('.user-card-stash #sortableUserCards li'));
                 });
 
                 $('#sortableUserCards').on('click', 'li', function(){
-                    var cardData = [];
-                    for(var i=0; i<window.usersData[user]['hand'].length; i++){
-                        if( $(this).attr('data-cartid') == window.usersData[user]['hand'][i]['id']){
-                            cardData = window.usersData[user]['hand'][i];
-                        }
-                    }
+                    var cardData = getCardData($(this).attr('data-cartid'), $('.user-describer').attr('id'));
+
                     $('#notSortableOne').animate({'opacity':'1'}, 500);
 
                     $('#notSortableOne').empty().append('' +
@@ -304,6 +309,15 @@ $(window).load(function(){
                         '</div>' +
                     '</li>');
                 });
+
+                $('#sortableUserCards').on('mouseover', 'li', function(){
+                    var zIndex = $(this).css('z-index');
+                    $(this).css({'top': '-80px', 'z-index': '300'});
+                    var _this = $(this);
+                    $(this).mouseout(function(){
+                        _this.css({'top': '0px', 'z-index': zIndex});
+                    });
+                });
             }
 
 
@@ -323,16 +337,80 @@ $(window).load(function(){
                         }
                     }
                 });
+
+                if(window.allowActions == 1) {
+
+                    $('.user-card-stash #sortableUserCards').sortable({
+                        connectWith: '.user .convert-card-box .can-i-use-useless',
+                        stop: function (e, ui) {
+                            $(this).children('li[data-cartid='+ui.item.attr('data-cartid')+']').remove();
+                            handReformCardLayers($('.user-card-stash #sortableUserCards li'));
+                        }
+                    });
+
+                    $('.user .convert-card-box .can-i-use-useless').droppable({
+                        accept: '.ui-sortable-handle',
+                        drop: function(e, ui){
+                            var field = $(this).attr('id');
+                            var currentCard = getCardData(ui.draggable[0].attributes['data-cartid'].nodeValue, $('.user-describer').attr('id'));
+
+                            if(currentCard.action_row.length == 1){
+                                switch(currentCard.action_row[0]){
+                                    case 0:
+                                        var targetField = '#sortable-user-cards-field-meele';
+                                        break;
+                                    case 1:
+                                        var targetField = '#sortable-user-cards-field-range';
+                                        break;
+                                    case 2:
+                                        var targetField = '#sortable-user-cards-field-super-renge';
+                                        break;
+                                }
+                                if(currentCard['type'] == 'special'){
+                                    $('.user .convert-stuff '+targetField).parents('.convert-stuff').childrens('.image-inside-line').empty().append('<ul>'+createFieldCardView(currentCard)+'</ul>');
+                                }else{
+                                    $('.user .convert-stuff '+targetField).append(createFieldCardView(currentCard));
+                                    handReformCardLayers($('.user .convert-stuff '+targetField+' li'));
+                                }
+                            }else{ // Если у карты неcколько рядов действия
+
+                            }
+                        }
+                    });
+                }
             }
 
+            function createFieldCardView(cardData){
+                return '' +
+                '<li class="content-card-item" data-cartid="'+cardData['id']+'" data-relative="'+cardData['type']+'">'+
+                    '<div class="content-card-item-main" style="background-image: url(/img/card_images/'+cardData['img_url']+')">'+
+                        '<div class="label-power-card">'+cardData['strength']+'</div>'+
+                        '<div class="hovered-items">'+
+                            '<div class="card-name-property"><p>'+cardData['title']+'</div>'+
+                        '</div>'+
+                    '</div>'+
+                '</li>';
+            }
+
+
+            function getCardData(id, user){
+                var cardData = [];
+                for(var i=0; i<window.usersData[user]['hand'].length; i++){
+
+                    if( id == window.usersData[user]['hand'][i]['id']){
+                        cardData = window.usersData[$('.user-describer').attr('id')]['hand'][i];
+                    }
+                }
+                return cardData;
+            }
 
             changeDeckCardsWidth('.user-card-stash', '#sortableUserCards');
             handReformDeck($('.convert-battle-front .user').attr('data-user'));
 
 
             function showPopup(ms){
-                $('#buyingCardOrmagic .popup-content-wrap').html('<p>' + ms + '</p>');
-                $('#buyingCardOrmagic').show(300).delay(3000).hide(400);
+                $('.market-buy-popup .popup-content-wrap').html('<p>' + ms + '</p>');
+                $('.market-buy-popup').show(300);
             }
         });
 
