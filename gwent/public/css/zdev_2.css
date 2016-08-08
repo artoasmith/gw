@@ -667,7 +667,7 @@ body {
   -o-background-size: 100% 100%;
   background-size: 100% 100%;
   background-image: url(../images/bg-bf.png);
-  overflow: hidden; }
+  /*overflow: hidden;*/}
 
 .convert-battle-front {
   display: inline-block;
@@ -1000,7 +1000,8 @@ body {
 .convert-right-info {
   width: 311px;
   display: inline-block;
-  height: 300px;
+  position: relative;
+  z-index: 2;
   vertical-align: top; }
   .convert-right-info .useless-card {
     -webkit-box-shadow: 0px 0px 28.2px 11.8px rgba(158, 99, 38, 0.27), inset 0px 0px 28.2px 11.8px rgba(158, 99, 38, 0.27);

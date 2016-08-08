@@ -120,7 +120,7 @@ $(window).load(function(){
                     if( 0 == parseInt(userData[key]['ready'])){
                         if (userData[key]['hand'].length > 0) {
                             //Вывод карт руки и колоды
-                            createUserCardSelect(userData[key]['hand'], userData[key]['deck'], userData[key]['can_change_cards']);
+                            createUserCardSelect(userData[key]['hand'], userData[key]['can_change_cards']);
 
                             //Появление поп-апа выбора карт руки
 
@@ -143,6 +143,7 @@ $(window).load(function(){
 
 
             function userChangeDeck(can_change_cards){
+                //Смена карт при старте игры
                 $('#handCards li').click(function(){
                     if($(this).children('img').hasClass('disactive')){
                         $(this).children('img').removeClass('disactive');
@@ -153,6 +154,7 @@ $(window).load(function(){
                     }
                 });
 
+                //Пользователь Выбрал карты для сноса и нажал "ОК"
                 $('#selecthandCardsPopup input[name=accpetHandDeck]').click(function(){
                     var token = $('.market-buy-popup input[name=_token]').val().trim();
                     var n = $('#handCards li .disactive').length;
@@ -197,13 +199,14 @@ $(window).load(function(){
                                     ident: ident
                                 })
                             );
-                            console.log('block has sended Ready');
+                            console.log('user send Ready');
                         }
                     });
                 });
             }
 
-
+            
+            //Создание описаний пользователей в правом сайдбаре
             function createUserDescriber(userLogin, user_img, userRace){
                 if(user_img != ''){
                     $('.convert-right-info #'+userLogin+' .stash-about .image-oponent-ork').css({'background':'url(/img/user_images/'+user_img+') 50% 50% no-repeat'});
@@ -213,6 +216,7 @@ $(window).load(function(){
             }
 
 
+            //Создание изображений магических еффектов в правом сайдбаре
             function createUserMagicFieldCards(userLogin, magicData){
                 for(var i=0; i<magicData.length; i++){
                     $('.convert-right-info #' + userLogin + ' .useless-card').children().children('.magic-effects-wrap').append(createMagicEffectView(magicData[i]));
@@ -220,6 +224,7 @@ $(window).load(function(){
             }
 
 
+            //Созднаие Отображения маг. еффекта
             function createMagicEffectView(magicData){
                 return  '' +
                     '<li data-cardid="' + magicData['id'] + '">' +
@@ -227,23 +232,17 @@ $(window).load(function(){
                     '</li>';
             }
 
-            function createUserCardToSelectView(card){
-                return  '' +
-                    '<li data-cardid="' + card['id'] + '">' +
-                    '<img src="/img/card_images/' + card['img_url']+'" alt="' + card['slug'] +'" title="' + card['title'] +'">' +
-                    '<div class="card-strength-wrap">' + card['strength'] + '</div>' +
-                    '</li>';
-            }
 
-
-            function createUserCardSelect(handDeck, userDeck, cardsToSelectQuantity){
+            //Создание списка карт "Руки"
+            function createUserCardSelect(handDeck, cardsToSelectQuantity){
                 $('#selecthandCardsPopup .cards-select-message-wrap span').text(cardsToSelectQuantity);
                 for(var i=0; i<handDeck.length; i++){
-                    $('#selecthandCardsPopup #handCards').append(createUserCardToSelectView(handDeck[i]));
+                    $('#selecthandCardsPopup #handCards').append(createUserHandView(handDeck[i]));
                 }
             }
 
 
+            //Изменение ширины карт при выборе Карт "Руки"
             function changeDeckCardsWidth(parent, handler){
                 var cardsSelectBlockWidth = $(parent+' '+handler).width();
                 var cardsCount = $(parent+' '+handler+' li').length;
@@ -251,23 +250,24 @@ $(window).load(function(){
                 var cardsSelectBlockMargin = Math.floor((cardsSelectBlockWidth - singleCardBlockLength*cardsCount)/2 - 0.5);
                 $(parent+' '+handler+' li').width(singleCardBlockLength);
                 $(parent+' '+handler).css({'padding-left': cardsSelectBlockMargin+'px', 'padding-right': cardsSelectBlockMargin+'px'});
-
             }
 
 
+            //Отображение карт в "Руке"
             function createUserHandView(cardData){
                 return  '' +
-                    '<li data-cartid="'+cardData['id']+'" data-relative="'+cardData['type']+'">'+
+                    '<li data-cardid="'+cardData['id']+'" data-relative="'+cardData['type']+'">'+
                         '<img title="'+cardData['title']+'" alt="'+cardData['slug']+'" src="/img/card_images/'+cardData['img_url']+'">'+
                         '<div class="card-strength-wrap">'+cardData['strength']+'</div>' +
                         '<div class="card-name-property"><p>'+cardData['title']+'</p></div>'+
                     '</li>';
             }
 
+            
+            //Смешение карт "гармошкой"
             function handReformCardLayers(handler){
                 var shift = 0;
                 var zIndex = 6;
-                console.log(handler);
                 handler.each(function() {
                     $(this).css({'left': shift + '%', 'z-index': zIndex});
                     shift += 19 - handler.length;
@@ -276,15 +276,16 @@ $(window).load(function(){
             }
 
 
+            //Формирование "Руки"
             function handReformDeck(user){
-
+                //Изменение ширины карт "Руки"
                 $('.user-card-stash #sortableUserCards li').each(function(){
                     $(this).width($(this).width()+45);
                     handReformCardLayers($('.user-card-stash #sortableUserCards li'));
                 });
-
+                //Нажатие на карту
                 $('#sortableUserCards').on('click', 'li', function(){
-                    var cardData = getCardData($(this).attr('data-cartid'), $('.user-describer').attr('id'));
+                    var cardData = getCardData($(this).attr('data-cardid'), $('.user-describer').attr('id'));
 
                     $('#notSortableOne').animate({'opacity':'1'}, 500);
 
@@ -309,7 +310,7 @@ $(window).load(function(){
                         '</div>' +
                     '</li>');
                 });
-
+                //Выдвижение карты при наведении
                 $('#sortableUserCards').on('mouseover', 'li', function(){
                     var zIndex = $(this).css('z-index');
                     $(this).css({'top': '-80px', 'z-index': '300'});
@@ -321,8 +322,9 @@ $(window).load(function(){
             }
 
 
+            //Пользователь производит действие
             function userMakeAction(){
-
+                //Нажатие "Пасс"
                 $('.buttons-block-play button[name=userPassed]').click(function(){
                     if(window.allowActions == 1){
                         var result = confirm('Вы действительно хотите спасовать?');
@@ -339,41 +341,72 @@ $(window).load(function(){
                 });
 
                 if(window.allowActions == 1) {
-
+                    
+                    //Перетягивание карты на поле боя
                     $('.user-card-stash #sortableUserCards').sortable({
-                        connectWith: '.user .convert-card-box .can-i-use-useless',
-                        stop: function (e, ui) {
-                            $(this).children('li[data-cartid='+ui.item.attr('data-cartid')+']').remove();
+                        connectWith: '.convert-cards .convert-card-box .can-i-use-useless',
+                        stop: function (e, ui) {                            
                             handReformCardLayers($('.user-card-stash #sortableUserCards li'));
                         }
                     });
 
-                    $('.user .convert-card-box .can-i-use-useless').droppable({
+                    //Пользователь перетянул карту
+                    $('.convert-cards .convert-card-box .can-i-use-useless').droppable({
                         accept: '.ui-sortable-handle',
                         drop: function(e, ui){
-                            var field = $(this).attr('id');
-                            var currentCard = getCardData(ui.draggable[0].attributes['data-cartid'].nodeValue, $('.user-describer').attr('id'));
 
-                            if(currentCard.action_row.length == 1){
-                                switch(currentCard.action_row[0]){
-                                    case 0:
-                                        var targetField = '#sortable-user-cards-field-meele';
-                                        break;
-                                    case 1:
-                                        var targetField = '#sortable-user-cards-field-range';
-                                        break;
-                                    case 2:
-                                        var targetField = '#sortable-user-cards-field-super-renge';
-                                        break;
+                            var destignationField = 'user';
+                            
+                            var currentCard = getCardData(ui.draggable[0].attributes['data-cardid'].nodeValue, $('.user-describer').attr('id'));
+
+                            for(var i=0; i<currentCard['actions'].length; i++){
+                                if(currentCard['actions'][i]['CAspy_get_cards_num'] !== undefined){
+                                    destignationField = 'oponent';
                                 }
+                            }
+
+                            if(currentCard['type'] == 'special'){
+                                if($(this).context['id'].indexOf('user') > 0){
+                                    destignationField = 'user';
+                                }
+                                if($(this).context['id'].indexOf('oponent') > 0){
+                                    destignationField = 'oponent';                            
+                                }
+                            }
+
+                            var fieldArray = [
+                                '#sortable-'+destignationField+'-cards-field-meele',
+                                '#sortable-'+destignationField+'-cards-field-range',
+                                '#sortable-'+destignationField+'-cards-field-super-renge'
+                            ];
+                            
+                            $('#sortableUserCards li[data-cardid='+ui.draggable[0].attributes['data-cardid'].nodeValue+']').remove();
+                            handReformCardLayers($('.user-card-stash #sortableUserCards li'));
+                            
+                            if(currentCard.action_row.length == 1){
+                                targetField = fieldArray[currentCard.action_row[0]];
+                                
                                 if(currentCard['type'] == 'special'){
-                                    $('.user .convert-stuff '+targetField).parents('.convert-stuff').childrens('.image-inside-line').empty().append('<ul>'+createFieldCardView(currentCard)+'</ul>');
+                                    $('.convert-battle-front .convert-stuff '+targetField).parents('.convert-stuff').children('.convert-one-field').children('.field-for-cards').children('.image-inside-line').html(createFieldCardView(currentCard));
                                 }else{
-                                    $('.user .convert-stuff '+targetField).append(createFieldCardView(currentCard));
+                                    $('.convert-battle-front .convert-stuff '+targetField).append(createFieldCardView(currentCard));
                                     handReformCardLayers($('.user .convert-stuff '+targetField+' li'));
                                 }
-                            }else{ // Если у карты неcколько рядов действия
-
+                            }else{
+                                // Если у карты неcколько рядов действия
+                                var field = $(this).context['id'];
+                                
+                                for(var i = 0; i<currentCard.action_row.length; i++){
+                                    if('#'+field == fieldArray[i]){
+                                        targetField = '#'+field;
+                                        if(currentCard['type'] == 'special'){
+                                            $('.convert-battle-front .convert-stuff '+targetField).parents('.convert-stuff').children('.convert-one-field').children('.field-for-cards').children('.image-inside-line').html(createFieldCardView(currentCard));
+                                        }else{
+                                            $('.convert-battle-front .convert-stuff '+targetField).append(createFieldCardView(currentCard));
+                                            handReformCardLayers($('.user .convert-stuff '+targetField+' li'));
+                                        }
+                                    }
+                                }
                             }
                         }
                     });
@@ -382,7 +415,7 @@ $(window).load(function(){
 
             function createFieldCardView(cardData){
                 return '' +
-                '<li class="content-card-item" data-cartid="'+cardData['id']+'" data-relative="'+cardData['type']+'">'+
+                '<li class="content-card-item" data-cardid="'+cardData['id']+'" data-relative="'+cardData['type']+'">'+
                     '<div class="content-card-item-main" style="background-image: url(/img/card_images/'+cardData['img_url']+')">'+
                         '<div class="label-power-card">'+cardData['strength']+'</div>'+
                         '<div class="hovered-items">'+
@@ -390,6 +423,16 @@ $(window).load(function(){
                         '</div>'+
                     '</div>'+
                 '</li>';
+            }
+            
+            function createSpecialCardViewForSpecial(){
+                return ''+
+                '<div class="content-card-item-main" style="background-image: url(/img/card_images/'+cardData['img_url']+')">'+
+                    '<div class="label-power-card">'+cardData['strength']+'</div>'+
+                    '<div class="hovered-items">'+
+                        '<div class="card-name-property"><p>'+cardData['title']+'</div>'+
+                    '</div>'+
+                '</div>';
             }
 
 

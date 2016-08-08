@@ -1706,6 +1706,22 @@ ul.cards-select-wrap li .card-strength-wrap, ul.user-hand-cards-wrap li .card-st
   top: 0;
 }
 
+ul.cards-select-wrap li .card-name-property{
+    background-image: url("/images/plashka-for-name.png");
+    background-size: 145px 20px;
+    bottom: 0;
+    color: #fff;
+    height: auto;
+    padding: 5px 0 7px;
+    position: absolute;
+    text-align: center;
+    width: 100%;
+}
+ul.cards-select-wrap li .card-name-property p{
+    margin: 0;
+    font-size: 12px;
+}
+
 ul.user-hand-cards-wrap{
   height: 100%;
   text-align: center;
@@ -1733,4 +1749,9 @@ ul.user-hand-cards-wrap li .card-name-property{
   width: 100%;
   position: absolute;
   bottom: 0;
+}
+
+.image-inside-line .content-card-item-main{
+    max-width: 80px;
+    max-height: 100px;
 }

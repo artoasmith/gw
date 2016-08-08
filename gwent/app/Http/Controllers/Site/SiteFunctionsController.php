@@ -275,54 +275,54 @@ class SiteFunctionsController extends BaseController
     }
 
 
-	//Функция возвращает данные пользователя [аватар, золото, серебро, энергия, настройки колоды, лиги]
-	protected function getUserData(Request $request){
-		$data = $request->all();
+    //Функция возвращает данные пользователя [аватар, золото, серебро, энергия, настройки колоды, лиги]
+    protected function getUserData(Request $request){
+        $data = $request->all();
 
-		if(empty($data['login'])){
-			//если просматриваем свои данные
-			$user = Auth::user();
-			$login = $user['login'];
-		}else{
-			//если просматриваем данные другого
-			$login = htmlspecialchars(strip_tags(trim($data['login'])));
-		}
+        if(empty($data['login'])){
+            //если просматриваем свои данные
+            $user = Auth::user();
+            $login = $user['login'];
+        }else{
+            //если просматриваем данные другого
+            $login = htmlspecialchars(strip_tags(trim($data['login'])));
+        }
 
-		if((!empty($login)) && ($login != '')){
-			//Достаем из БД данные пользователя
-			$user = User::where('login', '=', $login)->get();
-			//Достаем из БД дополнительные данные пользователя
-			$user_data = UserAdditionalDataModel::where('login', '=', $login)->get();
-			$etc_data = EtcDataModel::where('label_data', '=', 'deck_options')->get();
-			//$leagues = LeagueModel::orderBy('title', 'asc')->get();
-			$leagues = \DB::table('tbl_league')->select('title', 'min_lvl')->orderBy('title', 'asc')->get();
+        if((!empty($login)) && ($login != '')){
+            //Достаем из БД данные пользователя
+            $user = User::where('login', '=', $login)->get();
+            //Достаем из БД дополнительные данные пользователя
+            $user_data = UserAdditionalDataModel::where('login', '=', $login)->get();
+            $etc_data = EtcDataModel::where('label_data', '=', 'deck_options')->get();
+            //$leagues = LeagueModel::orderBy('title', 'asc')->get();
+            $leagues = \DB::table('tbl_league')->select('title', 'min_lvl')->orderBy('title', 'asc')->get();
             $exchanges = EtcDataModel::where('label_data', '=', 'exchange_options')->get();
 
-			$result = [
-				'avatar'    => $user[0] -> img_url,
-				'gold'      => $user_data[0] -> user_gold,
-				'silver'    => $user_data[0] -> user_silver,
-				'energy'    => $user_data[0] -> user_energy,
-			];
+            $result = [
+                'avatar'    => $user[0] -> img_url,
+                'gold'      => $user_data[0] -> user_gold,
+                'silver'    => $user_data[0] -> user_silver,
+                'energy'    => $user_data[0] -> user_energy,
+            ];
 
-			if(empty($data['login'])) {
-				foreach ($etc_data as $key => $value) {
-					$result[$value->meta_key] = $value->meta_value;
-				}
+            if(empty($data['login'])) {
+                foreach ($etc_data as $key => $value) {
+                    $result[$value->meta_key] = $value->meta_value;
+                }
 
-				$result['leagues'] = [];
-				foreach ($leagues as $key => $value) {
-					$result['leagues'][] = ['title' => $value->title, 'min_lvl' => $value->min_lvl];
-				}
+                $result['leagues'] = [];
+                foreach ($leagues as $key => $value) {
+                    $result['leagues'][] = ['title' => $value->title, 'min_lvl' => $value->min_lvl];
+                }
 
                 $result['exchanges'] = [];
                 foreach ($exchanges as $key => $value) {
                     $result['exchanges'][$value->meta_key] = $value->meta_value;
                 }
-			}
-			return json_encode($result);
-		}
-	}
+            }
+            return json_encode($result);
+        }
+    }
 
 
     //Функция возвращает пользовательские колоды (доступные карты и карты колоды)
@@ -434,16 +434,16 @@ class SiteFunctionsController extends BaseController
     }
 
 
-	//Пользователь покупает карту
-	protected function userBuyingCard(Request $request){
+    //Пользователь покупает карту
+    protected function userBuyingCard(Request $request){
         self::updateConnention();
 
-	    $data= $request->all();
+        $data= $request->all();
 
-		self::updateConnention();
-		$user = Auth::user();
-		//Данные пользователя
-		$user_data = UserAdditionalDataModel::where('user_id', '=', $user['id'])->get();
+        self::updateConnention();
+        $user = Auth::user();
+        //Данные пользователя
+        $user_data = UserAdditionalDataModel::where('user_id', '=', $user['id'])->get();
 
         //Если пользователь находится в игре - запрещаем менять колоды
         $user_plying_status = self::checkUserIsPlaying();
@@ -451,10 +451,10 @@ class SiteFunctionsController extends BaseController
             return $user_plying_status;
         }
 
-		//Данные карты
-		$card = CardsModel::where('id', '=', $data['card_id'])->get();
+        //Данные карты
+        $card = CardsModel::where('id', '=', $data['card_id'])->get();
 
-		//Определяем тип покупки (Только золото||золото+серебро)
+            //Определяем тип покупки (Только золото||золото+серебро)
         switch($data['buy_type']){
             case 'simpleBuy':
                 //Отнимаем от средств пользователя цену карты
@@ -475,31 +475,30 @@ class SiteFunctionsController extends BaseController
                 return json_encode(['message' => 'Неизвестный тип операции.']);
         }
 
-		//Доступные карты пользователя
-		$user_available_deck = unserialize($user_data[0]->user_available_deck);
+        //Доступные карты пользователя
+        $user_available_deck = unserialize($user_data[0]->user_available_deck);
 
-		//Если карта существуетв колоде - увеличиваем её количество на 1
-		if( isset($user_available_deck[$data['card_id']]) ){
-			$user_available_deck[$data['card_id']]++;
-		}else{
-			//Если нету - создаем её
-			$user_available_deck[$data['card_id']] = 1;
-		}
+        //Если карта существуетв колоде - увеличиваем её количество на 1
+        if( isset($user_available_deck[$data['card_id']]) ){
+            $user_available_deck[$data['card_id']]++;
+        }else{
+            //Если нету - создаем её
+            $user_available_deck[$data['card_id']] = 1;
+        }
 
-		//Сохраняем колоду доступных карт
-		$user_data_to_save = UserAdditionalDataModel::find($user['id']);
-
-        $user_data_to_save -> user_gold             = $user_gold;
-        $user_data_to_save -> user_silver           = $user_silver;
-		$user_data_to_save -> user_available_deck   = serialize($user_available_deck);
+        //Сохраняем колоду доступных карт
+        $user_data_to_save = UserAdditionalDataModel::find($user_data[0]->id);
+        $user_data_to_save -> user_gold     = $user_gold;
+        $user_data_to_save -> user_silver   = $user_silver;
+        $user_data_to_save -> user_available_deck   = serialize($user_available_deck);
         $result = $user_data_to_save -> save();
 
-		if($result !== false){
-			return json_encode(['message' => 'success', 'gold' => $user_gold, 'silver' => $user_silver, 'title' => $card[0]->title]);
-		}else{
-			return $result;
-		}
-	}
+        if($result !== false){
+            return json_encode(['message' => 'success', 'gold' => $user_gold, 'silver' => $user_silver, 'title' => $card[0]->title]);
+        }else{
+            return $result;
+        }
+    }
 
 
     //Пользователь покупает энергию
@@ -585,12 +584,12 @@ class SiteFunctionsController extends BaseController
     }
 
 
-	//Пользователь покупает магию
-	protected function userBuyingMagic(Request $request){
-		self::updateConnention();
-		$user = Auth::user();
-		//Данные пользователя
-		$user_data = UserAdditionalDataModel::where('user_id', '=', $user['id'])->get();
+    //Пользователь покупает магию
+    protected function userBuyingMagic(Request $request){
+        self::updateConnention();
+        $user = Auth::user();
+        //Данные пользователя
+        $user_data = UserAdditionalDataModel::where('user_id', '=', $user['id'])->get();
 
         //Если пользователь находится в игре - запрещаем менять колоды
         $user_plying_status = self::checkUserIsPlaying();
@@ -598,26 +597,26 @@ class SiteFunctionsController extends BaseController
             return $user_plying_status;
         }
 
-		//Достаем из БД текущий магический еффект
-		$magic = MagicEffectsModel::where('id', '=', $request->input('magic_id'))->get();
+        //Достаем из БД текущий магический еффект
+        $magic = MagicEffectsModel::where('id', '=', $request->input('magic_id'))->get();
 
-		//Отнимаем от средств пользователя цену волшебства
-		$user_gold = $user_data[0]->user_gold - $magic[0]->price_gold;
-		$user_silver = $user_data[0]->user_silver - $magic[0]->price_silver;
+        //Отнимаем от средств пользователя цену волшебства
+        $user_gold = $user_data[0]->user_gold - $magic[0]->price_gold;
+        $user_silver = $user_data[0]->user_silver - $magic[0]->price_silver;
 
-		//Текущие магиские эффекты пользователя
-		$user_magic_effects = unserialize($user_data[0]->user_magic_effects);
+        //Текущие магиские эффекты пользователя
+        $user_magic_effects = unserialize($user_data[0]->user_magic_effects);
 
-		//Если существует текущий маг. эффект
-		if( isset($user_magic_effects[$request->input('magic_id')]) ){
-			//Добавляет +100 использований
-			$user_magic_effects[$request->input('magic_id')]['used_times'] += $magic[0]->usage_count;
-			//Обновляем дату окончания
+        //Если существует текущий маг. эффект
+        if( isset($user_magic_effects[$request->input('magic_id')]) ){
+                //Добавляет +100 использований
+                $user_magic_effects[$request->input('magic_id')]['used_times'] += $magic[0]->usage_count;
+                //Обновляем дату окончания
 
-		}else{
-			//Если не существует - создаем его
-			$user_magic_effects[$request->input('magic_id')] = ['used_times' => $magic[0]->usage_count, 'active' => 0];
-		}
+        }else{
+                //Если не существует - создаем его
+                $user_magic_effects[$request->input('magic_id')] = ['used_times' => $magic[0]->usage_count, 'active' => 0];
+        }
 
         $user_data_to_save = UserAdditionalDataModel::find($user['id']);
         $user_data_to_save -> user_gold         = $user_gold;
@@ -625,18 +624,18 @@ class SiteFunctionsController extends BaseController
         $user_data_to_save -> user_magic_effects= serialize($user_magic_effects);
         $result = $user_data_to_save -> save();
 
-		if($result !== false){
-			return json_encode([
+        if($result !== false){
+            return json_encode([
                 'message'   => 'success',
                 'date'      => '<p>'.$user_magic_effects[$request->input('magic_id')]['used_times'].'</p>',
                 'gold'      => $user_gold,
                 'silver'    => $user_silver,
                 'title'     => $magic[0]->title
             ]);
-		}else{
-			return $result;
-		}
-	}
+        }else{
+                return $result;
+        }
+    }
 
 
     //Пользователь покупает Серебро
@@ -673,13 +672,13 @@ class SiteFunctionsController extends BaseController
     }
 
 
-	//Пользователь активирует маг. еффект в магазине
-	protected function userChangeMagicEffectStatus(Request $request){
-		self::updateConnention();
+    //Пользователь активирует маг. еффект в магазине
+    protected function userChangeMagicEffectStatus(Request $request){
+        self::updateConnention();
 
-		$data = $request -> all();
+        $data = $request -> all();
         //Находим текущую сессию
-		$user = Auth::user();
+        $user = Auth::user();
 
         //Если пользователь находится в игре - запрещаем менять колоды
         $user_plying_status = self::checkUserIsPlaying();
@@ -688,43 +687,43 @@ class SiteFunctionsController extends BaseController
         }
 
         //Находим данные пользователя в БД
-		$user_data = UserAdditionalDataModel::where('user_id', '=', $user['id'])->get();
+        $user_data = UserAdditionalDataModel::where('user_id', '=', $user['id'])->get();
 
         //Все магические эффекты пользователя
-		$user_magic_effects = unserialize($user_data[0]->user_magic_effects);
+        $user_magic_effects = unserialize($user_data[0]->user_magic_effects);
 
         //Активные еффекты
-		$active_effects = [];
+        $active_effects = [];
 
-		foreach ($user_magic_effects as $key => $value){
-			if( 0 != $value['active'] ){
-				$active_effects[] = $key;
-			}
-		}
+        foreach ($user_magic_effects as $key => $value){
+            if( 0 != $value['active'] ){
+                $active_effects[] = $key;
+            }
+        }
 
         //максимальное количество активных магических эффектов
         $maximum_active_magic = \DB::table('tbl_etc_data')->select('meta_key', 'meta_value')->where('meta_key', '=', 'base_max_magic')->get();
 
-		if($data['is_active'] == 'false') {
+        if($data['is_active'] == 'false') {
 
-			if ($maximum_active_magic[0]->meta_value > count($active_effects)) {
-				$user_magic_effects[$data['status_id']]['active'] = 1;
-			}else{
-				return json_encode(['too_much', 0]);
-			}
-			
-		}else{
-			$user_magic_effects[$data['status_id']]['active'] = 0;
-		}
+            if ($maximum_active_magic[0]->meta_value > count($active_effects)) {
+                $user_magic_effects[$data['status_id']]['active'] = 1;
+            }else{
+                return json_encode(['too_much', 0]);
+            }
 
-		UserAdditionalDataModel::where('user_id', '=', $user['id'])->update(['user_magic_effects' => serialize($user_magic_effects)]);
+        }else{
+            $user_magic_effects[$data['status_id']]['active'] = 0;
+        }
 
-		return json_encode(['success', $user_magic_effects[$request->input('status_id')]['active']]);
-	}
+        UserAdditionalDataModel::where('user_id', '=', $user['id'])->update(['user_magic_effects' => serialize($user_magic_effects)]);
+
+        return json_encode(['success', $user_magic_effects[$request->input('status_id')]['active']]);
+    }
 
 
-	//валидация колоды
-	protected function validateUserDeck(Request $request){
+    //валидация колоды
+    protected function validateUserDeck(Request $request){
         self::updateConnention();
 
         $user = Auth::user();
