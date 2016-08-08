@@ -8,3 +8,4 @@ gwent/public/storage/
 gwent/public/bigdump.php
 .vagrant/
 .idea/
+/nbproject/private/
