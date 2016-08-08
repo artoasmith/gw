@@ -385,13 +385,7 @@ $(window).load(function(){
                             
                             if(currentCard.action_row.length == 1){
                                 targetField = fieldArray[currentCard.action_row[0]];
-                                
-                                if(currentCard['type'] == 'special'){
-                                    $('.convert-battle-front .convert-stuff '+targetField).parents('.convert-stuff').children('.convert-one-field').children('.field-for-cards').children('.image-inside-line').html(createFieldCardView(currentCard));
-                                }else{
-                                    $('.convert-battle-front .convert-stuff '+targetField).append(createFieldCardView(currentCard));
-                                    handReformCardLayers($('.user .convert-stuff '+targetField+' li'));
-                                }
+                                checkCardTypeThenPut(currentCard, targetField);
                             }else{
                                 // Если у карты неcколько рядов действия
                                 var field = $(this).context['id'];
@@ -399,33 +393,41 @@ $(window).load(function(){
                                 for(var i = 0; i<currentCard.action_row.length; i++){
                                     if('#'+field == fieldArray[i]){
                                         targetField = '#'+field;
-                                        if(currentCard['type'] == 'special'){
-                                            $('.convert-battle-front .convert-stuff '+targetField).parents('.convert-stuff').children('.convert-one-field').children('.field-for-cards').children('.image-inside-line').html(createFieldCardView(currentCard));
-                                        }else{
-                                            $('.convert-battle-front .convert-stuff '+targetField).append(createFieldCardView(currentCard));
-                                            handReformCardLayers($('.user .convert-stuff '+targetField+' li'));
-                                        }
+                                        checkCardTypeThenPut(currentCard, targetField);
                                     }
                                 }
                             }
+                            
+                            conn.send(
+                                JSON.stringify({
+                                    action: 'userMadeCardAction',
+                                    cardData: currentCard['id'],
+                                    field: targetField,
+                                    ident: ident
+                                })
+                            )
                         }
                     });
+                }
+            }
+            
+            function checkCardTypeThenPut(currentCard, targetField){
+                if(currentCard['type'] == 'special'){
+                    $('.convert-battle-front .convert-stuff '+targetField).parents('.convert-stuff').children('.convert-one-field').children('.field-for-cards').children('.image-inside-line').html(createCardDescriptionView(currentCard));
+                }else{
+                    $('.convert-battle-front .convert-stuff '+targetField).append(createFieldCardView(currentCard));
+                    handReformCardLayers($('.user .convert-stuff '+targetField+' li'));
                 }
             }
 
             function createFieldCardView(cardData){
                 return '' +
                 '<li class="content-card-item" data-cardid="'+cardData['id']+'" data-relative="'+cardData['type']+'">'+
-                    '<div class="content-card-item-main" style="background-image: url(/img/card_images/'+cardData['img_url']+')">'+
-                        '<div class="label-power-card">'+cardData['strength']+'</div>'+
-                        '<div class="hovered-items">'+
-                            '<div class="card-name-property"><p>'+cardData['title']+'</div>'+
-                        '</div>'+
-                    '</div>'+
+                    createCardDescriptionView(cardData)+
                 '</li>';
             }
             
-            function createSpecialCardViewForSpecial(){
+            function createCardDescriptionView(cardData){
                 return ''+
                 '<div class="content-card-item-main" style="background-image: url(/img/card_images/'+cardData['img_url']+')">'+
                     '<div class="label-power-card">'+cardData['strength']+'</div>'+
@@ -449,7 +451,9 @@ $(window).load(function(){
 
             changeDeckCardsWidth('.user-card-stash', '#sortableUserCards');
             handReformDeck($('.convert-battle-front .user').attr('data-user'));
-
+            $('.convert-battle-front .can-i-use-useless').each(function(){
+                handReformCardLayers($(this).children('li'));
+            });
 
             function showPopup(ms){
                 $('.market-buy-popup .popup-content-wrap').html('<p>' + ms + '</p>');
@@ -458,6 +462,5 @@ $(window).load(function(){
         });
 
     });
-
 
 });

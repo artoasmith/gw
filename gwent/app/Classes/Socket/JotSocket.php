@@ -49,8 +49,6 @@ class JotSocket extends BaseSocket
 
         $battle = BattleModel::find($msg->ident->battleId); //Даные битвы
 
-
-
         $battle_members = \DB::table('tbl_battle_members')->select('user_id','battle_id','user_ready', 'round_passed')->where('battle_id', '=', $msg->ident->battleId)->get(); //Данные о участвующих в битве
 
         SiteFunctionsController::updateUserInBattleConnection($msg->ident->userId);//Обновление пользовательского статуса online
@@ -81,7 +79,6 @@ class JotSocket extends BaseSocket
                 break;
 
             case 'userReady':
-                var_dump($battle -> fight_status);
                 if($battle -> fight_status == 10){
 
                     $ready_players_count = 0; //Количество игроков за столом готовых к игре
@@ -128,11 +125,85 @@ class JotSocket extends BaseSocket
                     }
                 }
                 break;
+                
+            case 'userMadeCardAction':                
+                $card_data = \DB::table('tbl_card')->select('id', 'card_type', 'allowed_rows', 'card_actions')->where('id', '=', $msg->cardData)->get();
+                
+                $user_member = \DB::table('tbl_battle_members')->select('user_id','user_hand')->where('user_id', '=', $msg->ident->userId)->get();
+                $user_hand = unserialize($user_member[0]->user_hand);
+                
+                foreach($user_hand as $key => $value){
+                    if($card_data[0]->id == $value['id']){
+                        unset($user_hand[$key]);
+                        break;
+                    }
+                }
+                $user_hand = serialize(array_values($user_hand));
+                
+                
+                switch($msg->field){
+                    case '#sortable-oponent-cards-field-super-renge':
+                        $field_relate_to_user = self::formUserBattleField($msg, '!=');
+                        $row = 2;
+                        break;                    
+                    case '#sortable-oponent-cards-field-range':
+                        $field_relate_to_user = self::formUserBattleField($msg, '!=');
+                        $row = 1;
+                        break;                    
+                    case '#sortable-oponent-cards-field-meele':
+                        $field_relate_to_user = self::formUserBattleField($msg, '!=');
+                        $row = 0;
+                        break;
+                    
+                    case '#sortable-user-cards-field-meele':
+                        $field_relate_to_user = self::formUserBattleField($msg, '=');
+                        $row = 0;
+                        break;
+                    case '#sortable-user-cards-field-range':
+                        $field_relate_to_user = self::formUserBattleField($msg, '=');
+                        $row = 1;
+                        break;
+                    case '#sortable-user-cards-field-super-renge':
+                        $field_relate_to_user = self::formUserBattleField($msg, '=');
+                        $row = 2;
+                        break;
+                    default:
+                        $result = ['message' => 'error', 'error' => 'действие прервано. Перезагрузите сраницу (F5).','battleInfo' => $msg->ident->battleId, 'login' => $user->login];
+                        self::sendMessageToSelf($from, $result);
+                }
+                
+                if(!isset($result)){
+                    $battle_field = unserialize($field_relate_to_user[0]->battle_field);
+                    if($card_data[0]->card_type == 'special'){
+                        if(in_array($row, unserialize($card_data[0]->allowed_rows), true)){
+                            $battle_field[$row]['special'] = $card_data[0]->id;
+                        }                        
+                    }else{
+                        if(in_array($row, unserialize($card_data[0]->allowed_rows), true)){
+                            $battle_field[$row]['warrior'][] = $card_data[0]->id;
+                        } 
+                    }
+                    
+                    BattleMembersModel::where('user_id', '=', $msg->ident->userId)->update(['user_hand' => $user_hand]);
+                    
+                    BattleMembersModel::where('user_id', '=', $field_relate_to_user[0]->user_id)->update(['battle_field' => serialize($battle_field)]);
+                    
+                }
+                break;
 
         }
 
     }
-
+    
+    
+    protected static function formUserBattleField($msg, $equal){
+        if($equal == '!='){
+            return \DB::table('tbl_battle_members')->select('id','user_id','battle_id','battle_field')->where('battle_id', '=', $msg->ident->battleId)->where('user_id', '!=', $msg->ident->userId)->get();
+        }
+        if($equal == '='){
+            return \DB::table('tbl_battle_members')->select('id','user_id','battle_id','battle_field')->where('battle_id', '=', $msg->ident->battleId)->where('user_id', '=', $msg->ident->userId)->get();
+        }
+    }
 
     protected static function sendMessageToOthers($from, $result, $battles){
         foreach ($battles as $client) {
