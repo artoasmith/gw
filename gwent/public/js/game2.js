@@ -1,8 +1,6 @@
 $(window).load(function(){
     $.get('/get_socket_settings', function(data) {
 
-        window.allowActions = 0;
-
         var socketResult = JSON.parse(data);
 
         var ident = {
@@ -58,9 +56,8 @@ $(window).load(function(){
                         });
 
                         if(result.userTurn == $('.user-describer').attr('id')){
-                            showPopup('Ваша очередь ходить');
-                            window.allowActions = 1;
-                            userMakeAction();
+                            showPopup('Ваша очередь ходить');                            
+                            userMakeAction(1);
                         }
 
                         break;
@@ -68,20 +65,45 @@ $(window).load(function(){
                     case 'allUsersAreReady':
                         if(result.login == $('.user-describer').attr('id')){
                             showPopup('Ваша очередь ходить');
-                            window.allowActions = 1;
-                            userMakeAction();
+                            userMakeAction(1);
                         }else{
-                            window.allowActions = 0;
+                            userMakeAction(0);
                             showPopup('Ход игрока '+result.login);
                         }
-                        console.log('allowActions = '+window.allowActions);
                         break;
 
-                    case 'UserMadeMove':
-
+                    case 'userMadeAction':
+                        if(result.login != $('.user-describer').attr('id')){
+                            showPopup('Ваша очередь ходить');
+                            userMakeAction(1);
+                        }else{
+                            userMakeAction(0);
+                            showPopup('Ход игрока '+result.login);
+                        }
+                        //console.log($('.convert-cards ul[id$=super-renge]').attr('id'));
+                        $('.convert-cards .convert-cards .convert-stuff .can-i-use-useless').empty();
+                        for(var key in result.battle_field){
+                            for(var row in result.battle_field[key]){
+                                row = ''+row;
+                                switch(row){
+                                    case '2': var rowField = 'super-renge'; break;
+                                    case '1': var rowField = 'field-range'; break;
+                                    case '0': var rowField = 'field-meele'; break;
+                                }
+                                for(var warrior_card in result.battle_field[key][row]['warrior']){
+                                    $('.convert-cards[data-user='+key+'] .convert-card-box .convert-stuff .field-for-cards ul[id$='+rowField+']').append(createFieldCardView(result.battle_field[key][row]['warrior'][warrior_card]));
+                                    //$('.convert-cards[data-user='+key+'] .convert-stuff ul[id$='+rowField+']').append()
+                                }
+                                //$('.convert-cards[data-user='+key+'] .convert-cards .convert-stuff ul[id$='+rowField+']')
+                            }
+                        }
                         break;
-
-
+                        
+                    case 'selfTurnEnds':
+                        userMakeAction(0);
+                        showPopup('Ход игрока '+result.login);                       
+                        break;
+                        
                 }
             }
 
@@ -175,7 +197,6 @@ $(window).load(function(){
                         data:   {cards:cardsToChange},
                         success:function(data){
                             data = JSON.parse(data);
-                            console.log(data);
                             for(var key in data){
                                 window.usersData[key]['deck'] = data[key]['deck'];
                                 window.usersData[key]['hand'] = data[key]['hand'];
@@ -323,24 +344,8 @@ $(window).load(function(){
 
 
             //Пользователь производит действие
-            function userMakeAction(){
-                //Нажатие "Пасс"
-                $('.buttons-block-play button[name=userPassed]').click(function(){
-                    if(window.allowActions == 1){
-                        var result = confirm('Вы действительно хотите спасовать?');
-                        if(result === true){
-                            conn.send(
-                                JSON.stringify({
-                                    action: 'userPassedTurn',
-                                    ident: ident
-                                })
-                            )
-                            window.allowActions = 0;
-                        }
-                    }
-                });
-
-                if(window.allowActions == 1) {
+            function userMakeAction(allowActions){
+                if(allowActions !== 0) {
                     
                     //Перетягивание карты на поле боя
                     $('.user-card-stash #sortableUserCards').sortable({
@@ -354,62 +359,70 @@ $(window).load(function(){
                     $('.convert-cards .convert-card-box .can-i-use-useless').droppable({
                         accept: '.ui-sortable-handle',
                         drop: function(e, ui){
+                            if((allowActions !== 0) && (allowActions !== undefined)){                               
 
-                            var destignationField = 'user';
-                            
-                            var currentCard = getCardData(ui.draggable[0].attributes['data-cardid'].nodeValue, $('.user-describer').attr('id'));
+                                var destignationField = 'user';
 
-                            for(var i=0; i<currentCard['actions'].length; i++){
-                                if(currentCard['actions'][i]['CAspy_get_cards_num'] !== undefined){
-                                    destignationField = 'oponent';
-                                }
-                            }
+                                var currentCard = getCardData(ui.draggable[0].attributes['data-cardid'].nodeValue, $('.user-describer').attr('id'));
 
-                            if(currentCard['type'] == 'special'){
-                                if($(this).context['id'].indexOf('user') > 0){
-                                    destignationField = 'user';
-                                }
-                                if($(this).context['id'].indexOf('oponent') > 0){
-                                    destignationField = 'oponent';                            
-                                }
-                            }
-
-                            var fieldArray = [
-                                '#sortable-'+destignationField+'-cards-field-meele',
-                                '#sortable-'+destignationField+'-cards-field-range',
-                                '#sortable-'+destignationField+'-cards-field-super-renge'
-                            ];
-                            
-                            $('#sortableUserCards li[data-cardid='+ui.draggable[0].attributes['data-cardid'].nodeValue+']').remove();
-                            handReformCardLayers($('.user-card-stash #sortableUserCards li'));
-                            
-                            if(currentCard.action_row.length == 1){
-                                targetField = fieldArray[currentCard.action_row[0]];
-                                checkCardTypeThenPut(currentCard, targetField);
-                            }else{
-                                // Если у карты неcколько рядов действия
-                                var field = $(this).context['id'];
-                                
-                                for(var i = 0; i<currentCard.action_row.length; i++){
-                                    if('#'+field == fieldArray[i]){
-                                        targetField = '#'+field;
-                                        checkCardTypeThenPut(currentCard, targetField);
+                                for(var i=0; i<currentCard['actions'].length; i++){
+                                    if(currentCard['actions'][i]['CAspy_get_cards_num'] !== undefined){
+                                        destignationField = 'oponent';
                                     }
                                 }
+
+                                if(currentCard['type'] == 'special'){
+                                    if($(this).context['id'].indexOf('user') > 0){
+                                        destignationField = 'user';
+                                    }
+                                    if($(this).context['id'].indexOf('oponent') > 0){
+                                        destignationField = 'oponent';                            
+                                    }
+                                }
+
+                                var fieldArray = [
+                                    '#sortable-'+destignationField+'-cards-field-meele',
+                                    '#sortable-'+destignationField+'-cards-field-range',
+                                    '#sortable-'+destignationField+'-cards-field-super-renge'
+                                ];
+
+                                $('#sortableUserCards li[data-cardid='+ui.draggable[0].attributes['data-cardid'].nodeValue+']').remove();
+                                handReformCardLayers($('.user-card-stash #sortableUserCards li'));
+
+                                if(currentCard.action_row.length == 1){
+                                    targetField = fieldArray[currentCard.action_row[0]];
+                                    checkCardTypeThenPut(currentCard, targetField);
+                                }else{
+                                    // Если у карты неcколько рядов действия
+                                    var field = $(this).context['id'];
+
+                                    for(var i = 0; i<currentCard.action_row.length; i++){
+                                        if('#'+field == fieldArray[i]){
+                                            targetField = '#'+field;
+                                            checkCardTypeThenPut(currentCard, targetField);
+                                        }
+                                    }
+                                }
+
+                                conn.send(
+                                    JSON.stringify({
+                                        action: 'userMadeCardAction',
+                                        cardData: currentCard['id'],
+                                        field: targetField,
+                                        ident: ident
+                                    })
+                                )
+                                allowActions = 0;
                             }
-                            
-                            conn.send(
-                                JSON.stringify({
-                                    action: 'userMadeCardAction',
-                                    cardData: currentCard['id'],
-                                    field: targetField,
-                                    ident: ident
-                                })
-                            )
                         }
                     });
                 }
             }
+            
+            /*function recalculateBattleFields(){
+                $('.convert-battle-front .convert-cards .convert-one-field')
+            }*/
+            
             
             function checkCardTypeThenPut(currentCard, targetField){
                 if(currentCard['type'] == 'special'){
@@ -419,6 +432,7 @@ $(window).load(function(){
                     handReformCardLayers($('.user .convert-stuff '+targetField+' li'));
                 }
             }
+            
 
             function createFieldCardView(cardData){
                 return '' +
@@ -426,6 +440,7 @@ $(window).load(function(){
                     createCardDescriptionView(cardData)+
                 '</li>';
             }
+            
             
             function createCardDescriptionView(cardData){
                 return ''+

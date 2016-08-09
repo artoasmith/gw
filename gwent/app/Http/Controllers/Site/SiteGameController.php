@@ -275,7 +275,7 @@ class SiteGameController extends BaseController
 
 
     //Создание колод по id карт
-    protected static function buildCardDeck($deck, $result_array){
+    public static function buildCardDeck($deck, $result_array){
         foreach($deck as $key => $card_id){
             $card_data = \DB::table('tbl_card')->select('id','title','slug','card_type','card_strong','img_url','short_description', 'allowed_rows', 'card_actions')->where('id', '=', $card_id['id'])->get();
 

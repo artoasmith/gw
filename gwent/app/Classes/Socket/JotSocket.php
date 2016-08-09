@@ -125,22 +125,21 @@ class JotSocket extends BaseSocket
                     }
                 }
                 break;
-                
+
             case 'userMadeCardAction':                
                 $card_data = \DB::table('tbl_card')->select('id', 'card_type', 'allowed_rows', 'card_actions')->where('id', '=', $msg->cardData)->get();
-                
+
                 $user_member = \DB::table('tbl_battle_members')->select('user_id','user_hand')->where('user_id', '=', $msg->ident->userId)->get();
                 $user_hand = unserialize($user_member[0]->user_hand);
-                
+
                 foreach($user_hand as $key => $value){
                     if($card_data[0]->id == $value['id']){
                         unset($user_hand[$key]);
                         break;
                     }
                 }
-                $user_hand = serialize(array_values($user_hand));
-                
-                
+                $user_hand = serialize(array_values($user_hand));                
+
                 switch($msg->field){
                     case '#sortable-oponent-cards-field-super-renge':
                         $field_relate_to_user = self::formUserBattleField($msg, '!=');
@@ -154,7 +153,7 @@ class JotSocket extends BaseSocket
                         $field_relate_to_user = self::formUserBattleField($msg, '!=');
                         $row = 0;
                         break;
-                    
+
                     case '#sortable-user-cards-field-meele':
                         $field_relate_to_user = self::formUserBattleField($msg, '=');
                         $row = 0;
@@ -171,7 +170,7 @@ class JotSocket extends BaseSocket
                         $result = ['message' => 'error', 'error' => 'действие прервано. Перезагрузите сраницу (F5).','battleInfo' => $msg->ident->battleId, 'login' => $user->login];
                         self::sendMessageToSelf($from, $result);
                 }
-                
+
                 if(!isset($result)){
                     $battle_field = unserialize($field_relate_to_user[0]->battle_field);
                     if($card_data[0]->card_type == 'special'){
@@ -183,11 +182,31 @@ class JotSocket extends BaseSocket
                             $battle_field[$row]['warrior'][] = $card_data[0]->id;
                         } 
                     }
-                    
+
                     BattleMembersModel::where('user_id', '=', $msg->ident->userId)->update(['user_hand' => $user_hand]);
-                    
+
                     BattleMembersModel::where('user_id', '=', $field_relate_to_user[0]->user_id)->update(['battle_field' => serialize($battle_field)]);
+
+                    $battle_field = [];
+                    $battle_members = \DB::table('tbl_battle_members')->select('battle_id','user_id', 'battle_field')->where('battle_id', '=', $msg->ident->battleId)->get();
+                    foreach($battle_members as $i => $value){
+                        $user = self::getUserData($value->user_id);
+                        $temp = unserialize($value->battle_field);
+                        for($i =0; $i<count($temp); $i++){
+                            $battle_field[$user->login][$i]['special'] = self::buildCardDeck([$temp[$i]['special']]);
+                            $battle_field[$user->login][$i]['warrior'] = self::buildCardDeck($temp[$i]['warrior']);
+                        }
+                    }
+                    //var_dump($battle_field);
+
                     
+                    $user = self::getUserData($msg->ident->userId);
+                    $result = ['message' => 'userMadeAction', 'login' => $user->login, 'battle_field' => $battle_field];
+                    self::sendMessageToOthers($from, $result, $this->battles[$msg->ident->battleId]);
+
+                    $user = self::getUserData(self::changeUserTurn($msg->ident->battleId));
+                    $result = ['message' => 'selfTurnEnds', 'login' => $user->login];
+                    self::sendMessageToSelf($from, $result);
                 }
                 break;
 
@@ -195,6 +214,33 @@ class JotSocket extends BaseSocket
 
     }
     
+    protected static function buildCardDeck($deck){
+        $result_array = [];
+        foreach($deck as $key => $card_id){
+            if(!empty($card_id)){
+                $card_data = \DB::table('tbl_card')->select('id','title','slug','card_type','card_strong','img_url','short_description', 'allowed_rows', 'card_actions')->where('id', '=', $card_id)->get();
+                $result_array[] = [
+                    'id'        => $card_data[0]->id,
+                    'title'     => $card_data[0]->title,
+                    'type'      => $card_data[0]->card_type,
+                    'strength'  => $card_data[0]->card_strong,
+                    'img_url'   => $card_data[0]->img_url                
+                ];
+            }
+            
+        }
+        return $result_array;
+    }
+    
+    
+    protected static function changeUserTurn($current_battle_id){
+        $current_user_turn = \DB::table('tbl_battles')->select('id','user_id_turn')->where('id', '=', $current_battle_id)->get();
+        $next_user = \DB::table('tbl_battle_members')->select('battle_id', 'user_id')->where('battle_id', '=', $current_battle_id)->where('user_id', '!=', $current_user_turn[0]->user_id_turn)->get();
+        BattleModel::where('id', '=', $current_battle_id)->update(['user_id_turn' => $next_user[0]->user_id]);
+        return $next_user[0]->user_id;
+    }
+
+
     
     protected static function formUserBattleField($msg, $equal){
         if($equal == '!='){
