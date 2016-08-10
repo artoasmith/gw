@@ -1,12 +1,13 @@
 <?php
 namespace App\Classes\Socket;
 
-use App\User;
 use App\BattleModel;
 use App\BattleMembersModel;
 use App\Classes\Socket\Base\BaseSocket;
-use Ratchet\ConnectionInterface;
 use App\Http\Controllers\Site\SiteFunctionsController;
+use App\Http\Controllers\Site\SiteGameController;
+use Crypt;
+use Ratchet\ConnectionInterface;
 
 class JotSocket extends BaseSocket
 {
@@ -132,7 +133,7 @@ class JotSocket extends BaseSocket
                 $user_member = \DB::table('tbl_battle_members')->select('user_id','user_hand')->where('user_id', '=', $msg->ident->userId)->get();
                 $user_hand = unserialize($user_member[0]->user_hand);
 
-                foreach($user_hand as $key => $value){
+                /*foreach($user_hand as $key => $value){
                     if($card_data[0]->id == $value['id']){
                         unset($user_hand[$key]);
                         break;
@@ -207,7 +208,7 @@ class JotSocket extends BaseSocket
                     $user = self::getUserData(self::changeUserTurn($msg->ident->battleId));
                     $result = ['message' => 'selfTurnEnds', 'login' => $user->login];
                     self::sendMessageToSelf($from, $result);
-                }
+                }*/
                 break;
 
         }
@@ -218,19 +219,15 @@ class JotSocket extends BaseSocket
         $result_array = [];
         foreach($deck as $key => $card_id){
             if(!empty($card_id)){
-                $card_data = \DB::table('tbl_card')->select('id','title','slug','card_type','card_strong','img_url','short_description', 'allowed_rows', 'card_actions')->where('id', '=', $card_id)->get();
-                $result_array[] = [
-                    'id'        => $card_data[0]->id,
-                    'title'     => $card_data[0]->title,
-                    'type'      => $card_data[0]->card_type,
-                    'strength'  => $card_data[0]->card_strong,
-                    'img_url'   => $card_data[0]->img_url                
-                ];
+                $card_data = SiteGameController::getCardData($card_id);
+                $result_array[] = $card_data;
             }
             
         }
         return $result_array;
     }
+    
+    
     
     
     protected static function changeUserTurn($current_battle_id){

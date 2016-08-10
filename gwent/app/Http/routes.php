@@ -156,6 +156,10 @@ Route::post('/user_create_battle', [
 Route::get('/validate_deck', [
     'uses' => 'Site\SiteFunctionsController@validateUserDeck'
 ]);
+//Получить данные о карте
+Route::get('/game_get_card_data', [
+    'uses' => 'Site\SiteGameController@getCardData'
+]);
 
 
 //Изменение пользовательских данных

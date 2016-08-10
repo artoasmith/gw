@@ -2,59 +2,18 @@
 @section('content')
     @if(!empty($errors->all()))
         @foreach($errors->all() as $key => $value)
-                {{ $value }}
+            {{ $value }}
         @endforeach
         {{ die() }}
     @endif
 
     <?php
-
-    function getCard($card_id){
-        if(!empty($card_id)){
-            $card = \DB::table('tbl_card')->select('id','title','card_type','card_strong','img_url')->where('id', '=', $card_id)->get();
-            return $card[0];            
-        }else{
-            return false;
-        }
-    }
-    
-    function createFieldCardView($card_id){
-        $cardData = getCard($card_id);
-        if($cardData !== false){
-            return '<li class="content-card-item" data-cardid="'.$cardData->id.'" data-relative="'.$cardData->card_type.'">'.
-                createCardDescriptionView($card_id).
-            '</li>';
-        }        
-    }
-            
-    function createCardDescriptionView($card_id){        
-        $cardData = getCard($card_id);        
-        if($cardData !== false){
-            return
-            '<div class="content-card-item-main" style="background-image: url(/img/card_images/'.$cardData->img_url.')">'.
-                '<div class="label-power-card">'.$cardData->card_strong.'</div>'.
-                '<div class="hovered-items">'.
-                    '<div class="card-name-property"><p>'.$cardData->title.'</div>'.
-                '</div>'.
-            '</div>';
-        }        
-    }
-    /*
-     * Для готовой модели
-     * Нужно зашифровать все поля:
-     *      $players['enemy'][0]['user_nickname']
-     *      $card[id]
-     *      $magic_effect[id]
-    */
-
-
     $user = Auth::user();
 
     $battle_members = \App\BattleMembersModel::where('battle_id','=',$battle_data->id)->get();
 
     $players = ['enemy' => [], 'allied' => []];
     $players_count = 0;
-
 
     foreach($battle_members as $key => $value){        
         //Создание сторон противников и союзников
@@ -63,28 +22,23 @@
 
 
         if($user['id'] == $value->user_id){
-            $players['allied'][] = [
-                'user_id'       => $value -> user_id,
-                'user_deck'     => unserialize($value -> user_deck),
+            //dd(unserialize($value -> user_hand));
+            $players['allied'] = [
+                'battle_field'=> unserialize($value -> battle_field),
+                'user_deck_race'=> $race_name[0] -> title,
+                'user_energy'   => $value -> user_energy,
                 'user_hand'     => unserialize($value -> user_hand),
-                'magic_effects' => unserialize($value -> magic_effects),
-                'user_energy'   => $value -> user_energy,
                 'user_img'      => $player_data[0] -> img_url,
                 'user_nickname' => $player_data[0] -> login,
-                'user_deck_race'=> $race_name[0] -> title,
                 'user_ready'    => $value -> user_ready,
-                'battle_field'  => unserialize($value -> battle_field)
-            ];
+                ];
         }else{
-            $players['enemy'][] = [
-                'user_id'       => $value -> user_id,
-                'user_deck'     => unserialize($value -> user_deck),
-                'magic_effects' => unserialize($value -> magic_effects),
+            $players['enemy'] = [
+                'battle_field'  => unserialize($value -> battle_field),
+                'user_deck_race'=> $race_name[0] -> title,
                 'user_energy'   => $value -> user_energy,
                 'user_img'      => $player_data[0] -> img_url,
                 'user_nickname' => $player_data[0] -> login,
-                'user_deck_race'=> $race_name[0] -> title,
-                'battle_field'  => unserialize($value -> battle_field)
             ];
         }
         $players_count++;        
@@ -149,7 +103,11 @@
     <div class="convert-left-info">
         <!-- Колода и отбой противника -->
         <div class="cards-bet cards-oponent">
-            <ul id="card-give-more-oponent" @if(isset($players['enemy'][0]))data-user="{{ $players['enemy'][0]['user_nickname'] }}"@endif>
+            <ul id="card-give-more-oponent" 
+                @if(isset($players['enemy']['user_nickname']))
+                    data-user="{{ $players['enemy']['user_nickname'] }}"
+                @endif
+            >
                 <!-- Колода противника -->
                 <li>
                     <div class="card-init">
@@ -174,7 +132,7 @@
 
         <div class="cards-bet cards-main">
             <!-- Колода и отбой игрока-->
-            <ul id="card-give-more-user" data-user="{{ $players['allied'][0]['user_nickname'] }}">
+            <ul id="card-give-more-user" data-user="{{ $players['allied']['user_nickname'] }}">
                 <li>
                     <div class="card-my-init cards-take-more">
                         <!-- Колода игрока -->
@@ -216,123 +174,67 @@
     <!-- Поле битвы -->
     <div class="convert-battle-front">
         <!-- Поле противника -->
-        <div class="convert-cards oponent" @if(isset($players['enemy'][0]))data-user="{{ $players['enemy'][0]['user_nickname'] }}"@endif>
+        <div class="convert-cards oponent" @if(isset($players['enemy']['user_nickname']))data-user="{{ $players['enemy']['user_nickname'] }}"@endif>
             <div class="convert-card-box">
                 <!-- Сверхдальние Юниты противника -->
                 <div class="convert-stuff">
                     <div class="convert-one-field">
-                        <div class="field-super-renge field-for-cards">
+                        <div class="field-for-cards" id="superRange">
 
-                            <div class="image-inside-line">
-                                @if(isset($players['enemy'][0]))
-                                {!! createCardDescriptionView($players['enemy'][0]['battle_field'][2]['special']) !!}
-                                @endif
-                            </div><!-- Место для спецкарты -->
+                            <div class="image-inside-line"><!-- Место для спецкарты --></div>
 
                             <!-- Поле размещения сверхдальних карт -->
                             <div class="inputer-field-super-renge fields-for-cards-wrap">
 
                                 <div class="bg-img-super-renge fields-for-cards-img"><!-- Картинка пустого сверхдальнего ряда --></div>
-                                <!-- Список сверхдальних карт-->
-                                <ul id="sortable-oponent-cards-field-super-renge" class="can-i-use-useless sort">
-                                @if(isset($players['enemy'][0]))
-                                    @foreach($players['enemy'][0]['battle_field'][2]['warrior'] as $key => $value)
-                                        {!! createFieldCardView($value) !!}
-                                    @endforeach
-                                @endif
-                                    <!--<li class="content-card-item" data-relative="special" data-power='10' data-cardid="555">
-                                        <div class="content-card-item-main">Бекграунд карты
-
-                                            <div class="label-power-card">10Сила карты</div>
-                                            <div class="hovered-items">
-
-                                                <div class="card-game-status">
-                                                    <img src="images/kard-property.png" alt="" />
-                                                    <img src="images/kard-property.png" alt="" />
-                                                    <img src="images/kard-property.png" alt="" />
-                                                </div>
-
-                                                <div class="card-name-property">
-                                                    <p>Дионис Стальной Название карты</p>
-                                                </div>
-                                                <div class="block-describe">
-                                                    <div class="block-image-describe"></div>
-                                                    <div class="block-text-describe">
-                                                        Описание карты (short_description)
-                                                        <p>Признай свои ошибки и похорони их как следует. Иначе они придут за тобой sdfg sdf gsdf gsdf hgsdhf </p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </li>-->
-
-                                </ul>
+                                
+                                <ul class="cards-row-wrap"><!-- Список сверхдальних карт--></ul>
                                 <!-- END OF Список сверхдальних карт-->
                             </div>
                             <!-- END OF Поле размещения сверхдальних карт -->
                         </div>
                     </div>
-                    <div class="field-for-sum">10<!-- Сумарная сила воинов в сверхдальнем ряду --></div>
+                    <div class="field-for-sum"><!-- Сумарная сила воинов в сверхдальнем ряду --></div>
                 </div>
                 <!-- END OF Сверхдальние Юниты противника -->
 
                 <!-- Дальние Юниты противника -->
                 <div class="convert-stuff">
                     <div class="convert-one-field">
-                        <div class="field-range field-for-cards">
+                        <div class="field-for-cards" id="range">
 
-                            <div class="image-inside-line">
-                                @if(isset($players['enemy'][0]))
-                                {!! createCardDescriptionView($players['enemy'][0]['battle_field'][1]['special']) !!}
-                                @endif
-                            </div><!-- Место для спецкарты -->
+                            <div class="image-inside-line"></div>
                             <!-- Поле размещения дальних карт -->
                             <div class="inputer-field-range fields-for-cards-wrap">
 
                                 <div class="bg-img-range fields-for-cards-img"><!-- Картинка пустого дальнего ряда --></div>
                                 <!-- Список дальних карт-->
-                                <ul id="sortable-oponent-cards-field-range" class="can-i-use-useless sort">
-                                @if(isset($players['enemy'][0]))
-                                    @foreach($players['enemy'][0]['battle_field'][1]['warrior'] as $key => $value)
-                                        {!! createFieldCardView($value) !!}
-                                    @endforeach
-                                @endif
-                                </ul>
+                                <ul class="cards-row-wrap"></ul>
                                 <!-- END OF Список дальних карт-->
                             </div>
                             <!-- END OF Поле размещения дальних карт -->
                         </div>
                     </div>
-                    <div class="field-for-sum">0<!-- Сумарная сила воинов в дальнем ряду --></div>
+                    <div class="field-for-sum"><!-- Сумарная сила воинов в дальнем ряду --></div>
                 </div>
                 <!-- END OF Дальние Юниты противника -->
 
                 <!-- Ближние Юниты противника -->
                 <div class="convert-stuff">
                     <div class="convert-one-field">
-                        <div class="field-meele field-for-cards">
+                        <div class="field-for-cards" id="meele">
 
-                            <div class="image-inside-line">
-                            @if(isset($players['enemy'][0]))
-                                {!! createCardDescriptionView($players['enemy'][0]['battle_field'][0]['special']) !!}
-                            @endif
-                            </div><!-- Место для спецкарты -->
+                            <div class="image-inside-line"></div>
                             <div class="inputer-field-meele fields-for-cards-wrap">
 
                                 <div class="bg-img-meele fields-for-cards-img"><!-- Картинка пустого ближнего ряда --></div>
                                 <!-- Список ближних карт-->
-                                <ul id="sortable-oponent-cards-field-meele" class="can-i-use-useless sort">
-                                @if(isset($players['enemy'][0]))
-                                    @foreach($players['enemy'][0]['battle_field'][0]['warrior'] as $key => $value)
-                                        {!! createFieldCardView($value) !!}
-                                    @endforeach
-                                @endif
-                                </ul>
+                                <ul class="cards-row-wrap"></ul>
                                 <!-- END OF Список ближних карт-->
                             </div>
                         </div>
                     </div>
-                    <div class="field-for-sum">0<!-- Сумарная сила воинов в ближнем ряду --></div>
+                    <div class="field-for-sum"><!-- Сумарная сила воинов в ближнем ряду --></div>
                 </div>
                 <!-- END OF Ближние Юниты противника -->
             </div>
@@ -342,82 +244,70 @@
         <div class="mezdyline"></div>
 
         <!-- Поле пользователя -->
-        <div class="convert-cards user" data-user="{{ $players['allied'][0]['user_nickname'] }}">
+        <div class="convert-cards user" data-user="{{ $players['allied']['user_nickname'] }}">
             <div class="convert-card-box">
                 <!-- Ближние Юниты пользователя -->
                 <div class="convert-stuff">
                     <div class="convert-one-field">
-                        <div class="field-meele field-for-cards" data-fieldtype="meele">
+                        <div class="field-for-cards" id="meele">
 
-                            <div class="image-inside-line">{!! createCardDescriptionView($players['allied'][0]['battle_field'][0]['special']) !!}</div><!-- Место для спецкарты -->
+                            <div class="image-inside-line"></div><!-- Место для спецкарты -->
 
                             <div class="inputer-field-meele fields-for-cards-wrap">
 
-                                <div class="bg-img-meele fields-for-cards-img"><!-- Картинка пустого ближнего ряда --></div>
+                                <div class="bg-img-meele fields-for-cards-img"></div>
 
                                 <!-- Список ближних карт-->
-                                <ul id="sortable-user-cards-field-meele" class="can-i-use-useless sort">
-                                    @foreach($players['allied'][0]['battle_field'][0]['warrior'] as $key => $value)
-                                        {!! createFieldCardView($value) !!}
-                                    @endforeach
-                                </ul>
+                                <ul class="cards-row-wrap"></ul>
                                 <!-- END OF Список ближних карт-->
                             </div>
                         </div>
                     </div>
-                    <div class="field-for-sum field-for-sum-user-meele">0<!-- Сила воинов в ближнем ряду--></div>
+                    <div class="field-for-sum"><!-- Сила воинов в ближнем ряду--></div>
                 </div>
                 <!-- END OF Ближние Юниты пользователя -->
 
                 <!-- Дальние Юниты пользователя -->
                 <div class="convert-stuff">
                     <div class="convert-one-field">
-                        <div class="field-range field-for-cards"  data-fieldtype="range">
+                        <div class="field-for-cards" id="range">
 
-                            <div class="image-inside-line">{!! createCardDescriptionView($players['allied'][0]['battle_field'][1]['special']) !!}</div><!-- Место для спецкарты -->
+                            <div class="image-inside-line"></div><!-- Место для спецкарты -->
 
                             <div class="inputer-field-range fields-for-cards-wrap">
 
                                 <div class="bg-img-range fields-for-cards-img"><!-- Картинка пустого ближнего ряда --></div>
 
                                 <!-- Список дальних карт-->
-                                <ul id="sortable-user-cards-field-range" class="can-i-use-useless sort">
-                                    @foreach($players['allied'][0]['battle_field'][1]['warrior'] as $key => $value)
-                                        {!! createFieldCardView($value) !!}
-                                    @endforeach
-                                </ul>
+                                <ul class="cards-row-wrap"></ul>
                                 <!-- END OF Список дальних карт-->
 
                             </div>
                         </div>
                     </div>
-                    <div class="field-for-sum field-for-sum-user-renge">0</div>
+                    <div class="field-for-sum"></div>
                 </div>
                 <!-- END OF Дальние Юниты пользователя -->
 
                 <!-- Сверхдальние юниты пользователя -->
                 <div class="convert-stuff">
                     <div class="convert-one-field">
-                        <div class="field-super-renge field-for-cards" data-fieldtype="super-renge">
+                        <div class="field-for-cards" id="superRange">
 
-                            <div class="image-inside-line">{!! createCardDescriptionView($players['allied'][0]['battle_field'][2]['special']) !!}</div><!-- Место для спецкарты -->
+                            <div class="image-inside-line"></div><!-- Место для спецкарты -->
 
                             <div class="inputer-field-super-renge fields-for-cards-wrap">
 
                                 <div class="bg-img-super-renge fields-for-cards-img"><!-- Картинка пустого ближнего ряда --></div>
 
                                 <!-- Список сверхдальних карт-->
-                                <ul id="sortable-user-cards-field-super-renge" class="can-i-use-useless sort">
-                                    @foreach($players['allied'][0]['battle_field'][2]['warrior'] as $key => $value)
-                                        {!! createFieldCardView($value) !!}
-                                    @endforeach
-                                </ul>
+                                <ul class="cards-row-wrap"></ul>
                                 <!-- END OF Список сверхдальнихдальних карт-->
 
                             </div>
                         </div>
                     </div>
-                    <div class="field-for-sum field-for-sum-user-super-renge">0</div>
+                    <div class="field-for-sum"></div>
                 </div>
                 <!-- END OF Сверхдальние юниты пользователя -->
             </div>
@@ -441,15 +331,19 @@
 
             <!-- Карты руки пользователя -->
             <ul id="sortableUserCards" class="user-hand-cards-wrap cfix">
-                @if($players['allied'][0]['user_ready'])
-                    @foreach($players['allied'][0]['user_hand'] as $i => $card_data)
-                        <li data-cardid="{{ $card_data['id'] }}" data-relative="{{ $card_data['type'] }}">
-                            <img title="'{{ $card_data['title'] }}" alt="{{ $card_data['slug'] }}" src="/img/card_images/{{ $card_data['img_url'] }}">
-                            <div class="card-strength-wrap">{{ $card_data['strength'] }}</div>
-                            <div class="card-name-property"><p>{{ $card_data['title'] }}</p></div>
-                        </li>
-                    @endforeach
-                @endif
+            @if($players['allied']['user_ready'] > 0)
+                @foreach($players['allied']['user_hand'] as $i => $card)
+                <li data-cardid="{{ $card['id'] }}" data-relative="{{ $card['type'] }}">
+                    <div class="card-wrap">
+                        <img src="/img/card_images/{{ $card['img_url'] }}" alt="">
+                        <div class="label-power-card">{{ $card['strength'] }}</div>
+                        <div class="hovered-items">
+                            <div class="card-name-property"><p>{{ $card['title'] }}</div>
+                        </div>
+                    </div>
+                </li>
+                @endforeach
+            @endif
             </ul>
             <!-- END OF Карты руки пользователя -->
 
@@ -470,7 +364,7 @@
 
     <!-- Правый сайдбар -->
     <div class="convert-right-info">
-        <div class="oponent-describer" @if(isset($players['enemy'][0]))id="{{ $players['enemy'][0]['user_nickname'] }}"@endif>
+        <div class="oponent-describer" @if(isset($players['enemy']['user_nickname']))id="{{ $players['enemy']['user_nickname'] }}"@endif>
 
             <div class="useless-card">
                 <div class="inside-for-some-block" style="">
@@ -483,13 +377,13 @@
             <!-- Данные попротивника -->
             <div class="stash-about" >
                 <div class="power-element">
-                    <div class="power-text power-text-oponent">0<!-- Сумарная сила воинов во всех рядах противника --></div>
+                    <div class="power-text power-text-oponent"><!-- Сумарная сила воинов во всех рядах противника --></div>
                 </div>
                 <div class="oponent-discribe">
 
                     <div class="image-oponent-ork"
-                        @if( (isset($players['enemy'][0]) ) && (!empty($players['enemy'][0]['user_img'])) )
-                        style="background: url('/img/user_images/{{$players['enemy'][0]['user_img']}}') 50% 50% no-repeat;"
+                        @if( (isset($players['enemy']['user_img']) ) && (!empty($players['enemy']['user_img'])) )
+                        style="background: url('/img/user_images/{{$players['enemy']['user_img']}}') 50% 50% no-repeat;"
                         @endif
                     >
 
@@ -518,10 +412,10 @@
                     </div>
 
                     <div class="naming-oponent">
-                        <div class="name">@if(isset($players['enemy'][0])){{$players['enemy'][0]['user_nickname']}}@endif<!-- Имя противника --></div>
+                        <div class="name">@if(isset($players['enemy']['user_nickname'])){{$players['enemy']['user_nickname']}}@endif<!-- Имя противника --></div>
                         <div class="rasa">
-                        @if(isset($players['enemy'][0]))
-                            {{$players['enemy'][0]['user_deck_race']}}
+                        @if(isset($players['enemy']['user_deck_race']))
+                            {{$players['enemy']['user_deck_race']}}
                         @endif
 
                         <!-- Колода противника-->
@@ -538,10 +432,9 @@
                         </div>
                     </div>
                     <div class="stats-shit">
-                    @if(isset($players['enemy'][0]))
-                        {{$players['enemy'][0]['user_energy']}}
+                    @if(isset($players['enemy']['user_energy']))
+                        {{$players['enemy']['user_energy']}}
                     @endif
-
                     <!-- Количество Энергии противника -->
                     </div>
                 </div>
@@ -555,14 +448,14 @@
         </div>
 
         <!-- Данные пользователя -->
-        <div class="user-describer" id="{{ $players['allied'][0]['user_nickname'] }}">
+        <div class="user-describer" id="{{ $players['allied']['user_nickname'] }}">
             <div class="stash-about">
                 <div class="power-element">
-                    <div class="power-text  power-text-user">1<!-- Сумарная сила воинов во всех рядах противника --></div>
+                    <div class="power-text  power-text-user"><!-- Сумарная сила воинов во всех рядах противника --></div>
                 </div>
                 <div class="oponent-discribe">
 
-                    <div class="image-oponent-ork" @if(!empty($players['allied'][0]['user_img']))style="background: url('/img/user_images/{{$players['allied'][0]['user_img']}}') 50% 50% no-repeat;"@endif></div><!-- Аватар игрока -->
+                    <div class="image-oponent-ork" @if(!empty($players['allied']['user_img']))style="background: url('/img/user_images/{{$players['allied']['user_img']}}') 50% 50% no-repeat;"@endif></div><!-- Аватар игрока -->
 
                     <div class="circle-status">
                         <svg id="svg" width='140px'  viewPort="0 0 100 100" version="1.1" xmlns="http://www.w3.org/2000/svg">
@@ -584,8 +477,8 @@
                     </div>
 
                     <div class="naming-user">
-                        <div class="name">{{$players['allied'][0]['user_nickname']}}<!-- Имя игрока --></div>
-                        <div class="rasa">{{$players['allied'][0]['user_deck_race']}}<!-- Колода игрока --></div>
+                        <div class="name">{{$players['allied']['user_nickname']}}<!-- Имя игрока --></div>
+                        <div class="rasa">{{$players['allied']['user_deck_race']}}<!-- Колода игрока --></div>
                     </div>
 
                 </div>
@@ -596,7 +489,7 @@
                             <div class="greencard-num"><!-- Количество карт на руках --></div>
                         </div>
                     </div>
-                    <div class="stats-shit">{{$players['allied'][0]['user_energy']}}<!-- Количество Энергии игрока --></div>
+                    <div class="stats-shit">{{$players['allied']['user_energy']}}<!-- Количество Энергии игрока --></div>
                 </div>
             </div>
             <div class="useless-card">

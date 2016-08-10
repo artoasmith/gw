@@ -52,7 +52,7 @@ $user = Auth::user();
 
 
     <script type="text/javascript" src="{{ URL::asset('js/scenario.js') }}"></script>
-    <script type="text/javascript" src="{{ URL::asset('js/game2.js') }}"></script>
+    <script type="text/javascript" src="{{ URL::asset('js/game.js') }}"></script>
     <!-- endbuild -->
 
 <!-- <script src="@{{ URL::asset('js/validate_script.js') }}"></script>-->
@@ -87,9 +87,7 @@ $user = Auth::user();
             <div class="cards-select-message-wrap">Вы можете заменить <span></span> карты</div>
 
             <div class="cards-select-message-wrap">Карты Руки</div>
-            <ul class="cards-select-wrap cfix" id="handCards">
-
-            </ul>
+            <ul class="cards-select-wrap cfix" id="handCards"></ul>
 
             <div class="button-wrap">
                 <input name="accpetHandDeck" type="button" value="Готово">

@@ -4,11 +4,7 @@ namespace App\Http\Controllers\Site;
 use App\BattleLogModel;
 use App\BattleModel;
 use App\BattleMembersModel;
-use App\CardsModel;
-use App\EtcDataModel;
-use App\LeagueModel;
-use App\MagicEffectsModel;
-use App\RaceModel;
+use Crypt;
 use App\User;
 use App\UserAdditionalDataModel;
 use Illuminate\Routing\Controller as BaseController;
@@ -277,10 +273,15 @@ class SiteGameController extends BaseController
     //Создание колод по id карт
     public static function buildCardDeck($deck, $result_array){
         foreach($deck as $key => $card_id){
-            $card_data = \DB::table('tbl_card')->select('id','title','slug','card_type','card_strong','img_url','short_description', 'allowed_rows', 'card_actions')->where('id', '=', $card_id['id'])->get();
+            if(strlen($card_id['id']) > 11){
+                $card_id = Crypt::decrypt($card_id['id']);
+            }else{
+                $card_id = $card_id['id'];
+            }
+            $card_data = \DB::table('tbl_card')->select('id','title','slug','card_type','card_strong','img_url','short_description', 'allowed_rows', 'card_actions')->where('id', '=', $card_id)->get();
 
             $result_array[] = [
-                'id'        => $card_data[0]->id,
+                'id'        => Crypt::encrypt($card_data[0]->id),
                 'title'     => $card_data[0]->title,
                 'slug'      => $card_data[0]->slug,
                 'type'      => $card_data[0]->card_type,
@@ -380,10 +381,10 @@ class SiteGameController extends BaseController
         $user_battle = \DB::table('tbl_battle_members')->select('id', 'user_id', 'battle_id', 'user_deck', 'user_hand')->where('user_id', '=', $user['id'])->get(); //Данные текущей битвы пользователя
 
         $user_hand = unserialize($user_battle[0]->user_hand); //Карты руки пользователя
-
+        
         for($i=0; $i<$cards_to_change_count; $i++){
             foreach($user_hand as $key => $value){
-                if($value['id'] == $cards_to_change[$i]){
+                if(Crypt::decrypt($value['id']) == Crypt::decrypt($cards_to_change[$i])){
                     unset($user_hand[$key]); //Удаляем заменяемые карты из руки
                     break;
                 }
@@ -394,7 +395,7 @@ class SiteGameController extends BaseController
 
         $user_deck = unserialize($user_battle[0]->user_deck); //Колода игрока
         $deck_card_count = count($user_deck);
-
+        
         for($i=0; $i<$cards_to_change_count; $i++){ //перемещаем N рандомных карт из колоды в руку
             $rand_item = rand(0, $deck_card_count-1);
             $user_hand[] = $user_deck[$rand_item];
@@ -406,13 +407,13 @@ class SiteGameController extends BaseController
         }
 
         for($i=0; $i<$cards_to_change_count; $i++){ //Заменяемые карты возвращаем обратко в колоду
-            $user_deck[] = ['id' => $cards_to_change[$i]];
+            $user_deck[] = ['id' => Crypt::decrypt($cards_to_change[$i])];
         }
         $deck_card_count = count($user_deck);
-
+        
         $hand = self::buildCardDeck($user_hand, []);
         $deck = self::buildCardDeck($user_deck, []);
-
+        
         $users_result_data[$user['login']] = [
             'deck_count'=> $deck_card_count,
             'hand'      => $hand,
@@ -454,5 +455,28 @@ class SiteGameController extends BaseController
             'dom'       => getenv('APP_DOMEN_NAME'),
             'timeOut'   => $sec
         ]);
+    }
+    
+    
+    public static function getCardData(Request $request){
+        $data = $request->all();
+        
+        if(strlen($data['card']) > 11){
+            $card_id = Crypt::decrypt($data['card']);
+        }else{
+            $card_id = $data['card'];
+        }        
+        $card_data = \DB::table('tbl_card')->select('id','title','slug','card_type','card_strong','img_url','short_description', 'allowed_rows', 'card_actions')->where('id', '=', $card_id)->get();
+        return json_encode([
+            'id'        => Crypt::encrypt($card_data[0]->id),
+            'title'     => $card_data[0]->title,
+            'type'      => $card_data[0]->card_type,
+            'strength'  => $card_data[0]->card_strong,
+            'img_url'   => $card_data[0]->img_url,
+            'descript'  => $card_data[0]->short_description,
+            'action_row'=> unserialize($card_data[0]->allowed_rows),
+            'actions'   => unserialize($card_data[0]->card_actions)
+        ]);
+    
     }
 }

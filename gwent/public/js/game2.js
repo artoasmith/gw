@@ -81,7 +81,7 @@ $(window).load(function(){
                             showPopup('Ход игрока '+result.login);
                         }
                         //console.log($('.convert-cards ul[id$=super-renge]').attr('id'));
-                        $('.convert-cards .convert-cards .convert-stuff .can-i-use-useless').empty();
+                        $('.convert-cards .convert-stuff .can-i-use-useless').empty();
                         for(var key in result.battle_field){
                             for(var row in result.battle_field[key]){
                                 row = ''+row;
@@ -91,12 +91,15 @@ $(window).load(function(){
                                     case '0': var rowField = 'field-meele'; break;
                                 }
                                 for(var warrior_card in result.battle_field[key][row]['warrior']){
-                                    $('.convert-cards[data-user='+key+'] .convert-card-box .convert-stuff .field-for-cards ul[id$='+rowField+']').append(createFieldCardView(result.battle_field[key][row]['warrior'][warrior_card]));
-                                    //$('.convert-cards[data-user='+key+'] .convert-stuff ul[id$='+rowField+']').append()
+                                    $('.convert-cards[data-user='+key+'] .convert-card-box .convert-stuff .field-for-cards ul[id$='+rowField+']').append(createFieldCardView(result.battle_field[key][row]['warrior'][warrior_card]));                                    
                                 }
-                                //$('.convert-cards[data-user='+key+'] .convert-cards .convert-stuff ul[id$='+rowField+']')
+                                if(result.battle_field[key][row]['special'].length > 0){
+                                    console.log(result.battle_field[key][row]);
+                                    $('.convert-cards[data-user='+key+'] .convert-card-box .convert-stuff .field-for-cards ul[id$='+rowField+']').parents('.field-for-cards').children('.image-inside-line').html(createCardDescriptionView(result.battle_field[key][row]['special'][0]));
+                                }                                
                             }
                         }
+                        handReformFieldsLayers();
                         break;
                         
                     case 'selfTurnEnds':
@@ -295,6 +298,33 @@ $(window).load(function(){
                     zIndex++;
                 });
             }
+            
+            
+            function handReformFieldsLayers(){
+                var rowSummary = {
+                    "sortable-oponent-cards-field-super-renge":0,
+                    "sortable-oponent-cards-field-range":0,
+                    "sortable-oponent-cards-field-meele":0,
+                    "sortable-user-cards-field-meele":0,
+                    "sortable-user-cards-field-range":0,
+                    "sortable-user-cards-field-super-renge":0
+                };
+                
+                $('.convert-battle-front .can-i-use-useless').each(function(){
+                    handReformCardLayers($(this).children('li'));
+                });
+                
+                for(var key in rowSummary){                    
+                    $('.convert-cards .convert-card-box .convert-stuff .field-for-cards #'+key+' li').each(function(){
+                        rowSummary[key] += parseInt($(this).children('.content-card-item-main').children('.label-power-card').text());
+                    });
+                    $('.convert-cards .convert-card-box .convert-stuff .field-for-cards #'+key).parents('.convert-stuff').children('.field-for-sum').text(rowSummary[key]);
+                }
+                var summ = rowSummary["sortable-oponent-cards-field-super-renge"] + rowSummary["sortable-oponent-cards-field-range"]+rowSummary["sortable-oponent-cards-field-meele"];
+                $('.oponent-describer .power-text-oponent').text(summ);
+                var summ = rowSummary["sortable-user-cards-field-super-renge"] + rowSummary["sortable-user-cards-field-range"]+rowSummary["sortable-user-cards-field-meele"];
+                $('.user-describer .power-text-user').text(summ);
+            }
 
 
             //Формирование "Руки"
@@ -466,9 +496,8 @@ $(window).load(function(){
 
             changeDeckCardsWidth('.user-card-stash', '#sortableUserCards');
             handReformDeck($('.convert-battle-front .user').attr('data-user'));
-            $('.convert-battle-front .can-i-use-useless').each(function(){
-                handReformCardLayers($(this).children('li'));
-            });
+            
+            handReformFieldsLayers();
 
             function showPopup(ms){
                 $('.market-buy-popup .popup-content-wrap').html('<p>' + ms + '</p>');
