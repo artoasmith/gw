@@ -21,6 +21,7 @@ class CreateBattleTabe extends Migration
             $table->tinyInteger('fight_status')->unsigned(); //0 - ожидание другого игрока. 1 - подготовка к бою. 2 - бой продолжается. 3 - бой окончен
             $table->integer('user_id_turn')->unsigned(); //ID Последнего походившего пользователя (не того который сейчас ходит)
             $table->text('round_status'); //массив array[p1 => 'количество выграных раундов', p2 => 'количество выграных раундов']
+            $table->text('battle_field');
             $table->timestamps();
         });
     }

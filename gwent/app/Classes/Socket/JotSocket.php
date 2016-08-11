@@ -14,26 +14,20 @@ class JotSocket extends BaseSocket
     protected $clients;  //Соединения клиентов
     protected $battles;
 
-
     public function __construct(){
         $this->clients = new \SplObjectStorage;
     }
 
-
     public function onOpen(ConnectionInterface $conn){
         //Пользователь присоединяется к сессии
-
         $this->clients->attach($conn); //Добавление клиента
-
         echo 'New connection ('.$conn->resourceId.')'."\n\r";
     }
-
 
     protected static function getUserData($user_id){
         $user = \DB::table('users')->select('id', 'login', 'user_current_deck')->where('id', '=', $user_id)->get();
         return $user[0];
     }
-
 
     public function onMessage(ConnectionInterface $from, $msg){
         //Обработчик каждого сообщения
@@ -54,33 +48,11 @@ class JotSocket extends BaseSocket
 
         SiteFunctionsController::updateUserInBattleConnection($msg->ident->userId);//Обновление пользовательского статуса online
 
+        var_dump($battle -> fight_status);
         switch($msg->action){
-            case 'userJoinedToRoom':
-
-                if(count($battle_members) == $battle->players_quantity){
-                    if($battle -> fight_status < 10){
-                        $battle -> fight_status = 10; // Подключилось нужное количество пользователей
-                        $battle -> save();
-                    }
-
-                    if($battle -> user_id_turn != 0){
-                        $user_turn = self::getUserData($battle -> user_id_turn);
-                    }else{
-                        $user_turn = json_decode('{"login":""}');
-                    }
-
-                    $user = self::getUserData($msg->ident->userId); // Данные пользователя
-
-                    $result = ['message' => 'usersAreJoined', 'JoinedUser' => $user->login, 'userTurn' => $user_turn->login, 'battleInfo' => $msg->ident->battleId];
-
-                    self::sendMessageToSelf($from, $result); //Отправляем результат отправителю
-                    self::sendMessageToOthers($from, $result, $this->battles[$msg->ident->battleId]); //Отправляем результат всем остальным
-
-                }
-                break;
 
             case 'userReady':
-                if($battle -> fight_status == 10){
+                if($battle -> fight_status == 1){
 
                     $ready_players_count = 0; //Количество игроков за столом готовых к игре
                     foreach ($battle_members as $key => $value){
@@ -108,26 +80,65 @@ class JotSocket extends BaseSocket
 
                             $user = self::getUserData($players_turn);
 
-                        }else {
+                        }else{
                             $user = self::getUserData($battle->user_id_turn);
                             $players_turn = $battle->user_id_turn;
                         }
 
-                        $result = ['message' => 'allUsersAreReady', 'battleInfo' => $msg->ident->battleId, 'login' => $user->login];
+                        $result = ['message' => 'allUsersAreReady', 'row'=>'88', 'battleInfo' => $msg->ident->battleId, 'login' => $user->login];
 
-                        $battle -> fight_status = 101;
+                        if($battle -> fight_status <= 1){                            
+                            self::sendMessageToOthers($from, $result, $this->battles[$msg->ident->battleId]);
+                        }
+
+                        $battle -> fight_status = 2;
                         if($battle -> user_id_turn == 0){
                             $battle -> user_id_turn = $players_turn;
                             self::sendMessageToSelf($from, $result);
                         }
                         $battle -> save();
-
-                        self::sendMessageToOthers($from, $result, $this->battles[$msg->ident->battleId]);
                     }
                 }
                 break;
+            
+            case 'userJoinedToRoom':
 
-            case 'userMadeCardAction':                
+                if($battle -> fight_status <= 1){
+                    if(count($battle_members) == $battle->players_quantity){
+                        if($battle -> fight_status == 0){
+                            $battle -> fight_status = 1; // Подключилось нужное количество пользователей
+                            $battle -> save();
+                        }
+
+                        if($battle -> user_id_turn != 0){
+                            $user_turn = self::getUserData($battle -> user_id_turn);
+                        }else{
+                            $user_turn = json_decode('{"login":""}');
+                        }
+
+                        $user = self::getUserData($msg->ident->userId); // Данные пользователя
+
+                        $result = ['message' => 'usersAreJoined', 'row' => '121', 'JoinedUser' => $user->login, 'login' => $user_turn->login, 'battleInfo' => $msg->ident->battleId];
+
+                        self::sendMessageToSelf($from, $result); //Отправляем результат отправителю
+                        self::sendMessageToOthers($from, $result, $this->battles[$msg->ident->battleId]);
+                    }
+                }
+
+                if($battle -> fight_status == 2){
+                    if($battle -> user_id_turn != 0){
+                        $user_turn = self::getUserData($battle -> user_id_turn);
+                    }else{
+                        $user_turn = json_decode('{"login":""}');
+                    }
+
+                    $result = ['message' => 'allUsersAreReady', 'row'=>'135','battleInfo' => $msg->ident->battleId, 'login' => $user_turn->login];
+                    self::sendMessageToSelf($from, $result);
+                }
+                break;
+
+            
+            case 'userMadeCardAction':
                 $card_data = \DB::table('tbl_card')->select('id', 'card_type', 'allowed_rows', 'card_actions')->where('id', '=', $msg->cardData)->get();
 
                 $user_member = \DB::table('tbl_battle_members')->select('user_id','user_hand')->where('user_id', '=', $msg->ident->userId)->get();
@@ -212,9 +223,8 @@ class JotSocket extends BaseSocket
                 break;
 
         }
-
     }
-    
+
     protected static function buildCardDeck($deck){
         $result_array = [];
         foreach($deck as $key => $card_id){
@@ -222,14 +232,11 @@ class JotSocket extends BaseSocket
                 $card_data = SiteGameController::getCardData($card_id);
                 $result_array[] = $card_data;
             }
-            
         }
         return $result_array;
     }
     
-    
-    
-    
+
     protected static function changeUserTurn($current_battle_id){
         $current_user_turn = \DB::table('tbl_battles')->select('id','user_id_turn')->where('id', '=', $current_battle_id)->get();
         $next_user = \DB::table('tbl_battle_members')->select('battle_id', 'user_id')->where('battle_id', '=', $current_battle_id)->where('user_id', '!=', $current_user_turn[0]->user_id_turn)->get();
@@ -238,7 +245,6 @@ class JotSocket extends BaseSocket
     }
 
 
-    
     protected static function formUserBattleField($msg, $equal){
         if($equal == '!='){
             return \DB::table('tbl_battle_members')->select('id','user_id','battle_id','battle_field')->where('battle_id', '=', $msg->ident->battleId)->where('user_id', '!=', $msg->ident->userId)->get();
@@ -264,14 +270,12 @@ class JotSocket extends BaseSocket
 
     public function onClose(ConnectionInterface $conn){
         $this->clients->detach($conn);
-
         echo 'Connection '.$conn->resourceId.' has disconnected'."\n";
     }
 
 
     public function onError(ConnectionInterface $conn, \Exception $e){
         echo 'An error has occured: '.$e->getMessage()."\n";
-
         $conn -> close();
     }
 }

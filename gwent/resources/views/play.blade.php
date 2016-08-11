@@ -24,7 +24,8 @@
         if($user['id'] == $value->user_id){
             //dd(unserialize($value -> user_hand));
             $players['allied'] = [
-                'battle_field'=> unserialize($value -> battle_field),
+                'battle_field'  => unserialize($value -> battle_field),
+                'user_deck'     => unserialize($value -> user_deck),
                 'user_deck_race'=> $race_name[0] -> title,
                 'user_energy'   => $value -> user_energy,
                 'user_hand'     => unserialize($value -> user_hand),
@@ -35,6 +36,7 @@
         }else{
             $players['enemy'] = [
                 'battle_field'  => unserialize($value -> battle_field),
+                'user_deck'     => unserialize($value -> user_deck),
                 'user_deck_race'=> $race_name[0] -> title,
                 'user_energy'   => $value -> user_energy,
                 'user_img'      => $player_data[0] -> img_url,
@@ -112,7 +114,11 @@
                 <li>
                     <div class="card-init">
                         <div class="card-otboy-counter deck">
-                            <div class="counter"><!-- Колличество карт в колоде противника --></div>
+                            <div class="counter">
+                                @if(isset($players['enemy']['user_deck']))
+                                    {{ count($players['enemy']['user_deck'])}}
+                                @endif
+                            </div>
                         </div>
                     </div>
                 </li>
@@ -143,7 +149,11 @@
 
                         <!-- Количество карт в колоде -->
                         <div class="card-take-more-counter deck">
-                            <div class="counter"></div>
+                            <div class="counter">
+                                @if(isset($players['allied']['user_deck']))
+                                    {{ count($players['allied']['user_deck'])}}
+                                @endif                                
+                            </div>
                         </div>
                         <!--END OF Количество карт в колоде -->
                     </div>

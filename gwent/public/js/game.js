@@ -7,7 +7,9 @@ $(window).load(function(){
             userId: socketResult['user'],
             hash: socketResult['hash']
         };
-        
+        var allowActions = 0;
+        var userMadeAction = 0;
+
         $(document).ready(function(){
             var conn = new WebSocket('ws://' + socketResult['dom'] + ':8080');
 
@@ -30,7 +32,7 @@ $(window).load(function(){
             conn.onmessage = function (e) {
                 var result = JSON.parse(e.data);
                 console.log(result);
-                
+
                  switch(result.message){
                     case 'usersAreJoined':
                         var token = $('.market-buy-popup input[name=_token]').val().trim();
@@ -44,31 +46,34 @@ $(window).load(function(){
                                 if(data['message'] == 'success'){                                    
                                     //Формирование данных пользователей и окна выбора карт
                                     buildRoomPreview(data['userData']);
+                                    console.log('room builded');
                                 }
                             }
                         });
-                        if(result.userTurn == $('.user-describer').attr('id')){                                                        
-                            userMakeAction(1);
-                        }else{
-                            userMakeAction(0);
-                        }
                         break;
-                        
+
                     case 'allUsersAreReady':
                         if(result.login == $('.user-describer').attr('id')){
                             showPopup('Ваша очередь ходить');
-                            userMakeAction(1);
                         }else{
-                            userMakeAction(0);
                             showPopup('Ход игрока '+result.login);
                         }
                         break;
                 }
+
+                if((result.message == 'usersAreJoined') || (result.message == 'allUsersAreReady')){
+                    if(result.login == $('.user-describer').attr('id')){
+                        allowActions = 1;
+                    }else{
+                        allowActions = 0;
+                    }
+                    userMakeAction(allowActions);
+                }                
             }
-            
-            
+
+
             function buildRoomPreview(userData){
-                //очищение списков поп-апа выбора карт        
+                //очищение списков поп-апа выбора карт
                 $('#selecthandCardsPopup #handCards').empty();
 
                 //Отображаем данные пользователей
@@ -96,6 +101,7 @@ $(window).load(function(){
 
                     //Если пользователь не готов (не выбраны карты для игры)
                     if( 0 == parseInt(userData[key]['ready'])){
+                        console.log('is _not_ready')
                         if (userData[key]['hand'].length > 0) {
                             //Вывод карт руки и колоды
                             //createUserCardSelect(userData[key]['hand'], userData[key]['can_change_cards']);
@@ -104,7 +110,7 @@ $(window).load(function(){
                                 $('#selecthandCardsPopup #handCards').append(createFieldCardView(userData[key]['hand'][i], true));
                             }
                             //Изменение ширины карт при выборе Карт "Руки"
-                            $('#selecthandCardsPopup').show(300, function () {
+                            $('#selecthandCardsPopup').show(300, function(){
                                 var cardsSelectBlockWidth = $('#selecthandCardsPopup #handCards').width();
                                 var singleCardBlockLength = Math.floor(cardsSelectBlockWidth/$('#selecthandCardsPopup #handCards li').length)-1;
                                 $('#selecthandCardsPopup #handCards li').css({'width': singleCardBlockLength, 'padding-left': '1px'});
@@ -114,18 +120,11 @@ $(window).load(function(){
                             //Пользователь поменял карты
                             userChangeDeck(userData[key]['can_change_cards']);
                         }
-                    }else{
-                        conn.send(
-                            JSON.stringify({
-                                action: 'userReady',
-                                ident: ident
-                            })
-                        );
                     }
                 }
             }
-            
-            
+
+
             function userChangeDeck(can_change_cards){
                 //Смена карт при старте игры
                 $('#handCards li').click(function(){
@@ -181,80 +180,89 @@ $(window).load(function(){
                     });
                 });
             }
-            
+
             //Пользователь должен сделать действие
             function userMakeAction(allowActions){
-                $('ul li[data-cardid]').click(function(){
-                    if($(this).hasClass('active')){
-                        $(this).removeClass('active');
-                        clearRowSelection();
-                        $('#notSortableOne').empty().css({'opacity': 0});
-                    }else{
-                        $(this).parents('ul').children('li').removeClass('active');
-                        $(this).addClass('active');
-                    }
-                    if($(this).hasClass('active')){
-                        $.ajax({
-                            url:     '/game_get_card_data',
-                            type:    'GET',
-                            data:    {card:$(this).attr('data-cardid')},
-                            success: function(data){
-                                data = JSON.parse(data);
-                                $('#notSortableOne').animate({'opacity':'1'}, 240);
+                console.log('allowActions='+allowActions+'userMadeAction='+userMadeAction)
+                if((allowActions !== 0) && (userMadeAction === 0)){
+                    $('.convert-battle-front .convert-stuff').on('click', '.active',function(){
+                        userMadeAction = 1;
+                        var card = $('#sortableUserCards .active').attr('data-cardid');
+                        console.log(card);
+                        var field = $(this).attr('id');
+                        console.log(field)
+                    });
+                }
+            }
 
-                                $('#notSortableOne').empty().append('' +
-                                '<li class="content-card-item chossen-card" id="'+data['id']+'" data-type="'+data['type']+'" data-row="'+data['action_row']+'" >' +
-                                    '<div class="content-card-item-main" style="background-image: url(/img/card_images/'+data['img_url']+')">' +
-                                        '<div class="label-power-card">' +
-                                            '<span class="label-power-card-wrap"><span>'+data['strength']+'</span></span>' +
-                                        '</div>' +
-                                        '<div class="hovered-items">' +
-                                            '<div class="card-name-property"><p>'+data['title']+'</p></div>' +
-                                            '<div class="block-describe">' +
-                                                '<div class="block-text-describe">' +
-                                                    '<div class="block-text-describe-wrap">' +
-                                                        '<div class="block-text-describe-main">' +
-                                                            '<div class="block-text-describe-main-wrap"><p>'+data['descript']+'</p></div>' +
-                                                        '</div>' +
+            createCardLayers($('#sortableUserCards li'));
+
+            $('.convert-battle-front ul.cards-row-wrap, .user-card-stash #sortableUserCards').on('click', 'li', function(){
+                if($(this).hasClass('active')){
+                    $(this).removeClass('active');
+                    clearRowSelection();
+                    $('#notSortableOne').empty().css({'opacity': 0});
+                }else{
+                    $(this).parents('ul').children('li').removeClass('active');
+                    $(this).addClass('active');
+                }
+
+                if($(this).hasClass('active')){
+                    $.ajax({
+                        url:     '/game_get_card_data',
+                        type:    'GET',
+                        data:    {card:$(this).attr('data-cardid')},
+                        success: function(data){
+                            data = JSON.parse(data);
+                            $('#notSortableOne').animate({'opacity':'1'}, 240);
+
+                            $('#notSortableOne').empty().append('' +
+                            '<li class="content-card-item chossen-card" id="'+data['id']+'" data-type="'+data['type']+'" data-row="'+data['action_row']+'" >' +
+                                '<div class="content-card-item-main" style="background-image: url(/img/card_images/'+data['img_url']+')">' +
+                                    '<div class="label-power-card">' +
+                                        '<span class="label-power-card-wrap"><span>'+data['strength']+'</span></span>' +
+                                    '</div>' +
+                                    '<div class="hovered-items">' +
+                                        '<div class="card-name-property"><p>'+data['title']+'</p></div>' +
+                                        '<div class="block-describe">' +
+                                            '<div class="block-text-describe">' +
+                                                '<div class="block-text-describe-wrap">' +
+                                                    '<div class="block-text-describe-main">' +
+                                                        '<div class="block-text-describe-main-wrap"><p>'+data['descript']+'</p></div>' +
                                                     '</div>' +
                                                 '</div>' +
                                             '</div>' +
                                         '</div>' +
                                     '</div>' +
-                                '</li>');
-                        
-                                clearRowSelection();
-                                if(allowActions !== 0){
-                                    if(data['type'] == 'special'){
-                                        for(var i=0; i<data['actions'].length; i++){
-                                            var action = ''+data['actions'][i]['action'];
-                                            if((action == '21')||(action == '26'))illuminateAside();
-                                            if(action == '13') illuminateOpponent();
-                                            if((action == '24')||(action == '25')||(action == '27')||(action == '28')||(action == '29')) illuminateSelf();
-                                        }
-                                    }else{
-                                        illuminateCustom('.user', data['action_row']);
-                                        for(var i=0; i<data['actions'].length; i++){
-                                            var action = ''+data['actions'][i]['action'];
-                                            
-                                            if(action == '12'){ 
-                                                clearRowSelection();
-                                                illuminateCustom('.oponent', data['action_row']);
-                                            }
-                                        }
+                                '</div>' +
+                            '</li>');
+
+                            clearRowSelection();
+                            if(data['type'] == 'special'){
+                                for(var i=0; i<data['actions'].length; i++){
+                                    var action = ''+data['actions'][i]['action'];
+                                    if((action == '21')||(action == '26'))illuminateAside();
+                                    if(action == '13') illuminateOpponent();
+                                    if((action == '24')||(action == '25')||(action == '27')||(action == '28')||(action == '29')) illuminateSelf();
+                                }
+                            }else{
+                                illuminateCustom('.user', data['action_row']);
+                                for(var i=0; i<data['actions'].length; i++){
+                                    var action = ''+data['actions'][i]['action'];
+
+                                    if(action == '12'){ 
+                                        clearRowSelection();
+                                        illuminateCustom('.oponent', data['action_row']);
                                     }
                                 }
                             }
-                        });
-                    }
-                });                    
-            }           
-            
-            createCardLayers($('#sortableUserCards li'));
-    
+                        }
+                    });
+                }
+            });
         });
     });
-    
+
     function clearRowSelection(){
         $('.mezhdyblock .bor-beutifull-box #sortable-cards-field-more').removeClass('active');
         $('.convert-stuff .field-for-cards').each(function(){
@@ -265,20 +273,16 @@ $(window).load(function(){
     function illuminateOpponent(){$('.oponent .convert-stuff .field-for-cards').addClass('active');}
     function illuminateSelf(){$('.user .convert-stuff .field-for-cards').addClass('active');}
     function illuminateCustom(parent, row){
-        
         for(var i=0 ;i<row.length; i++){
-            
             switch(row[i].toString()){
-                case '0': var field = '#meele'; break
-                case '1': var field = '#range'; break
-                case '2': var field = '#superRange'; break
+                case '0': var field = '#meele'; break;
+                case '1': var field = '#range'; break;
+                case '2': var field = '#superRange'; break;
             }
-            console.log(field)
-            $('.convert-battle-front '+parent+' .convert-one-field '+field).addClass('active')
+            $('.convert-battle-front '+parent+' .convert-one-field '+field).addClass('active');
         }
-        
     }
-    
+
     //Создание описаний пользователей в правом сайдбаре
     function createUserDescriber(userLogin, user_img, userRace){
         if(user_img != ''){
@@ -287,7 +291,7 @@ $(window).load(function(){
         $('.convert-right-info #'+userLogin+' .stash-about .naming-oponent .name').text(userLogin);
         $('.convert-right-info #'+userLogin+' .stash-about .naming-oponent .rasa').text(userRace);
     }
-    
+
     //Создание изображений магических еффектов в правом сайдбаре
     function createUserMagicFieldCards(userLogin, magicData){
         for(var i=0; i<magicData.length; i++){
@@ -302,7 +306,7 @@ $(window).load(function(){
         '<img src="/img/card_images/' + magicData['img_url']+'" alt="' + magicData['slug'] +'" title="' + magicData['title'] +'">'+
         '</li>';
     }
-    
+
     //Создание отображения карты в списке
     function createFieldCardView(cardData, titleView){
         return '' +
@@ -326,7 +330,7 @@ $(window).load(function(){
         result += '</div>';
         return result;
     }
-    
+
     function createCardLayers(handler){
         var shift = 0;
         var zIndex = 6;
@@ -336,7 +340,7 @@ $(window).load(function(){
             zIndex++;
         });
     }
-    
+
     function showPopup(ms){
         $('.market-buy-popup .popup-content-wrap').html('<p>' + ms + '</p>');
         $('.market-buy-popup').show(300);

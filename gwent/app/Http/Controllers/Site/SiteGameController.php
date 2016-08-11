@@ -124,7 +124,6 @@ class SiteGameController extends BaseController
                 'user_ready'    => 0,
                 'round_passed'  => 0,
                 'rounds_won'    => 0,
-                'battle_field'  => serialize(['0' => ['special' => '', 'warrior' => []], '1' => ['special' => '', 'warrior' => []], '2'=> ['special' => '', 'warrior' => []]])
             ]);
         }else{
             $user_battle = BattleMembersModel::find($user_is_battle_member[0]->id);
@@ -137,7 +136,6 @@ class SiteGameController extends BaseController
             $user_battle -> user_ready      = 0;
             $user_battle -> round_passed    = 0;
             $user_battle -> rounds_won      = 0;
-            $user_battle -> battle_field    = serialize(['0' => ['special' => '', 'warrior' => []], '1' => ['special' => '', 'warrior' => []], '2'=> ['special' => '', 'warrior' => []]]);
             $result =  $user_battle -> save();
         }
         return $result;
@@ -170,7 +168,20 @@ class SiteGameController extends BaseController
                 'league'            => $league,
                 'fight_status'      => 0,
                 'player_num_turn'   => 0,
-                'round_status'      => serialize(['enemy'=>[], 'alias'=>[]]),
+                'round_status'      => serialize(['p1'=>[], 'p2'=>[]]),
+                'battle_field'      => serialize([
+                    'p1'=>[
+                        '0' => ['special' => '', 'warrior' => []],
+                        '1' => ['special' => '', 'warrior' => []],
+                        '2' => ['special' => '', 'warrior' => []]                        
+                    ],
+                    'p2'=>[
+                        '0' => ['special' => '', 'warrior' => []],
+                        '1' => ['special' => '', 'warrior' => []],
+                        '2' => ['special' => '', 'warrior' => []]
+                    ],
+                    'mid'=>[]
+                ])
             ]);
 
             if($result === false){
