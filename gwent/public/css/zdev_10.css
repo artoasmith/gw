@@ -1711,6 +1711,10 @@ ul.cards-row-wrap li{
     top: 0;
 }
 
+ul.cards-row-wrap li img{
+    max-height: 100px;
+}
+
 ul.user-hand-cards-wrap{
     width: 69%;
     float: left;

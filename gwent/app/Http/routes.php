@@ -158,7 +158,7 @@ Route::get('/validate_deck', [
 ]);
 //Получить данные о карте
 Route::get('/game_get_card_data', [
-    'uses' => 'Site\SiteGameController@getCardData'
+    'uses' => 'Site\SiteGameController@getCardDataByRequest'
 ]);
 
 

@@ -59,16 +59,28 @@ $(window).load(function(){
                             showPopup('Ход игрока '+result.login);
                         }
                         break;
+                        
+                    case 'userMadeAction':
+                        $('.oponent .convert-stuff .field-for-cards').each(function(){
+                            var handler = $('.oponent #'+$(this).attr('id')+' .cards-row-wrap li');
+                            createCardLayers(handler);
+                        });
+                        $('.user.convert-stuff .field-for-cards').each(function(){
+                            var handler = $('.user #'+$(this).attr('id')+' .cards-row-wrap li');
+                            createCardLayers(handler);
+                        });
+                        break;
+                        
                 }
 
-                if((result.message == 'usersAreJoined') || (result.message == 'allUsersAreReady')){
+                if((result.message == 'usersAreJoined') || (result.message == 'allUsersAreReady') || (result.message == 'userMadeAction')){
                     if(result.login == $('.user-describer').attr('id')){
                         allowActions = 1;
                     }else{
                         allowActions = 0;
                     }
-                    userMakeAction(allowActions);
-                }                
+                }
+                userMakeAction(allowActions, conn)
             }
 
 
@@ -182,15 +194,21 @@ $(window).load(function(){
             }
 
             //Пользователь должен сделать действие
-            function userMakeAction(allowActions){
-                console.log('allowActions='+allowActions+'userMadeAction='+userMadeAction)
-                if((allowActions !== 0) && (userMadeAction === 0)){
-                    $('.convert-battle-front .convert-stuff').on('click', '.active',function(){
+            function userMakeAction(allowActions, conn){
+                console.log('allowActions='+allowActions+' userMadeAction='+userMadeAction)
+                if((allowActions !== 0) && (userMadeAction === 0) && (allowActions !== undefined)){
+                    $('.convert-battle-front .convert-stuff, .mezhdyblock .bor-beutifull-box').on('click', '.active',function(){
                         userMadeAction = 1;
                         var card = $('#sortableUserCards .active').attr('data-cardid');
-                        console.log(card);
                         var field = $(this).attr('id');
-                        console.log(field)
+                        conn.send(
+                            JSON.stringify({
+                                action: 'userMadeCardAction',
+                                ident: ident,
+                                card: card,
+                                field: field
+                            })
+                        );
                     });
                 }
             }
@@ -340,6 +358,19 @@ $(window).load(function(){
             zIndex++;
         });
     }
+    
+    $('.oponent .convert-stuff .field-for-cards').each(function(){
+        var handler = $('.oponent #'+$(this).attr('id')+' .cards-row-wrap li');
+        if(handler.length){
+            createCardLayers(handler);
+        }        
+    });
+    $('.user.convert-stuff .field-for-cards').each(function(){
+        var handler = $('.user #'+$(this).attr('id')+' .cards-row-wrap li');
+        if(handler.length){
+            createCardLayers(handler);
+        }   
+    });
 
     function showPopup(ms){
         $('.market-buy-popup .popup-content-wrap').html('<p>' + ms + '</p>');

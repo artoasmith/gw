@@ -119,6 +119,7 @@ class SiteGameController extends BaseController
                 'user_deck_race'=> $user_deck_race,
                 'user_deck'     => serialize($user_deck),
                 'user_hand'     => serialize($user_hand),
+                'user_discard'  => 'a:0:{}',
                 'magic_effects' => $user_magic,
                 'user_energy'   => $user_energy,
                 'user_ready'    => 0,
@@ -131,6 +132,7 @@ class SiteGameController extends BaseController
             $user_battle -> user_deck_race  = $user_deck_race;
             $user_battle -> user_deck       = serialize($user_deck);
             $user_battle -> user_hand       = serialize($user_hand);
+            $user_battle -> user_discard    = 'a:0:{}';
             $user_battle -> magic_effects   = $user_magic;
             $user_battle -> user_energy     = $user_energy;
             $user_battle -> user_ready      = 0;
@@ -469,15 +471,16 @@ class SiteGameController extends BaseController
     }
     
     
-    public static function getCardData(Request $request){
+    public function getCardDataByRequest(Request $request){
         $data = $request->all();
-        
-        if(strlen($data['card']) > 11){
-            $card_id = Crypt::decrypt($data['card']);
-        }else{
-            $card_id = $data['card'];
-        }        
-        $card_data = \DB::table('tbl_card')->select('id','title','slug','card_type','card_strong','img_url','short_description', 'allowed_rows', 'card_actions')->where('id', '=', $card_id)->get();
+        return self::getCardData($data['card']);
+    }
+    
+    public static function getCardData($id){
+        if(strlen($id) > 11){
+            $id = Crypt::decrypt($id);
+        }      
+        $card_data = \DB::table('tbl_card')->select('id','title','slug','card_type','card_strong','img_url','short_description', 'allowed_rows', 'card_actions')->where('id', '=', $id)->get();
         return json_encode([
             'id'        => Crypt::encrypt($card_data[0]->id),
             'title'     => $card_data[0]->title,
@@ -488,6 +491,5 @@ class SiteGameController extends BaseController
             'action_row'=> unserialize($card_data[0]->allowed_rows),
             'actions'   => unserialize($card_data[0]->card_actions)
         ]);
-    
     }
 }

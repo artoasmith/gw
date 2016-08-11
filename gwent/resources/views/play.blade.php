@@ -13,13 +13,22 @@
     $battle_members = \App\BattleMembersModel::where('battle_id','=',$battle_data->id)->get();
 
     $players = ['enemy' => [], 'allied' => []];
-    $players_count = 0;
+    $players_count = 0;   
+    
+    $battle_field = unserialize($battle_data->battle_field);
+    
+    if($user['id'] == $battle_data->creator_id){
+        $user_field_identificator = 'p1';
+        $opponent_field_identificator = 'p2';
+    }else{
+        $user_field_identificator = 'p2';
+        $opponent_field_identificator = 'p1';
+    }
 
     foreach($battle_members as $key => $value){        
         //Создание сторон противников и союзников
         $player_data = \DB::table('users')->select('id','login','img_url')->where('id', '=', $value -> user_id)->get();
         $race_name = \DB::table('tbl_race')->select('slug', 'title')->where('slug', '=', $value -> user_deck_race)->get();
-
 
         if($user['id'] == $value->user_id){
             //dd(unserialize($value -> user_hand));
@@ -32,7 +41,7 @@
                 'user_img'      => $player_data[0] -> img_url,
                 'user_nickname' => $player_data[0] -> login,
                 'user_ready'    => $value -> user_ready,
-                ];
+            ];
         }else{
             $players['enemy'] = [
                 'battle_field'  => unserialize($value -> battle_field),
@@ -44,15 +53,6 @@
             ];
         }
         $players_count++;        
-    }
-
-    //Если присоединившийся пользователь не является создателем стола - изменяем статус битвы
-    if($user['id'] != $battle_data['creator_id']){
-        if($players_count == $battle_data -> players_quantity){
-            $battle_status_change = \App\BattleModel::find($battle_data->id);
-            $battle_status_change -> fight_status = 1;
-            $battle_status_change -> save();
-        }
     }
     ?>
     
@@ -198,7 +198,16 @@
 
                                 <div class="bg-img-super-renge fields-for-cards-img"><!-- Картинка пустого сверхдальнего ряда --></div>
                                 
-                                <ul class="cards-row-wrap"><!-- Список сверхдальних карт--></ul>
+                                <ul class="cards-row-wrap">
+                                @foreach($battle_field[$opponent_field_identificator][2]['warrior'] as $i => $card)
+                                    <li data-cardid="{{ $card->id}}" data-relative="{{ $card->type }}">
+                                        <div class="card-wrap">
+                                            <img src="{{ URL::asset('/img/card_images/'.$card->img_url) }}" alt="">
+                                            <div class="label-power-card">{{ $card->strength }}</div>
+                                        </div>
+                                    </li>
+                                @endforeach
+                                </ul>
                                 <!-- END OF Список сверхдальних карт-->
                             </div>
                             <!-- END OF Поле размещения сверхдальних карт -->
@@ -219,7 +228,16 @@
 
                                 <div class="bg-img-range fields-for-cards-img"><!-- Картинка пустого дальнего ряда --></div>
                                 <!-- Список дальних карт-->
-                                <ul class="cards-row-wrap"></ul>
+                                <ul class="cards-row-wrap">
+                                @foreach($battle_field[$opponent_field_identificator][1]['warrior'] as $i => $card)
+                                    <li data-cardid="{{ $card->id}}" data-relative="{{ $card->type }}">
+                                        <div class="card-wrap">
+                                            <img src="{{ URL::asset('/img/card_images/'.$card->img_url) }}" alt="">
+                                            <div class="label-power-card">{{ $card->strength }}</div>
+                                        </div>
+                                    </li>
+                                @endforeach
+                                </ul>
                                 <!-- END OF Список дальних карт-->
                             </div>
                             <!-- END OF Поле размещения дальних карт -->
@@ -239,7 +257,16 @@
 
                                 <div class="bg-img-meele fields-for-cards-img"><!-- Картинка пустого ближнего ряда --></div>
                                 <!-- Список ближних карт-->
-                                <ul class="cards-row-wrap"></ul>
+                                <ul class="cards-row-wrap">
+                                @foreach($battle_field[$opponent_field_identificator][0]['warrior'] as $i => $card)
+                                    <li data-cardid="{{ $card->id}}" data-relative="{{ $card->type }}">
+                                        <div class="card-wrap">
+                                            <img src="{{ URL::asset('/img/card_images/'.$card->img_url) }}" alt="">
+                                            <div class="label-power-card">{{ $card->strength }}</div>
+                                        </div>
+                                    </li>
+                                @endforeach
+                                </ul>
                                 <!-- END OF Список ближних карт-->
                             </div>
                         </div>
@@ -268,7 +295,16 @@
                                 <div class="bg-img-meele fields-for-cards-img"></div>
 
                                 <!-- Список ближних карт-->
-                                <ul class="cards-row-wrap"></ul>
+                                <ul class="cards-row-wrap">
+                                @foreach($battle_field[$user_field_identificator][0]['warrior'] as $i => $card)
+                                    <li data-cardid="{{ $card->id}}" data-relative="{{ $card->type }}">
+                                        <div class="card-wrap">
+                                            <img src="{{ URL::asset('/img/card_images/'.$card->img_url) }}" alt="">
+                                            <div class="label-power-card">{{ $card->strength }}</div>
+                                        </div>
+                                    </li>
+                                @endforeach
+                                </ul>
                                 <!-- END OF Список ближних карт-->
                             </div>
                         </div>
@@ -289,7 +325,16 @@
                                 <div class="bg-img-range fields-for-cards-img"><!-- Картинка пустого ближнего ряда --></div>
 
                                 <!-- Список дальних карт-->
-                                <ul class="cards-row-wrap"></ul>
+                                <ul class="cards-row-wrap">
+                                @foreach($battle_field[$user_field_identificator][1]['warrior'] as $i => $card)
+                                    <li data-cardid="{{ $card->id}}" data-relative="{{ $card->type }}">
+                                        <div class="card-wrap">
+                                            <img src="{{ URL::asset('/img/card_images/'.$card->img_url) }}" alt="">
+                                            <div class="label-power-card">{{ $card->strength }}</div>
+                                        </div>
+                                    </li>
+                                @endforeach
+                                </ul>
                                 <!-- END OF Список дальних карт-->
 
                             </div>
@@ -311,7 +356,16 @@
                                 <div class="bg-img-super-renge fields-for-cards-img"><!-- Картинка пустого ближнего ряда --></div>
 
                                 <!-- Список сверхдальних карт-->
-                                <ul class="cards-row-wrap"></ul>
+                                <ul class="cards-row-wrap">
+                                @foreach($battle_field[$user_field_identificator][2]['warrior'] as $i => $card)
+                                    <li data-cardid="{{ $card->id}}" data-relative="{{ $card->type }}">
+                                        <div class="card-wrap">
+                                            <img src="{{ URL::asset('/img/card_images/'.$card->img_url) }}" alt="">
+                                            <div class="label-power-card">{{ $card->strength }}</div>
+                                        </div>
+                                    </li>
+                                @endforeach
+                                </ul>
                                 <!-- END OF Список сверхдальнихдальних карт-->
 
                             </div>
@@ -453,7 +507,16 @@
 
         <div class="mezhdyblock">
             <div class="bor-beutifull-box">
-                <ul id="sortable-cards-field-more" class="can-i-use-useless sort"></ul>
+                <ul id="sortable-cards-field-more" class="can-i-use-useless sort">
+                    @foreach($battle_field['mid'] as $i => $card)
+                        <li data-cardid="{{ $card->id}}" data-relative="{{ $card->type }}">
+                            <div class="card-wrap">
+                                <img src="{{ URL::asset('/img/card_images/'.$card->img_url) }}" alt="">
+                                <div class="label-power-card">{{ $card->strength }}</div>
+                            </div>
+                        </li>
+                    @endforeach
+                </ul>
             </div>
         </div>
 
