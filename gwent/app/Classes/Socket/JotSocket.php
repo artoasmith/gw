@@ -41,7 +41,16 @@ class JotSocket extends BaseSocket
 
         $battle = BattleModel::find($msg->ident->battleId); //Даные битвы
 
-        $battle_members = \DB::table('tbl_battle_members')->select('user_id','battle_id','user_ready', 'round_passed')->where('battle_id', '=', $msg->ident->battleId)->get(); //Данные о участвующих в битве
+        $battle_members = BattleMembersModel::where('battle_id', '=', $msg->ident->battleId)->get(); //Данные о участвующих в битве
+        
+        $users = [];
+        foreach($battle_members as $key => $value){
+            $current_user = \DB::table('users')->select('id','login','user_current_deck')->where('id','=',$value->user_id)->get();
+            $users[$value->user_id] = [
+                'login' => $current_user[0]->login,
+                'user_current_deck' => $current_user[0]->user_current_deck
+            ];
+        }
 
         SiteFunctionsController::updateUserInBattleConnection($msg->ident->userId);//Обновление пользовательского статуса online
 
@@ -62,9 +71,9 @@ class JotSocket extends BaseSocket
 
                             $cursed_players = []; //Игроки фракции "Проклятые"
                             foreach ($battle_members as $key => $value){
-                                $user = self::getUserData($value->user_id);
-                                if($user -> user_current_deck == 'cursed'){
-                                    $cursed_players[] = $user->id;
+                                $user = $users[$value->user_id];
+                                if($user['user_current_deck'] == 'cursed'){
+                                    $cursed_players[] = $value->user_id;
                                 }
                             }
 
@@ -74,14 +83,14 @@ class JotSocket extends BaseSocket
                                 $players_turn = $battle_members[rand(0,$ready_players_count-1)] -> user_id;
                             }
 
-                            $user = self::getUserData($players_turn);
+                            $user = $users[$players_turn];
 
                         }else{
-                            $user = self::getUserData($battle->user_id_turn);
+                            $user = $users[$battle->user_id_turn];
                             $players_turn = $battle->user_id_turn;
                         }
 
-                        $result = ['message' => 'allUsersAreReady', 'battleInfo' => $msg->ident->battleId, 'login' => $user->login];
+                        $result = ['message' => 'allUsersAreReady', 'battleInfo' => $msg->ident->battleId, 'login' => $user['login']];
 
                         if($battle -> fight_status <= 1){                            
                             self::sendMessageToOthers($from, $result, $this->battles[$msg->ident->battleId]);
@@ -101,19 +110,19 @@ class JotSocket extends BaseSocket
                 if($battle -> fight_status <= 1){
                     if(count($battle_members) == $battle->players_quantity){
                         if($battle -> fight_status === 0){
-                            $battle -> fight_status = 1; // Подключилось нужное количество пользователей
-                            $battle -> save();
+                           $battle -> fight_status = 1; // Подключилось нужное количество пользователей
+                           $battle -> save();
                         }
 
                         if($battle -> user_id_turn != 0){
-                            $user_turn = self::getUserData($battle -> user_id_turn);
+                            $user_turn = $users[$battle -> user_id_turn];
                         }else{
-                            $user_turn = json_decode('{"login":""}');
+                            $user_turn['login'] = '';
                         }
 
-                        $user = self::getUserData($msg->ident->userId); // Данные пользователя
+                        $user = $users[$msg->ident->userId]; // Данные пользователя
 
-                        $result = ['message' => 'usersAreJoined', 'JoinedUser' => $user->login, 'login' => $user_turn->login, 'battleInfo' => $msg->ident->battleId];
+                        $result = ['message' => 'usersAreJoined', 'JoinedUser' => $user['login'], 'login' => $user_turn['login'], 'battleInfo' => $msg->ident->battleId];
 
                         self::sendMessageToSelf($from, $result); //Отправляем результат отправителю
                         self::sendMessageToOthers($from, $result, $this->battles[$msg->ident->battleId]);
@@ -123,11 +132,11 @@ class JotSocket extends BaseSocket
                 if($battle -> fight_status == 2){
                     
                     if($battle -> user_id_turn != 0){
-                        $user_turn = self::getUserData($battle -> user_id_turn);
+                        $user_turn = $users[$battle -> user_id_turn];
                     }else{
-                        $user_turn = json_decode('{"login":""}');
+                        $user_turn['login'] = '';
                     }
-                    $result = ['message' => 'allUsersAreReady', 'battleInfo' => $msg->ident->battleId, 'login' => $user_turn->login];
+                    $result = ['message' => 'allUsersAreReady', 'battleInfo' => $msg->ident->battleId, 'login' => $user_turn['login']];
                     self::sendMessageToSelf($from, $result);
                 }
                 break;
@@ -135,6 +144,7 @@ class JotSocket extends BaseSocket
             
             case 'userMadeCardAction':
                 if($battle -> fight_status == 2){
+                    
                     $card = json_decode(SiteGameController::getCardData($msg->card));//Получаем данные о карте
                     switch($msg->field){ //Порядковый номер поля
                         case 'meele':       $row = 0; break;
@@ -145,10 +155,11 @@ class JotSocket extends BaseSocket
                     
                     if((in_array($row, $card->action_row, true)) or ($msg->field == 'sortable-cards-field-more')){ //Если номер поля не подделал пользователь
                         //Данные о текущем пользователе
-                        $current_battle_user_data  = \DB::table('tbl_battle_members')->select('id','user_id','battle_id', 'user_hand', 'user_discard')->where('battle_id','=',$msg->ident->battleId)->where('user_id','=',$msg->ident->userId)->get();
+                        
+                        $current_user_battle_data = self::searchUserInBattle($msg->ident->userId, $battle_members);
 
-                        $user_hand = unserialize($current_battle_user_data[0]->user_hand); //рука пользователя
-                        $user_discard = unserialize($current_battle_user_data[0]->user_discard); //Отбой пользователя
+                        $user_hand = unserialize($current_user_battle_data->user_hand); //рука пользователя
+                        $user_discard = unserialize($current_user_battle_data->user_discard); //Отбой пользователя
                         
                         if($battle->creator_id == $msg->ident->userId){ //Если пользователь является создателем стола (р1 -создатель)
                             $user_battle_field_identificator = 'p1';
@@ -179,9 +190,9 @@ class JotSocket extends BaseSocket
                                     unset($battle_field['mid'][0]); //Удаляем первую карту                                    
                                 }
                                 
-                                $user_data = self::getUserData($current_battle_user_data[0]->user_id);//Узнаем логин пользователя
+                                $user =$users($current_user_battle_data->user_id);//Узнаем логин пользователя
                                 $card_data = SiteGameController::getCardData($card->id);
-                                $battle_field['mid'][] = [json_decode($card_data), $user_data->login]; //Добавляем текущую карту на поле боя и её принадлежность пользователю
+                                $battle_field['mid'][] = [json_decode($card_data), $user['login']]; //Добавляем текущую карту на поле боя и её принадлежность пользователю
                                 $battle_field['mid'] = array_values($battle_field[$user_battle_field_identificator]);
                             }else{
                                 
@@ -208,14 +219,15 @@ class JotSocket extends BaseSocket
                         $user_hand = serialize(array_values($user_hand));
                         $user_discard = serialize(array_values($user_discard));                        
                         
-                        \DB::table('tbl_battle_members')->where('id', '=', $current_battle_user_data[0]->id)->update(['user_hand' => $user_hand, 'user_discard' => $user_discard]);
+                        \DB::table('tbl_battle_members')->where('id', '=', $current_user_battle_data->id)->update(['user_hand' => $user_hand, 'user_discard' => $user_discard]);
                         
                         $battle->battle_field = serialize($battle_field);
                         $battle->save();
                         
-                        $user_turn_id = self::changeUserTurn($msg->ident->battleId);
-                        $user_turn = self::getUserData($user_turn_id);
-                        $result = ['message' => 'userMadeAction', 'field_data' => $battle_field ,'battleInfo' => $msg->ident->battleId, 'login' => $user_turn->login];
+                        $user_turn = self::changeUserTurn($msg->ident->battleId);
+                        $user = $users[$user_turn];
+
+                        $result = ['message' => 'userMadeAction', 'field_data' => $battle_field ,'battleInfo' => $msg->ident->battleId, 'login' => $user['login']];
                                 
                         self::sendMessageToSelf($from, $result); //Отправляем результат отправителю
                         self::sendMessageToOthers($from, $result, $this->battles[$msg->ident->battleId]);
@@ -226,22 +238,18 @@ class JotSocket extends BaseSocket
         }
     }
 
+    protected static function searchUserInBattle($user_id, $battle_members){
+        foreach($battle_members as $key => $value){
+            if($user_id == $value->user_id){
+                return $value;
+            }
+        }
+    }
+    
     protected static function getUserData($user_id){
         $user = \DB::table('users')->select('id', 'login', 'user_current_deck')->where('id', '=', $user_id)->get();
         return $user[0];
     }
-    
-    protected static function buildCardDeck($deck){
-        $result_array = [];
-        foreach($deck as $key => $card_id){
-            if(!empty($card_id)){
-                $card_data = SiteGameController::getCardData($card_id);
-                $result_array[] = $card_data;
-            }
-        }
-        return $result_array;
-    }
-    
 
     protected static function changeUserTurn($current_battle_id){
         $current_user_turn = \DB::table('tbl_battles')->select('id','user_id_turn')->where('id', '=', $current_battle_id)->get();

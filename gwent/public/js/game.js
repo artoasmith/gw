@@ -53,22 +53,12 @@ $(window).load(function(){
                         break;
 
                     case 'allUsersAreReady':
-                        if(result.login == $('.user-describer').attr('id')){
-                            showPopup('Ваша очередь ходить');
-                        }else{
-                            showPopup('Ход игрока '+result.login);
-                        }
+                        changeTurnIndicator(result.login);
                         break;
                         
                     case 'userMadeAction':
                         $('.mezhdyblock #sortable-cards-field-more, .convert-battle-front #p1 .cards-row-wrap, .convert-battle-front #p1 .image-inside-line, .convert-battle-front #p2 .cards-row-wrap, .convert-battle-front #p2 .image-inside-line').empty();
-                        
-                        if(result.login == $('.user-describer').attr('id')){
-                            showPopup('Ваша очередь ходить');
-                        }else{
-                            showPopup('Ход игрока '+result.login);
-                        }
-                        
+                        changeTurnIndicator(result.login);
                         for(var fieldType in result.field_data){
                             if(fieldType == 'mid'){
                                 for(var i=0; i<result.field_data['mid'].length; i++){
@@ -103,6 +93,7 @@ $(window).load(function(){
                             var handler = $('.user #'+$(this).attr('id')+' .cards-row-wrap li');
                             createCardLayers(handler);
                         });
+                        recalculateBattleField();
                         break;
                         
                 }
@@ -110,6 +101,7 @@ $(window).load(function(){
                 if((result.message == 'usersAreJoined') || (result.message == 'allUsersAreReady') || (result.message == 'userMadeAction')){
                     if(result.login == $('.user-describer').attr('id')){
                         allowActions = 1;
+                        userMadeAction = 0;
                     }else{
                         allowActions = 0;
                     }
@@ -319,12 +311,15 @@ $(window).load(function(){
         });
     });
 
+    //Отмена подсветки ряда действий карты
     function clearRowSelection(){
         $('.mezhdyblock .bor-beutifull-box #sortable-cards-field-more').removeClass('active');
         $('.convert-stuff .field-for-cards').each(function(){
             $(this).removeClass('active')
         });
     }
+    
+    //Подсветка рядов действия карты
     function illuminateAside(){$('.mezhdyblock .bor-beutifull-box #sortable-cards-field-more').addClass('active');}
     function illuminateOpponent(){$('.oponent .convert-stuff .field-for-cards').addClass('active');}
     function illuminateSelf(){$('.user .convert-stuff .field-for-cards').addClass('active');}
@@ -387,6 +382,7 @@ $(window).load(function(){
         return result;
     }
 
+    //Отображение карт "Гармошкой"
     function createCardLayers(handler){
         var shift = 0;
         var zIndex = 6;
@@ -396,6 +392,33 @@ $(window).load(function(){
             zIndex++;
         });
     }
+    
+    //Пересчет Силы рядов
+    function recalculateBattleField(){
+        var players = {"oponent-meele":0,"oponent-range":0,"oponent-superRange":0,"user-meele":0,"user-range":0,"user-superRange":0};
+        var total = {"oponent":0, "user":0}
+        
+        $('.convert-battle-front .convert-stuff .field-for-cards').each(function(){
+            var _this = $(this);
+            var prefix = 'oponent';
+            if($(this).parents('.convert-cards').hasClass('user')){
+                prefix = 'user';
+            }
+            $(this).children('.fields-for-cards-wrap').children('.cards-row-wrap').children('li').each(function(){
+                players[prefix+'-'+_this.attr('id')] += parseInt($(this).children('.card-wrap').children('.label-power-card').text());
+                total[prefix] += parseInt($(this).children('.card-wrap').children('.label-power-card').text());
+            });
+        });
+        
+        for(var key in players){
+            var temp = key.split('-');
+            $('.convert-battle-front .'+temp[0]+' .convert-stuff #'+temp[1]).parents('.convert-stuff').children('.field-for-sum').text(players[key]);
+        }
+        for(var key in total){
+            $('.convert-right-info .'+key+'-describer .power-element .power-text').text(total[key]);
+        }
+    }
+    recalculateBattleField();
     
     $('.oponent .convert-stuff .field-for-cards').each(function(){
         var handler = $('.oponent #'+$(this).attr('id')+' .cards-row-wrap li');
@@ -413,5 +436,13 @@ $(window).load(function(){
     function showPopup(ms){
         $('.market-buy-popup .popup-content-wrap').html('<p>' + ms + '</p>');
         $('.market-buy-popup').show(300);
+    }
+    
+    function changeTurnIndicator(login){
+        if(login == $('.user-describer').attr('id')){
+            $('.user-turn-wrap .turn-indicator').addClass('active');
+        }else{
+            $('.user-turn-wrap .turn-indicator').removeClass('active');
+        }
     }
 });

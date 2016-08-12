@@ -94,4 +94,8 @@ $user = Auth::user();
             </div>
         </div>
     </div>
+    
+    <div class="user-turn-wrap">
+        <div class="turn-indicator"></div>
+    </div>
 </div>

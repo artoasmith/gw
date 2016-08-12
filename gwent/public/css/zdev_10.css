@@ -1837,3 +1837,29 @@ ul.user-hand-cards-wrap li img{width: 90px;}
    -o-background-size: 100% 155px;
    background-size: 100% 155px;
 }
+
+.user-turn-wrap{
+    position: fixed;
+    bottom: 2%;
+    right:15px;
+    -webkit-box-shadow: 0 0 0 2px #fff;
+    box-shadow: 0 0 0 2px #fff;
+    border: 2px solid transparent;
+    width: 64px;
+    height: 64px;
+    -webkit-border-radius: 32px;
+    -moz-border-radius: 32px;
+    border-radius: 32px;
+    z-index: 100;
+}
+
+.user-turn-wrap .active, .user-turn-wrap .turn-indicator{
+    width: 60px;
+    height: 60px;
+    padding: 1px;
+    -webkit-border-radius: 30px;
+    -moz-border-radius: 30px;
+    border-radius: 30px;
+    background-color: #e00;
+}
+.user-turn-wrap .active{background-color: #0e0 !important;}
