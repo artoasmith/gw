@@ -29,9 +29,16 @@
         //Создание сторон противников и союзников
         $player_data = \DB::table('users')->select('id','login','img_url')->where('id', '=', $value -> user_id)->get();
         $race_name = \DB::table('tbl_race')->select('slug', 'title')->where('slug', '=', $value -> user_deck_race)->get();
+        
+        $temp_magic = unserialize($value->magic_effects);
+        $user_magic = [];
+        foreach($temp_magic as $id => $quantity){
+            $magic_data = \DB::table('tbl_magic_effects')->select('id', 'title', 'slug', 'img_url')->where('id','=',$id)->get();
+            $user_magic[] = $magic_data[0];
+        }
 
         if($user['id'] == $value->user_id){
-            //dd(unserialize($value -> user_hand));
+            
             $players['allied'] = [
                 'battle_field'  => unserialize($value -> battle_field),
                 'user_deck'     => unserialize($value -> user_deck),
@@ -39,6 +46,7 @@
                 'user_energy'   => $value -> user_energy,
                 'user_hand'     => unserialize($value -> user_hand),
                 'user_img'      => $player_data[0] -> img_url,
+                'user_magic'    => $user_magic,
                 'user_nickname' => $player_data[0] -> login,
                 'user_ready'    => $value -> user_ready,
             ];
@@ -49,6 +57,7 @@
                 'user_deck_race'=> $race_name[0] -> title,
                 'user_energy'   => $value -> user_energy,
                 'user_img'      => $player_data[0] -> img_url,
+                'user_magic'    => $user_magic,
                 'user_nickname' => $player_data[0] -> login,
             ];
         }
@@ -475,7 +484,14 @@
             <div class="useless-card">
                 <div class="inside-for-some-block" style="">
                     <ul class="magic-effects-wrap">
-                        <!-- Активная магия -->
+                    <!-- Активная магия -->
+                    @if(isset($players['enemy']['user_magic']))
+                        @foreach($players['enemy']['user_magic'] as $i => $value)
+                        <li data-cardid="{{ $value->id }}">
+                        <img src="/img/card_images/{{$value->img_url }}" alt="{{$value->slug}}" title="{{$value->title}}">
+                        </li>
+                        @endforeach
+                    @endif
                     </ul>
                 </div>
             </div>
@@ -610,7 +626,14 @@
             <div class="useless-card">
                 <div class="inside-for-some-block">
                     <ul class="magic-effects-wrap">
-                        <!-- Активная магия -->
+                    <!-- Активная магия -->
+                    @if(!empty($players['allied']['user_magic']))
+                        @foreach($players['allied']['user_magic'] as $i => $value)
+                        <li data-cardid="{{ $value->id }}">
+                        <img src="/img/card_images/{{$value->img_url }}" alt="{{$value->slug}}" title="{{$value->title}}">
+                        </li>
+                        @endforeach
+                    @endif
                     </ul>
                 </div>
             </div>
