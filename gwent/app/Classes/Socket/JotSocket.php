@@ -180,7 +180,8 @@ class JotSocket extends BaseSocket
                                 }
                                 
                                 $user_data = self::getUserData($current_battle_user_data[0]->user_id);//Узнаем логин пользователя
-                                $battle_field['mid'][] = [$card->id => $user_data->login]; //Добавляем текущую карту на поле боя и её принадлежность пользователю
+                                $card_data = SiteGameController::getCardData($card->id);
+                                $battle_field['mid'][] = [json_decode($card_data), $user_data->login]; //Добавляем текущую карту на поле боя и её принадлежность пользователю
                                 $battle_field['mid'] = array_values($battle_field[$user_battle_field_identificator]);
                             }else{
                                 
@@ -214,7 +215,7 @@ class JotSocket extends BaseSocket
                         
                         $user_turn_id = self::changeUserTurn($msg->ident->battleId);
                         $user_turn = self::getUserData($user_turn_id);
-                        $result = ['message' => 'userMadeAction', ' battleField' => $battle_field ,'battleInfo' => $msg->ident->battleId, 'login' => $user_turn->login];
+                        $result = ['message' => 'userMadeAction', 'field_data' => $battle_field ,'battleInfo' => $msg->ident->battleId, 'login' => $user_turn->login];
                                 
                         self::sendMessageToSelf($from, $result); //Отправляем результат отправителю
                         self::sendMessageToOthers($from, $result, $this->battles[$msg->ident->battleId]);

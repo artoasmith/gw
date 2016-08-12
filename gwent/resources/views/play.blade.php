@@ -14,9 +14,9 @@
 
     $players = ['enemy' => [], 'allied' => []];
     $players_count = 0;   
-    
+
     $battle_field = unserialize($battle_data->battle_field);
-    
+
     if($user['id'] == $battle_data->creator_id){
         $user_field_identificator = 'p1';
         $opponent_field_identificator = 'p2';
@@ -25,7 +25,7 @@
         $opponent_field_identificator = 'p1';
     }
 
-    foreach($battle_members as $key => $value){        
+    foreach($battle_members as $key => $value){
         //Создание сторон противников и союзников
         $player_data = \DB::table('users')->select('id','login','img_url')->where('id', '=', $value -> user_id)->get();
         $race_name = \DB::table('tbl_race')->select('slug', 'title')->where('slug', '=', $value -> user_deck_race)->get();
@@ -52,10 +52,10 @@
                 'user_nickname' => $player_data[0] -> login,
             ];
         }
-        $players_count++;        
+        $players_count++;
     }
     ?>
-    
+
 <header class="header">
     <div class="mbox">
         <div class="header-box cfix">
@@ -152,7 +152,7 @@
                             <div class="counter">
                                 @if(isset($players['allied']['user_deck']))
                                     {{ count($players['allied']['user_deck'])}}
-                                @endif                                
+                                @endif
                             </div>
                         </div>
                         <!--END OF Количество карт в колоде -->
@@ -184,14 +184,21 @@
     <!-- Поле битвы -->
     <div class="convert-battle-front">
         <!-- Поле противника -->
-        <div class="convert-cards oponent" @if(isset($players['enemy']['user_nickname']))data-user="{{ $players['enemy']['user_nickname'] }}"@endif>
+        <div class="convert-cards oponent" @if(isset($players['enemy']['user_nickname']))data-user="{{ $players['enemy']['user_nickname'] }}" id="{{$opponent_field_identificator}}"@endif>
             <div class="convert-card-box">
                 <!-- Сверхдальние Юниты противника -->
                 <div class="convert-stuff">
                     <div class="convert-one-field">
                         <div class="field-for-cards" id="superRange">
 
-                            <div class="image-inside-line"><!-- Место для спецкарты --></div>
+                            <div class="image-inside-line">
+                                @if(!empty($battle_field[$opponent_field_identificator][2]['special']))
+                                <div class="card-wrap" data-cardid="{{ $battle_field[$opponent_field_identificator][2]['special']->id}}" data-relative="{{ $battle_field[$opponent_field_identificator][2]['special']->type }}" title="{{ $battle_field[$opponent_field_identificator][2]['special']->title}}">
+                                    <img src="{{ URL::asset('/img/card_images/'.$battle_field[$opponent_field_identificator][2]['special']->img_url) }}" alt="">
+                                    <div class="label-power-card">{{ $battle_field[$opponent_field_identificator][2]['special']->strength }}</div>
+                                </div>
+                                @endif
+                            </div>
 
                             <!-- Поле размещения сверхдальних карт -->
                             <div class="inputer-field-super-renge fields-for-cards-wrap">
@@ -200,7 +207,7 @@
                                 
                                 <ul class="cards-row-wrap">
                                 @foreach($battle_field[$opponent_field_identificator][2]['warrior'] as $i => $card)
-                                    <li data-cardid="{{ $card->id}}" data-relative="{{ $card->type }}">
+                                    <li data-cardid="{{ $card->id}}" data-relative="{{ $card->type }}"  title="{{ $card->title}}">
                                         <div class="card-wrap">
                                             <img src="{{ URL::asset('/img/card_images/'.$card->img_url) }}" alt="">
                                             <div class="label-power-card">{{ $card->strength }}</div>
@@ -222,7 +229,14 @@
                     <div class="convert-one-field">
                         <div class="field-for-cards" id="range">
 
-                            <div class="image-inside-line"></div>
+                            <div class="image-inside-line">
+                                @if(!empty($battle_field[$opponent_field_identificator][1]['special']))
+                                <div class="card-wrap" data-cardid="{{ $battle_field[$opponent_field_identificator][1]['special']->id}}" data-relative="{{ $battle_field[$opponent_field_identificator][1]['special']->type }}"  title="{{ $battle_field[$opponent_field_identificator][1]['special']->title}}">
+                                    <img src="{{ URL::asset('/img/card_images/'.$battle_field[$opponent_field_identificator][1]['special']->img_url) }}" alt="">
+                                    <div class="label-power-card">{{ $battle_field[$opponent_field_identificator][1]['special']->strength }}</div>
+                                </div>
+                                @endif
+                            </div>
                             <!-- Поле размещения дальних карт -->
                             <div class="inputer-field-range fields-for-cards-wrap">
 
@@ -230,7 +244,7 @@
                                 <!-- Список дальних карт-->
                                 <ul class="cards-row-wrap">
                                 @foreach($battle_field[$opponent_field_identificator][1]['warrior'] as $i => $card)
-                                    <li data-cardid="{{ $card->id}}" data-relative="{{ $card->type }}">
+                                    <li data-cardid="{{ $card->id}}" data-relative="{{ $card->type }}" title="{{ $card->title}}">
                                         <div class="card-wrap">
                                             <img src="{{ URL::asset('/img/card_images/'.$card->img_url) }}" alt="">
                                             <div class="label-power-card">{{ $card->strength }}</div>
@@ -252,7 +266,14 @@
                     <div class="convert-one-field">
                         <div class="field-for-cards" id="meele">
 
-                            <div class="image-inside-line"></div>
+                            <div class="image-inside-line">
+                                @if(!empty($battle_field[$opponent_field_identificator][0]['special']))
+                                <div class="card-wrap" data-cardid="{{ $battle_field[$opponent_field_identificator][0]['special']->id}}" data-relative="{{ $battle_field[$opponent_field_identificator][0]['special']->type }}" title="{{ $battle_field[$opponent_field_identificator][0]['special']->title}}">
+                                    <img src="{{ URL::asset('/img/card_images/'.$battle_field[$opponent_field_identificator][0]['special']->img_url) }}" alt="">
+                                    <div class="label-power-card">{{ $battle_field[$opponent_field_identificator][0]['special']->strength }}</div>
+                                </div>
+                                @endif
+                            </div>
                             <div class="inputer-field-meele fields-for-cards-wrap">
 
                                 <div class="bg-img-meele fields-for-cards-img"><!-- Картинка пустого ближнего ряда --></div>
@@ -281,14 +302,21 @@
         <div class="mezdyline"></div>
 
         <!-- Поле пользователя -->
-        <div class="convert-cards user" data-user="{{ $players['allied']['user_nickname'] }}">
+        <div class="convert-cards user" data-user="{{ $players['allied']['user_nickname'] }}" id="{{$user_field_identificator}}">
             <div class="convert-card-box">
                 <!-- Ближние Юниты пользователя -->
                 <div class="convert-stuff">
                     <div class="convert-one-field">
                         <div class="field-for-cards" id="meele">
 
-                            <div class="image-inside-line"></div><!-- Место для спецкарты -->
+                            <div class="image-inside-line">
+                                @if(!empty($battle_field[$user_field_identificator][0]['special']))
+                                <div class="card-wrap" data-cardid="{{ $battle_field[$user_field_identificator][0]['special']->id}}" data-relative="{{ $battle_field[$user_field_identificator][0]['special']->type }}" title="{{ $battle_field[$user_field_identificator][0]['special']->title}}">
+                                    <img src="{{ URL::asset('/img/card_images/'.$battle_field[$user_field_identificator][0]['special']->img_url) }}" alt="">
+                                    <div class="label-power-card">{{ $battle_field[$user_field_identificator][0]['special']->strength }}</div>
+                                </div>
+                                @endif
+                            </div><!-- Место для спецкарты -->
 
                             <div class="inputer-field-meele fields-for-cards-wrap">
 
@@ -297,7 +325,7 @@
                                 <!-- Список ближних карт-->
                                 <ul class="cards-row-wrap">
                                 @foreach($battle_field[$user_field_identificator][0]['warrior'] as $i => $card)
-                                    <li data-cardid="{{ $card->id}}" data-relative="{{ $card->type }}">
+                                    <li data-cardid="{{ $card->id}}" data-relative="{{ $card->type }}" title="{{ $card->title}}">
                                         <div class="card-wrap">
                                             <img src="{{ URL::asset('/img/card_images/'.$card->img_url) }}" alt="">
                                             <div class="label-power-card">{{ $card->strength }}</div>
@@ -318,7 +346,14 @@
                     <div class="convert-one-field">
                         <div class="field-for-cards" id="range">
 
-                            <div class="image-inside-line"></div><!-- Место для спецкарты -->
+                            <div class="image-inside-line">
+                                @if(!empty($battle_field[$user_field_identificator][1]['special']))
+                                <div class="card-wrap" data-cardid="{{ $battle_field[$user_field_identificator][1]['special']->id}}" data-relative="{{ $battle_field[$user_field_identificator][1]['special']->type }}" title="{{ $battle_field[$user_field_identificator][1]['special']->title}}">
+                                    <img src="{{ URL::asset('/img/card_images/'.$battle_field[$user_field_identificator][1]['special']->img_url) }}" alt="">
+                                    <div class="label-power-card">{{ $battle_field[$user_field_identificator][1]['special']->strength }}</div>
+                                </div>
+                                @endif
+                            </div><!-- Место для спецкарты -->
 
                             <div class="inputer-field-range fields-for-cards-wrap">
 
@@ -327,7 +362,7 @@
                                 <!-- Список дальних карт-->
                                 <ul class="cards-row-wrap">
                                 @foreach($battle_field[$user_field_identificator][1]['warrior'] as $i => $card)
-                                    <li data-cardid="{{ $card->id}}" data-relative="{{ $card->type }}">
+                                    <li data-cardid="{{ $card->id}}" data-relative="{{ $card->type }}" title="{{ $card->title}}">
                                         <div class="card-wrap">
                                             <img src="{{ URL::asset('/img/card_images/'.$card->img_url) }}" alt="">
                                             <div class="label-power-card">{{ $card->strength }}</div>
@@ -349,7 +384,14 @@
                     <div class="convert-one-field">
                         <div class="field-for-cards" id="superRange">
 
-                            <div class="image-inside-line"></div><!-- Место для спецкарты -->
+                            <div class="image-inside-line">
+                                @if(!empty($battle_field[$user_field_identificator][2]['special']))
+                                <div class="card-wrap" data-cardid="{{ $battle_field[$user_field_identificator][2]['special']->id}}" data-relative="{{ $battle_field[$user_field_identificator][2]['special']->type }}" title="{{ $battle_field[$user_field_identificator][2]['special']->title}}">
+                                    <img src="{{ URL::asset('/img/card_images/'.$battle_field[$user_field_identificator][2]['special']->img_url) }}" alt="">
+                                    <div class="label-power-card">{{ $battle_field[$user_field_identificator][2]['special']->strength }}</div>
+                                </div>
+                                @endif
+                            </div><!-- Место для спецкарты -->
 
                             <div class="inputer-field-super-renge fields-for-cards-wrap">
 
@@ -358,7 +400,7 @@
                                 <!-- Список сверхдальних карт-->
                                 <ul class="cards-row-wrap">
                                 @foreach($battle_field[$user_field_identificator][2]['warrior'] as $i => $card)
-                                    <li data-cardid="{{ $card->id}}" data-relative="{{ $card->type }}">
+                                    <li data-cardid="{{ $card->id}}" data-relative="{{ $card->type }}" title="{{ $card->title}}">
                                         <div class="card-wrap">
                                             <img src="{{ URL::asset('/img/card_images/'.$card->img_url) }}" alt="">
                                             <div class="label-power-card">{{ $card->strength }}</div>
@@ -508,14 +550,14 @@
         <div class="mezhdyblock">
             <div class="bor-beutifull-box">
                 <ul id="sortable-cards-field-more" class="can-i-use-useless sort">
-                    @foreach($battle_field['mid'] as $i => $card)
-                        <li data-cardid="{{ $card->id}}" data-relative="{{ $card->type }}">
-                            <div class="card-wrap">
-                                <img src="{{ URL::asset('/img/card_images/'.$card->img_url) }}" alt="">
-                                <div class="label-power-card">{{ $card->strength }}</div>
-                            </div>
-                        </li>
-                    @endforeach
+                @foreach($battle_field['mid'] as $i => $card)
+                    <li data-cardid="{{ $card[0]->id }}" data-relative="{{ $card[0]->type }}">
+                        <div class="card-wrap">
+                            <img src="{{ URL::asset('/img/card_images/'.$card[0]->img_url)}}" alt="">
+                            <div class="label-power-card">{{ $card[0]->strength }}</div>
+                        </div>
+                    </li>
+                @endforeach
                 </ul>
             </div>
         </div>

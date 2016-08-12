@@ -1711,9 +1711,9 @@ ul.cards-row-wrap li{
     top: 0;
 }
 
-ul.cards-row-wrap li img{
-    max-height: 100px;
-}
+.image-inside-line img, ul.cards-row-wrap li img{max-height: 100px;}
+
+ul.can-i-use-useless img{max-height: 125px;}
 
 ul.user-hand-cards-wrap{
     width: 69%;
@@ -1737,6 +1737,7 @@ ul.user-hand-cards-wrap li img{width: 90px;}
     display: block;
     height: 100%;
     position: relative;
+    text-align: center;
     width: 100%;
 }
 .card-wrap img{

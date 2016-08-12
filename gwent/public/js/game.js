@@ -61,11 +61,45 @@ $(window).load(function(){
                         break;
                         
                     case 'userMadeAction':
+                        $('.mezhdyblock #sortable-cards-field-more, .convert-battle-front #p1 .cards-row-wrap, .convert-battle-front #p1 .image-inside-line, .convert-battle-front #p2 .cards-row-wrap, .convert-battle-front #p2 .image-inside-line').empty();
+                        
+                        if(result.login == $('.user-describer').attr('id')){
+                            showPopup('Ваша очередь ходить');
+                        }else{
+                            showPopup('Ход игрока '+result.login);
+                        }
+                        
+                        for(var fieldType in result.field_data){
+                            if(fieldType == 'mid'){
+                                for(var i=0; i<result.field_data['mid'].length; i++){
+                                    $('.mezhdyblock #sortable-cards-field-more').append(createFieldCardView(result.field_data['mid'][i][0], false));
+                                }                                
+                            }else{
+                                for(var i=0; i<result.field_data[fieldType].length; i++){
+                                    switch(i){
+                                        case 0: var row = '#meele'; break;
+                                        case 1: var row = '#range'; break;
+                                        case 2: var row = '#superRange'; break;
+                                    }
+                                    for(var j=0; j<result.field_data[fieldType][i]['warrior'].length; j++){
+                                        $('.convert-battle-front #'+fieldType+' .convert-stuff '+row+' .cards-row-wrap').append(createFieldCardView(result.field_data[fieldType][i]['warrior'][j], false));
+                                    }
+                                    if(result.field_data[fieldType][i]['special'] != ''){
+                                        $('.convert-battle-front #'+fieldType+' .convert-stuff '+row+' .image-inside-line').append(createCardDescriptionView(result.field_data[fieldType][i]['special']));
+                                    }
+                                }
+                            }
+                        }
+                        
+                        $('#sortableUserCards .active').remove();
+                        $('#sortableUserCards li').removeClass('active');
+                        createCardLayers($('#sortableUserCards li'));
+
                         $('.oponent .convert-stuff .field-for-cards').each(function(){
                             var handler = $('.oponent #'+$(this).attr('id')+' .cards-row-wrap li');
                             createCardLayers(handler);
                         });
-                        $('.user.convert-stuff .field-for-cards').each(function(){
+                        $('.user .convert-stuff .field-for-cards').each(function(){
                             var handler = $('.user #'+$(this).attr('id')+' .cards-row-wrap li');
                             createCardLayers(handler);
                         });
@@ -195,20 +229,24 @@ $(window).load(function(){
 
             //Пользователь должен сделать действие
             function userMakeAction(allowActions, conn){
-                console.log('allowActions='+allowActions+' userMadeAction='+userMadeAction)
+                console.log('allowActions='+allowActions+' userMadeAction='+userMadeAction);
+                console.log((allowActions !== 0) && (userMadeAction === 0));
                 if((allowActions !== 0) && (userMadeAction === 0) && (allowActions !== undefined)){
-                    $('.convert-battle-front .convert-stuff, .mezhdyblock .bor-beutifull-box').on('click', '.active',function(){
-                        userMadeAction = 1;
+                    $('.convert-battle-front .convert-stuff, .mezhdyblock .bor-beutifull-box').on('click', '.active',function(){                        
                         var card = $('#sortableUserCards .active').attr('data-cardid');
                         var field = $(this).attr('id');
-                        conn.send(
-                            JSON.stringify({
-                                action: 'userMadeCardAction',
-                                ident: ident,
-                                card: card,
-                                field: field
-                            })
-                        );
+                        if((allowActions !== 0) && (allowActions !== undefined)){
+                            conn.send(
+                                JSON.stringify({
+                                    action: 'userMadeCardAction',
+                                    ident: ident,
+                                    card: card,
+                                    field: field
+                                })
+                            );
+                        }
+                        allowActions = 0;
+                        userMadeAction = 1;
                     });
                 }
             }
@@ -365,7 +403,7 @@ $(window).load(function(){
             createCardLayers(handler);
         }        
     });
-    $('.user.convert-stuff .field-for-cards').each(function(){
+    $('.user .convert-stuff .field-for-cards').each(function(){
         var handler = $('.user #'+$(this).attr('id')+' .cards-row-wrap li');
         if(handler.length){
             createCardLayers(handler);
