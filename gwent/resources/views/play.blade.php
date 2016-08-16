@@ -16,6 +16,7 @@
     $players_count = 0;   
 
     $battle_field = unserialize($battle_data->battle_field);
+    //dd($battle_field);
 
     if($user['id'] == $battle_data->creator_id){
         $user_field_identificator = 'p1';
@@ -42,6 +43,7 @@
             $players['allied'] = [
                 'battle_field'  => unserialize($value -> battle_field),
                 'user_deck'     => unserialize($value -> user_deck),
+                'user_discard'  => unserialize($value -> user_discard),
                 'user_deck_race'=> $race_name[0] -> title,
                 'user_energy'   => $value -> user_energy,
                 'user_hand'     => unserialize($value -> user_hand),
@@ -55,6 +57,7 @@
                 'battle_field'  => unserialize($value -> battle_field),
                 'user_deck'     => unserialize($value -> user_deck),
                 'user_deck_race'=> $race_name[0] -> title,
+                'user_discard'  => unserialize($value -> user_discard),
                 'user_energy'   => $value -> user_energy,
                 'user_img'      => $player_data[0] -> img_url,
                 'user_magic'    => $user_magic,
@@ -114,25 +117,31 @@
     <div class="convert-left-info">
         <!-- Колода и отбой противника -->
         <div class="cards-bet cards-oponent">
-            <ul id="card-give-more-oponent" 
-                @if(isset($players['enemy']['user_nickname']))
-                    data-user="{{ $players['enemy']['user_nickname'] }}"
-                @endif
-            >
+            <ul id="card-give-more-oponent" @if(isset($players['enemy']['user_nickname'])) data-user="{{ $players['enemy']['user_nickname'] }}"@endif >
                 <!-- Колода противника -->
-                <li>
+                <li data-field="deck">
+                @if( (isset($players['enemy']['user_deck'])) and (count($players['enemy']['user_deck']) != 0) )
                     <div class="card-init">
                         <div class="card-otboy-counter deck">
-                            <div class="counter">
-                                @if(isset($players['enemy']['user_deck']))
-                                    {{ count($players['enemy']['user_deck'])}}
-                                @endif
-                            </div>
+                            <div class="counter">{{ count($players['enemy']['user_deck'])}}</div>
                         </div>
                     </div>
+                @else
+                    <div class="nothinh-for-swap"></div>
+                @endif
                 </li>
                 <!-- Отбой противника -->
-                <li><div class="nothinh-for-swap"></div><!-- nothing-to-swap пустой контейнер отбоя/колоды --></li>
+                <li data-field="discard">
+                @if( (isset($players['enemy']['user_discard'])) and (count($players['enemy']['user_discard']) != 0) )
+                    <div class="card-init">
+                        <div class="card-otboy-counter deck">
+                            <div class="counter">{{ count($players['enemy']['user_discard'])}}</div>
+                        </div>
+                    </div>
+                @else
+                    <div class="nothinh-for-swap"></div>
+                @endif
+                </li>
             </ul>
         </div>
         <!--END OF Колода и отбой противника -->
@@ -148,41 +157,31 @@
         <div class="cards-bet cards-main">
             <!-- Колода и отбой игрока-->
             <ul id="card-give-more-user" data-user="{{ $players['allied']['user_nickname'] }}">
-                <li>
+                <li data-field="deck">
+                @if( (isset($players['allied']['user_deck'])) and (count($players['allied']['user_deck']) != 0) )
                     <div class="card-my-init cards-take-more">
-                        <!-- Колода игрока -->
-                        <div class="convert-otboy-cards">
-
-                        </div>
-                        <!-- END OF Колода игрока -->
-
                         <!-- Количество карт в колоде -->
                         <div class="card-take-more-counter deck">
-                            <div class="counter">
-                                @if(isset($players['allied']['user_deck']))
-                                    {{ count($players['allied']['user_deck'])}}
-                                @endif
-                            </div>
+                            <div class="counter">{{ count($players['allied']['user_deck'])}}</div>
                         </div>
                         <!--END OF Количество карт в колоде -->
                     </div>
+                @else
+                    <div class="nothinh-for-swap"></div>
+                @endif
                 </li>
-                <li>
-                    <div class="nothinh-for-swap"></div><!-- Если в отбое нету карт -->
-                    <!-- Если в отбое есть карты -->
-                    <!--<div class="card-my-init">
-
-                        <div class="convert-otboy-cards">
-                            <ul id="otboy-cards-list">
-
-                            </ul>
+                <li data-field="discard">
+                @if( (isset($players['allied']['user_discard'])) and (count($players['allied']['user_discard']) != 0) )
+                    <div class="card-my-init cards-take-more">
+                        <!-- Количество карт в отбое -->
+                        <div class="card-take-more-counter deck">
+                            <div class="counter">{{ count($players['allied']['user_discard'])}}</div>
                         </div>
-
-                        <div class="card-otboy-counter">
-                            <div class="counter">Количество карт в отбое</div>
-                        </div>
-                    </div>-->
-                    <!-- END OF Если в отбое есть карты -->
+                        <!--END OF Количество карт в отбое -->
+                    </div>
+                @else
+                    <div class="nothinh-for-swap"></div>
+                @endif
                 </li>
             </ul>
             <!--END OF Колода и отбой игрока-->
@@ -193,7 +192,7 @@
     <!-- Поле битвы -->
     <div class="convert-battle-front">
         <!-- Поле противника -->
-        <div class="convert-cards oponent" @if(isset($players['enemy']['user_nickname']))data-user="{{ $players['enemy']['user_nickname'] }}" id="{{$opponent_field_identificator}}"@endif>
+        <div class="convert-cards oponent" @if(isset($players['enemy']['user_nickname']))data-user="{{ $players['enemy']['user_nickname'] }}"@endif id="{{$opponent_field_identificator}}">
             <div class="convert-card-box">
                 <!-- Сверхдальние Юниты противника -->
                 <div class="convert-stuff">
@@ -215,11 +214,12 @@
                                 <div class="bg-img-super-renge fields-for-cards-img"><!-- Картинка пустого сверхдальнего ряда --></div>
                                 
                                 <ul class="cards-row-wrap">
+                                    
                                 @foreach($battle_field[$opponent_field_identificator][2]['warrior'] as $i => $card)
-                                    <li data-cardid="{{ $card->id}}" data-relative="{{ $card->type }}"  title="{{ $card->title}}">
+                                    <li data-cardid="{{ $card['card']->id}}" data-relative="{{ $card['card']->type }}"  title="{{ $card['card']->title}}">
                                         <div class="card-wrap">
-                                            <img src="{{ URL::asset('/img/card_images/'.$card->img_url) }}" alt="">
-                                            <div class="label-power-card">{{ $card->strength }}</div>
+                                            <img src="{{ URL::asset('/img/card_images/'.$card['card']->img_url) }}" alt="">
+                                            <div class="label-power-card">{{ $card['strength'] }}</div>
                                         </div>
                                     </li>
                                 @endforeach
@@ -253,10 +253,10 @@
                                 <!-- Список дальних карт-->
                                 <ul class="cards-row-wrap">
                                 @foreach($battle_field[$opponent_field_identificator][1]['warrior'] as $i => $card)
-                                    <li data-cardid="{{ $card->id}}" data-relative="{{ $card->type }}" title="{{ $card->title}}">
+                                    <li data-cardid="{{ $card['card']->id}}" data-relative="{{ $card['card']->type }}" title="{{ $card['card']->title}}">
                                         <div class="card-wrap">
-                                            <img src="{{ URL::asset('/img/card_images/'.$card->img_url) }}" alt="">
-                                            <div class="label-power-card">{{ $card->strength }}</div>
+                                            <img src="{{ URL::asset('/img/card_images/'.$card['card']->img_url) }}" alt="">
+                                            <div class="label-power-card">{{ $card['strength'] }}</div>
                                         </div>
                                     </li>
                                 @endforeach
@@ -289,10 +289,10 @@
                                 <!-- Список ближних карт-->
                                 <ul class="cards-row-wrap">
                                 @foreach($battle_field[$opponent_field_identificator][0]['warrior'] as $i => $card)
-                                    <li data-cardid="{{ $card->id}}" data-relative="{{ $card->type }}">
+                                    <li data-cardid="{{ $card['card']->id}}" data-relative="{{ $card['card']->type }}" title="{{ $card['card']->title}}">
                                         <div class="card-wrap">
-                                            <img src="{{ URL::asset('/img/card_images/'.$card->img_url) }}" alt="">
-                                            <div class="label-power-card">{{ $card->strength }}</div>
+                                            <img src="{{ URL::asset('/img/card_images/'.$card['card']->img_url) }}" alt="">
+                                            <div class="label-power-card">{{ $card['strength'] }}</div>
                                         </div>
                                     </li>
                                 @endforeach
@@ -334,10 +334,10 @@
                                 <!-- Список ближних карт-->
                                 <ul class="cards-row-wrap">
                                 @foreach($battle_field[$user_field_identificator][0]['warrior'] as $i => $card)
-                                    <li data-cardid="{{ $card->id}}" data-relative="{{ $card->type }}" title="{{ $card->title}}">
+                                    <li data-cardid="{{ $card['card']->id}}" data-relative="{{ $card['card']->type }}" title="{{ $card['card']->title}}">
                                         <div class="card-wrap">
-                                            <img src="{{ URL::asset('/img/card_images/'.$card->img_url) }}" alt="">
-                                            <div class="label-power-card">{{ $card->strength }}</div>
+                                            <img src="{{ URL::asset('/img/card_images/'.$card['card']->img_url) }}" alt="">
+                                            <div class="label-power-card">{{ $card['strength'] }}</div>
                                         </div>
                                     </li>
                                 @endforeach
@@ -371,10 +371,10 @@
                                 <!-- Список дальних карт-->
                                 <ul class="cards-row-wrap">
                                 @foreach($battle_field[$user_field_identificator][1]['warrior'] as $i => $card)
-                                    <li data-cardid="{{ $card->id}}" data-relative="{{ $card->type }}" title="{{ $card->title}}">
+                                    <li data-cardid="{{ $card['card']->id}}" data-relative="{{ $card['card']->type }}" title="{{ $card['card']->title}}">
                                         <div class="card-wrap">
-                                            <img src="{{ URL::asset('/img/card_images/'.$card->img_url) }}" alt="">
-                                            <div class="label-power-card">{{ $card->strength }}</div>
+                                            <img src="{{ URL::asset('/img/card_images/'.$card['card']->img_url) }}" alt="">
+                                            <div class="label-power-card">{{ $card['strength'] }}</div>
                                         </div>
                                     </li>
                                 @endforeach
@@ -409,10 +409,10 @@
                                 <!-- Список сверхдальних карт-->
                                 <ul class="cards-row-wrap">
                                 @foreach($battle_field[$user_field_identificator][2]['warrior'] as $i => $card)
-                                    <li data-cardid="{{ $card->id}}" data-relative="{{ $card->type }}" title="{{ $card->title}}">
+                                    <li data-cardid="{{ $card['card']->id}}" data-relative="{{ $card['card']->type }}" title="{{ $card['card']->title}}">
                                         <div class="card-wrap">
-                                            <img src="{{ URL::asset('/img/card_images/'.$card->img_url) }}" alt="">
-                                            <div class="label-power-card">{{ $card->strength }}</div>
+                                            <img src="{{ URL::asset('/img/card_images/'.$card['card']->img_url) }}" alt="">
+                                            <div class="label-power-card">{{ $card['strength'] }}</div>
                                         </div>
                                     </li>
                                 @endforeach

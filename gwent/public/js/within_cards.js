@@ -484,7 +484,7 @@ $(document).ready(function(){
                 if (0 == $('input[name=CAkiller_groupOrSingle]:checked').val()) {
                     //Действует на одного
                     realActionRow += ', "CAkiller_groupOrSingle": "0"';
-                    displayActionRow += ' - Дейстует на всех; <br>';
+                    displayActionRow += ' - Не дейстует на группу; <br>';
 
                 } else {
                     //если выбор пал на группу,- пишем в БД id групп
