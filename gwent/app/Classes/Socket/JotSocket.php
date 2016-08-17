@@ -426,6 +426,21 @@ class JotSocket extends BaseSocket
                                         }
                                     }
                                     //END OF УБИЙЦА
+                                    //РАЗВЕДЧИК
+                                    if($action_data->action == '15'){
+                                        $deck_card_count = count($user_array['user_deck']);
+
+                                        if($deck_card_count > 0){
+                                            $rand_item = rand(0, $deck_card_count-1);
+                                            $random_card = $user_array['user_deck'][$rand_item];
+                                            $user_array['user_hand'][] = $random_card;
+                                            $new_cards[] = $random_card;
+                                            unset($user_array['user_deck'][$rand_item]);
+
+                                            $user_array['user_deck'] = array_values($user_array['user_deck']);
+                                        }
+                                    }
+                                    //END OF РАЗВЕДЧИК
                                 }                                        
                                 
                                 /*END OF Перебор действий карты*/
@@ -497,10 +512,10 @@ class JotSocket extends BaseSocket
                                     'message'   => 'userMadeAction',
                                     'field_data'=> $battle_field,
                                     'counts'    => [
-                                        'user_deck'    => $user_deck_count,
-                                        'user_discard' => $user_discard_count,
-                                        'opon_discard' => $oponent_discard_count,
-                                        'opon_deck'    => $oponent_deck_count
+                                        'user_deck'    => $oponent_deck_count,
+                                        'user_discard' => $oponent_discard_count,
+                                        'opon_discard' => $user_discard_count,
+                                        'opon_deck'    => $user_deck_count
                                     ],
                                     'battleInfo'=> $msg->ident->battleId,
                                     'login' => $user['login']
