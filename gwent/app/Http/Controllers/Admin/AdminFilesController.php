@@ -50,33 +50,31 @@ class AdminFilesController extends BaseController
 
     // Удаление файлов
     public function dropFiles(Request $request){
-        if( csrf_token() == $request->input('token')){
-            $data = $request -> all();
+        $data = $request -> all();
 
-            //Принимаем массив файлов к удалению
-            $files = json_decode($data['files']);
-            $n=count($files);
+        //Принимаем массив файлов к удалению
+        $files = json_decode($data['files']);
+        $n=count($files);
 
-            $dest = 'img/card_images/';
+        $dest = 'img/card_images/';
 
-            if(is_dir($dest)){
-                $dir = opendir($dest);
+        if(is_dir($dest)){
+            $dir = opendir($dest);
 
-                while($filename = readdir($dir)){
+            while($filename = readdir($dir)){
 
-                    for($i=0; $i<$n; $i++){
-                        //если имя файла входит в массив
-                        if($filename == $files[$i]){
-                            //удаляем
-                            unlink($dest.$filename);
-                        }
+                for($i=0; $i<$n; $i++){
+                    //если имя файла входит в массив
+                    if($filename == $files[$i]){
+                        //удаляем
+                        unlink($dest.$filename);
                     }
-
                 }
 
             }
-            return 'success';
+
         }
+        return 'success';
     }
 
 }

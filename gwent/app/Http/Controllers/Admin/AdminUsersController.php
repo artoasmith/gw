@@ -38,46 +38,38 @@ class AdminUsersController extends BaseController
 
 
     protected function editAdmin(Request $request){
-        //Проверка на кроссайтовую передачу данных
-        if(csrf_token() == $request->input('_token')){
-            $data = $request->all();
+        $data = $request->all();
 
-
-
-            $user = User::find($data['user_id']);
-            $user -> email      = $data['user_email'];
-            $user -> nickname   = $data['user_nickname'];
-            $user -> name       = $data['user_name'];
-            $user -> birth_date = $data['user_birthday'];
-            $user -> user_gender= $data['user_gender'];
-            $user -> address    = $data['user_address'];
-            if(isset($data['user_role'])){
-                $user -> user_role = 1;
-            }else{
-                $user -> user_role = 0;
-            }
-            $user -> save();
-
-            UserAdditionalDataModel::where('user_id', '=', $data['user_id'])->update(['user_gold' => $data['user_gold']]);
-            UserAdditionalDataModel::where('user_id', '=', $data['user_id'])->update(['user_silver' => $data['user_silver']]);
-            UserAdditionalDataModel::where('user_id', '=', $data['user_id'])->update(['user_energy' => $data['user_energy']]);
-
-            return redirect(route('admin-users'));
-
+        $user = User::find($data['user_id']);
+        $user -> email      = $data['user_email'];
+        $user -> nickname   = $data['user_nickname'];
+        $user -> name       = $data['user_name'];
+        $user -> birth_date = $data['user_birthday'];
+        $user -> user_gender= $data['user_gender'];
+        $user -> address    = $data['user_address'];
+        if(isset($data['user_role'])){
+            $user -> user_role = 1;
+        }else{
+            $user -> user_role = 0;
         }
+        $user -> save();
+
+        UserAdditionalDataModel::where('user_id', '=', $data['user_id'])->update(['user_gold' => $data['user_gold']]);
+        UserAdditionalDataModel::where('user_id', '=', $data['user_id'])->update(['user_silver' => $data['user_silver']]);
+        UserAdditionalDataModel::where('user_id', '=', $data['user_id'])->update(['user_energy' => $data['user_energy']]);
+
+        return redirect(route('admin-users'));
     }
 
 
 
     //удаление юзера
     public function deleteUser(Request $request){
-        if( csrf_token() == $request -> input('_token')){
-            $data = $request -> all();
-            $result = User::find($data['id']);
-            $result -> delete();
-            if($result !== false){
-                return redirect(route('admin-users'));
-            }
+        $data = $request -> all();
+        $result = User::find($data['id']);
+        $result -> delete();
+        if($result !== false){
+            return redirect(route('admin-users'));
         }
     }
 }

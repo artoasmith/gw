@@ -62,7 +62,7 @@ $(window).load(function(){
                         for(var fieldType in result.field_data){
                             if(fieldType == 'mid'){
                                 for(var i=0; i<result.field_data['mid'].length; i++){
-                                    $('.mezhdyblock #sortable-cards-field-more').append(createFieldCardView(result.field_data['mid'][i][0], 0, false));
+                                    $('.mezhdyblock #sortable-cards-field-more').append(createFieldCardView(result.field_data['mid'][i]['card'], 0, false));
                                 }                                
                             }else{
                                 for(var i=0; i<result.field_data[fieldType].length; i++){
@@ -76,7 +76,7 @@ $(window).load(function(){
                                         $('.convert-battle-front #'+fieldType+' .convert-stuff '+row+' .cards-row-wrap').append(createFieldCardView(result.field_data[fieldType][i]['warrior'][j]['card'], result.field_data[fieldType][i]['warrior'][j]['strength'], false));
                                     }
                                     if(result.field_data[fieldType][i]['special'] != ''){
-                                        $('.convert-battle-front #'+fieldType+' .convert-stuff '+row+' .image-inside-line').append(createCardDescriptionView(result.field_data[fieldType][i]['special'], 0, false));
+                                        $('.convert-battle-front #'+fieldType+' .convert-stuff '+row+' .image-inside-line').append(createCardDescriptionView(result.field_data[fieldType][i]['special']['card'], 0, false));
                                     }
                                 }
                             }
@@ -117,8 +117,10 @@ $(window).load(function(){
                             }
                         }
                         
-                        $('#sortableUserCards .active').remove();
-                        $('#sortableUserCards li').removeClass('active');
+                        if(result.login != $('.user-describer').attr('id')){
+                            $('#sortableUserCards .active').remove();
+                            $('#sortableUserCards li').removeClass('active');
+                        }                        
                         createCardLayers($('#sortableUserCards li'));
 
                         $('.oponent .convert-stuff .field-for-cards').each(function(){
@@ -263,7 +265,7 @@ $(window).load(function(){
                 console.log('allowActions='+allowActions+' userMadeAction='+userMadeAction);
                 console.log((allowActions !== 0) && (userMadeAction === 0));
                 if((allowActions !== 0) && (userMadeAction === 0) && (allowActions !== undefined)){
-                    $('.convert-battle-front .convert-stuff, .mezhdyblock .bor-beutifull-box').on('click', '.active',function(){                        
+                    $('.convert-battle-front .convert-stuff, .mezhdyblock .bor-beutifull-box').on('click', 'div.active, ul.active',function(){                        
                         var card = $('#sortableUserCards .active').attr('data-cardid');
                         var field = $(this).attr('id');
                         if((allowActions !== 0) && (allowActions !== undefined)){

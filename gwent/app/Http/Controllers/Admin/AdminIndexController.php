@@ -32,90 +32,79 @@ class AdminIndexController extends BaseController
 
     //Сохранение в БД данных о лигах
     protected function leagueEdit(Request $request){
-        if( csrf_token() == $request->input('token')){
-            $data = $request -> all();
+        $data = $request -> all();
 
-            //Входящий массив лиг
-            $league_data = json_decode($data['leagueData']);
+        //Входящий массив лиг
+        $league_data = json_decode($data['leagueData']);
 
-            //Удаляем все лиги из БД
-            $leagueModel = LeagueModel::get();
-            foreach($leagueModel as $league) {
-                $league->delete();
-            }
+        //Удаляем все лиги из БД
+        $leagueModel = LeagueModel::get();
+        foreach($leagueModel as $league) {
+            $league->delete();
+        }
 
-            //Создаем новые лиги из входящего массива
-            foreach($league_data as $league) {
-                $result = LeagueModel::create([
-                    'title'     => $league -> title,
-                    'min_lvl'   => $league -> min,
-                    'max_lvl'   => $league -> max
-                ]);
-            }
-            if($result != false){
-                return 'success';
-            }
-
+        //Создаем новые лиги из входящего массива
+        foreach($league_data as $league) {
+            $result = LeagueModel::create([
+                'title'     => $league -> title,
+                'min_lvl'   => $league -> min,
+                'max_lvl'   => $league -> max
+            ]);
+        }
+        if($result != false){
+            return 'success';
         }
     }
 
     //Сохранение в БД базовых полей пользователя
     protected function baseUserFieldsEdit(Request $request){
-        if( csrf_token() == $request -> input('_token') ){
-            $data = $request -> all();
+        $data = $request -> all();
 
-            $result = array();
-            //Для каждого входящего элемента обновляем значение в БД
-            foreach($data as $key => $value){
-                if( ($key != '_token') and ($key != '_method') ){
-                    $result[] = EtcDataModel::where('label_data', '=', 'base_user_fields')->where('meta_key', '=', $key)->update(['meta_value' => $value]);
-                }
+        $result = array();
+        //Для каждого входящего элемента обновляем значение в БД
+        foreach($data as $key => $value){
+            if( ($key != '_token') and ($key != '_method') ){
+                $result[] = EtcDataModel::where('label_data', '=', 'base_user_fields')->where('meta_key', '=', $key)->update(['meta_value' => $value]);
             }
+        }
 
-            if(!in_array(false, $result, true)){
-                return redirect(route('admin-main'));
-            }
-
+        if(!in_array(false, $result, true)){
+            return redirect(route('admin-main'));
         }
     }
 
 
     //Сохранение соотношения обменов
     protected function exchangeOptionsEdit(Request $request){
-        if( csrf_token() == $request -> input('_token') ) {
-            $data = $request->all();
+        $data = $request->all();
 
-            $result = array();
-            //Для каждого входящего элемента обновляем значение в БД
-            foreach($data as $key => $value) {
-                if (($key != '_token') and ($key != '_method')) {
-                    $result[] = EtcDataModel::where('label_data', '=', 'exchange_options')->where('meta_key', '=', $key)->update(['meta_value' => $value]);
-                }
+        $result = array();
+        //Для каждого входящего элемента обновляем значение в БД
+        foreach($data as $key => $value) {
+            if (($key != '_token') and ($key != '_method')) {
+                $result[] = EtcDataModel::where('label_data', '=', 'exchange_options')->where('meta_key', '=', $key)->update(['meta_value' => $value]);
             }
+        }
 
-            if(!in_array(false, $result, true)){
-                return redirect(route('admin-main'));
-            }
-            
+        if(!in_array(false, $result, true)){
+            return redirect(route('admin-main'));
         }
     }
 
     //Сохранение настроек колоды
     protected function deckOptionsEdit(Request $request){
-        if( csrf_token() == $request -> input('_token')){
-            $data = $request -> all();
+        $data = $request -> all();
 
-            $result = array();
-            //Для каждого входящего элемента обновляем значение в БД
-            foreach($data as $key => $value) {
-                if (($key != '_token') and ($key != '_method')) {
-                    $result[] = EtcDataModel::where('label_data', '=', 'deck_options')->where('meta_key', '=', $key)->update(['meta_value' => $value]);
-                }
+        $result = array();
+        //Для каждого входящего элемента обновляем значение в БД
+        foreach($data as $key => $value) {
+            if (($key != '_token') and ($key != '_method')) {
+                $result[] = EtcDataModel::where('label_data', '=', 'deck_options')->where('meta_key', '=', $key)->update(['meta_value' => $value]);
             }
+        }
 
-            if(!in_array(false, $result, true)){
-                return redirect(route('admin-main'));
-            }
+        if(!in_array(false, $result, true)){
+            return redirect(route('admin-main'));
         }
     }
 }

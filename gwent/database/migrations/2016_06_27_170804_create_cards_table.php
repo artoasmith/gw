@@ -25,6 +25,7 @@ class CreateCardsTable extends Migration
             $table->boolean('is_leader')->unsigned();       //Карта лидер?
             $table->string('img_url');                      //Картинка карты
             $table->text('card_actions');                   //Действия карты
+            $table->text('card_groups');                   //Действия карты
             $table->smallInteger('max_quant_in_deck')->unsigned();//Макс кол-во в колоде
             $table->text('short_description');
             $table->text('full_description');

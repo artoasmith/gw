@@ -34,63 +34,79 @@ class AdminCardsGroupController extends BaseController
 
     //Добавление группы в БД
     protected function addCardGroup(Request $request){
-        if( csrf_token() == $request -> input('token') ){
-            $data = $request -> all();
+        $data = $request -> all();
 
-            //Превращаем название в транслитезированую ссылку
-            $slug = AdminFunctions::str2url($data['title']);
+        //Превращаем название в транслитезированую ссылку
+        $slug = AdminFunctions::str2url($data['title']);
 
-            //Массив карт входящих в группу
-            $cards = array_values(array_unique(json_decode($data['cards'])));
+        //Массив карт входящих в группу
+        $cards = array_values(array_unique(json_decode($data['cards'])));
 
-            //Создание в БД новой группы
-            $result = CardGroupsModel::create([
-                'title' => $data['title'],
-                'slug'  => $slug,
-                'has_cards_ids' => serialize($cards)
-            ]);
+        //Создание в БД новой группы
+        $result = CardGroupsModel::create([
+            'title' => $data['title'],
+            'slug'  => $slug,
+            'has_cards_ids' => serialize($cards)
+        ]);
 
-            if($result !== false){
-                return 'success';
-            }
+        $group = serialize([$result->id]);
+        foreach($cards as $i => $card_id){
+            \DB::table('tbl_card')->where('id','=',$card_id)->update(['card_groups' => $group]);
+        }
+
+        if($result !== false){
+            return 'success';
         }
     }
 
     //Изменение группы в БД
     protected function editCardGroup(Request $request){
-        if( csrf_token() == $request -> input('token') ){
-            $data = $request -> all();
+        $data = $request -> all();
 
-            //Превращаем название в транслитезированую ссылку
-            $slug = AdminFunctions::str2url($data['title']);
+        //Превращаем название в транслитезированую ссылку
+        $slug = AdminFunctions::str2url($data['title']);
 
-            //Массив карт входящих в группу
-            $cards = array_values(array_unique(json_decode($data['cards'])));
+        //Массив карт входящих в группу
+        $cards = array_values(array_unique(json_decode($data['cards'])));
+        foreach($cards as $i => $card_id){
+            \DB::table('tbl_card')->where('id','=',$card_id)->update(['card_groups' => $group]);
+        }
 
-            //Изменение группы
-            $group_data = CardGroupsModel::find($data['id']);
-            $group_data -> title            = $data['title'];
-            $group_data -> slug             = $slug;
-            $group_data -> has_cards_ids    = serialize($cards);
+        //Изменение группы
+        $group_data = CardGroupsModel::find($data['id']);
+        $group_data -> title            = $data['title'];
+        $group_data -> slug             = $slug;
+        $group_data -> has_cards_ids    = serialize($cards);
 
-            $result = $group_data -> save();
+        $result = $group_data -> save();
 
-            if($result != false){
-                return 'success';
-            }
+        if($result != false){
+            return 'success';
         }
     }
 
 
     protected function dropCardGroup(Request $request){
-        if(csrf_token() == $request->input('_token')){
-            $cardGroups = CardGroupsModel::find($request -> input('group_id'));
-            $result = $cardGroups -> delete();
-            if($result !== false){
-                return redirect(route('admin-cards-group'));
-            }else{
-                return 'Не удалось удалить группу из базы.';
+        $cardGroups = CardGroupsModel::find($request -> input('group_id'));
+        $cards = unserialize($cardGroups -> has_cards_ids);
+        foreach($cards as $i => $card_id){
+            $card = CardsModel::find($card_id);
+
+            $groups = unserialize($card->card_groups);
+            foreach($groups as $j => $group){
+                if($request -> input('group_id') == $group){
+                    unset($groups[$j]);
+                }
             }
+            $groups = array_values($groups);
+            $card -> card_groups = serialize($groups);
+            $card -> save();
+        }
+        $result = $cardGroups -> delete();
+        if($result !== false){
+            return redirect(route('admin-cards-group'));
+        }else{
+            return 'Не удалось удалить группу из базы.';
         }
     }
 }

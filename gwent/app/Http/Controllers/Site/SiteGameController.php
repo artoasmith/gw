@@ -291,7 +291,7 @@ class SiteGameController extends BaseController
             }else{
                 $card_id = $card_id['id'];
             }
-            $card_data = \DB::table('tbl_card')->select('id','title','slug','card_type','card_strong','img_url','short_description', 'allowed_rows', 'card_actions')->where('id', '=', $card_id)->get();
+            $card_data = \DB::table('tbl_card')->select('id','title','slug','card_type','card_strong','img_url','short_description', 'allowed_rows', 'card_actions', 'card_groups')->where('id', '=', $card_id)->get();
 
             $result_array[] = [
                 'id'        => Crypt::encrypt($card_data[0]->id),
@@ -302,6 +302,7 @@ class SiteGameController extends BaseController
                 'img_url'   => $card_data[0]->img_url,
                 'descript'  => $card_data[0]->short_description,
                 'action_row'=> unserialize($card_data[0]->allowed_rows),
+                'groups'    => unserialize($card_data[0]->card_groups),
                 'actions'   => unserialize($card_data[0]->card_actions)
             ];
         }
@@ -480,7 +481,7 @@ class SiteGameController extends BaseController
         if(strlen($id) > 11){
             $id = Crypt::decrypt($id);
         }      
-        $card_data = \DB::table('tbl_card')->select('id','title','slug','card_type','card_strong','img_url','short_description', 'allowed_rows', 'card_actions')->where('id', '=', $id)->get();
+        $card_data = \DB::table('tbl_card')->select('id','title','slug','card_type','card_strong','card_groups','img_url','short_description', 'allowed_rows', 'card_actions')->where('id', '=', $id)->get();
         return json_encode([
             'id'        => Crypt::encrypt($card_data[0]->id),
             'title'     => $card_data[0]->title,
@@ -489,7 +490,8 @@ class SiteGameController extends BaseController
             'img_url'   => $card_data[0]->img_url,
             'descript'  => $card_data[0]->short_description,
             'action_row'=> unserialize($card_data[0]->allowed_rows),
-            'actions'   => unserialize($card_data[0]->card_actions)
+            'actions'   => unserialize($card_data[0]->card_actions),
+            'groups'    => unserialize($card_data[0]->card_groups)
         ]);
     }
 }
