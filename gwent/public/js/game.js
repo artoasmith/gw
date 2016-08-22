@@ -269,14 +269,14 @@ $(window).load(function(){
                         var card = $('#sortableUserCards .active').attr('data-cardid');
                         var field = $(this).attr('id');
                         if((allowActions !== 0) && (allowActions !== undefined)){
-                            conn.send(
+                            /*conn.send(
                                 JSON.stringify({
                                     action: 'userMadeCardAction',
                                     ident: ident,
                                     card: card,
                                     field: field
                                 })
-                            );
+                            );*/
                         }
                         allowActions = 0;
                         userMadeAction = 1;
@@ -328,11 +328,13 @@ $(window).load(function(){
 
                             clearRowSelection();
                             if(data['type'] == 'special'){
+                               
                                 for(var i=0; i<data['actions'].length; i++){
                                     var action = ''+data['actions'][i]['action'];
                                     if(action == '21')illuminateAside();
                                     if((action == '13')||(action == '26')) illuminateOpponent();
-                                    if((action == '24')||(action == '25')||(action == '27')||(action == '28')||(action == '29')) illuminateSelf();
+                                    if((action == '25')||(action == '27')||(action == '28')||(action == '29')) illuminateSelf();
+                                    if(action == '24') illuminateCards();
                                 }
                             }else{
                                 illuminateCustom('.user', data['action_row']);
@@ -357,6 +359,7 @@ $(window).load(function(){
         $('.mezhdyblock .bor-beutifull-box #sortable-cards-field-more').removeClass('active');
         $('.convert-stuff .field-for-cards').each(function(){
             $(this).removeClass('active')
+            $(this).children('.fields-for-cards-wrap').children('.cards-row-wrap').children('li').removeClass('glow');
         });
     }
     
@@ -373,6 +376,14 @@ $(window).load(function(){
             }
             $('.convert-battle-front '+parent+' .convert-one-field '+field).addClass('active');
         }
+    }
+    function illuminateCards(){
+        $('.convert-battle-front .user .field-for-cards').each(function(){
+            if($(this).children('.image-inside-line').children('div').length > 0){
+                $(this).children('.image-inside-line').children('div').addClass('glow');
+            }
+            $(this).children('.fields-for-cards-wrap').children('.cards-row-wrap').children('li').addClass('glow');
+        });
     }
 
     //Создание описаний пользователей в правом сайдбаре

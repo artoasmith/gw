@@ -531,6 +531,9 @@ class JotSocket extends BaseSocket
                                         }echo"531\n";
                                     }echo"532\n";
                                     //END OF ОДУРМАНИВАНИЕ
+                                    
+                                    //ПЕРЕГРУППИРОВКА
+                                    //END OF ПЕРЕГРУППИРОВКА
                                 }echo"534\n";
                                 /*END OF Перебор действий карты*/
 
@@ -691,12 +694,7 @@ class JotSocket extends BaseSocket
 
     protected static function recalculateStrengthByMid($battle_field, $user_array, $oponent_array){echo"692\n";
         $actions_array = []; //Массив действий
-        /*foreach($battle_field['mid'] as $i => $cards){echo"694\n";
-            if(!isset($actions_array[Crypt::decrypt($cards['card']->id)])){echo"463\n";
-                $actions_array[Crypt::decrypt($cards['card']->id)] = $cards;
-            }
-        }echo"698\n";*/
-        foreach($battle_field as $field => $rows){echo"699\n";
+        foreach($battle_field as $field => $rows){echo"694\n";
             if($field != 'mid'){
                 foreach ($rows as $row => $cards){
                     foreach($cards['warrior'] as $i => $card_data){                        
@@ -706,15 +704,15 @@ class JotSocket extends BaseSocket
                             }
                         }
                     }
-                }echo"709\n";
+                }echo"704\n";
             }else{
                 foreach($rows as $card_data){
-                    if(!isset($actions_array[Crypt::decrypt($card_data['card']->id)])){echo"463\n";
+                    if(!isset($actions_array[Crypt::decrypt($card_data['card']->id)])){echo"707\n";
                         $actions_array[Crypt::decrypt($card_data['card']->id)] = $card_data;
                     }
                 }
             }
-        }echo"713\n";
+        }echo"712\n";
 
         $battle_field = self::resetBattleFieldCardsStrength($battle_field);
 
