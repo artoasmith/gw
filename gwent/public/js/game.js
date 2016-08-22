@@ -56,6 +56,17 @@ $(window).load(function(){
                         changeTurnIndicator(result.login);
                         break;
                         
+                    case 'ownCardsData':
+                        for(var field in result.battleData){
+                            for(var row in result.battleData[field]){
+                                var currentRow = intRowToField(row);
+                                for(var i in result.battleData[field][row]){
+                                    $('.convert-battle-front #'+field+' .convert-stuff '+currentRow+' .cards-row-wrap li[data-cardid=\''+result.battleData[field][row][i]+'\']').addClass('glow');
+                                }
+                            }
+                        }
+                        break;
+                        
                     case 'userMadeAction':
                         $('.mezhdyblock #sortable-cards-field-more, .convert-battle-front #p1 .cards-row-wrap, .convert-battle-front #p1 .image-inside-line, .convert-battle-front #p2 .cards-row-wrap, .convert-battle-front #p2 .image-inside-line').empty();
                         changeTurnIndicator(result.login);
@@ -66,11 +77,7 @@ $(window).load(function(){
                                 }                                
                             }else{
                                 for(var i=0; i<result.field_data[fieldType].length; i++){
-                                    switch(i){
-                                        case 0: var row = '#meele'; break;
-                                        case 1: var row = '#range'; break;
-                                        case 2: var row = '#superRange'; break;
-                                    }
+                                    var row = intRowToField(i);
                                     
                                     for(var j=0; j<result.field_data[fieldType][i]['warrior'].length; j++){
                                         $('.convert-battle-front #'+fieldType+' .convert-stuff '+row+' .cards-row-wrap').append(createFieldCardView(result.field_data[fieldType][i]['warrior'][j]['card'], result.field_data[fieldType][i]['warrior'][j]['strength'], false));
@@ -148,7 +155,9 @@ $(window).load(function(){
                         allowActions = 0;
                     }
                 }
-                userMakeAction(allowActions, conn)
+                if(result.message != 'ownCardsData'){
+                    userMakeAction(allowActions, conn)
+                }                
             }
 
 
@@ -269,14 +278,34 @@ $(window).load(function(){
                         var card = $('#sortableUserCards .active').attr('data-cardid');
                         var field = $(this).attr('id');
                         if((allowActions !== 0) && (allowActions !== undefined)){
-                            /*conn.send(
+                            conn.send(
                                 JSON.stringify({
                                     action: 'userMadeCardAction',
                                     ident: ident,
                                     card: card,
                                     field: field
                                 })
-                            );*/
+                            );
+                        }
+                        allowActions = 0;
+                        userMadeAction = 1;
+                    });
+                    $('.convert-battle-front .convert-stuff .cards-row-wrap').on('click', 'li.glow', function(){
+                        var card = $('#sortableUserCards .active').attr('data-cardid');
+                        var cardToRetrieve = $(this).attr('data-cardid');
+                        var field = $(this).parents('.field-for-cards').attr('id');
+                        var player = $(this).parents('.convert-cards').attr('id');
+                        if((allowActions !== 0) && (allowActions !== undefined)){
+                            conn.send(
+                                JSON.stringify({
+                                    action: 'userMadeCardAction',
+                                    ident: ident,
+                                    card: card,
+                                    field: field,
+                                    player: player,
+                                    retrieve: cardToRetrieve
+                                })
+                            );
                         }
                         allowActions = 0;
                         userMadeAction = 1;
@@ -334,7 +363,7 @@ $(window).load(function(){
                                     if(action == '21')illuminateAside();
                                     if((action == '13')||(action == '26')) illuminateOpponent();
                                     if((action == '25')||(action == '27')||(action == '28')||(action == '29')) illuminateSelf();
-                                    if(action == '24') illuminateCards();
+                                    if(action == '24') illuminateCards(conn, ident);
                                 }
                             }else{
                                 illuminateCustom('.user', data['action_row']);
@@ -369,21 +398,26 @@ $(window).load(function(){
     function illuminateSelf(){$('.user .convert-stuff .field-for-cards').addClass('active');}
     function illuminateCustom(parent, row){
         for(var i=0 ;i<row.length; i++){
-            switch(row[i].toString()){
-                case '0': var field = '#meele'; break;
-                case '1': var field = '#range'; break;
-                case '2': var field = '#superRange'; break;
-            }
+            var field = intRowToField(row[i]);            
             $('.convert-battle-front '+parent+' .convert-one-field '+field).addClass('active');
         }
     }
-    function illuminateCards(){
-        $('.convert-battle-front .user .field-for-cards').each(function(){
-            if($(this).children('.image-inside-line').children('div').length > 0){
-                $(this).children('.image-inside-line').children('div').addClass('glow');
-            }
-            $(this).children('.fields-for-cards-wrap').children('.cards-row-wrap').children('li').addClass('glow');
-        });
+    function illuminateCards(conn, ident){
+        conn.send(
+            JSON.stringify({
+                action: 'getOwnBattleFieldData',
+                ident: ident
+            })
+        );
+    }
+    
+    function intRowToField(row){
+        switch(row.toString()){
+            case '0': var field = '#meele'; break;
+            case '1': var field = '#range'; break;
+            case '2': var field = '#superRange'; break;
+        }
+        return field;
     }
 
     //Создание описаний пользователей в правом сайдбаре

@@ -36,8 +36,9 @@
         foreach($temp_magic as $id => $quantity){
             $magic_data = \DB::table('tbl_magic_effects')->select('id', 'title', 'slug', 'img_url')->where('id','=',$id)->get();
             $user_magic[] = $magic_data[0];
+            
         }
-
+        
         if($user['id'] == $value->user_id){
             
             $players['allied'] = [
@@ -64,6 +65,7 @@
         }
         $players_count++;
     }
+    //dd($players['allied']['user_hand']);
     ?>
 
 <header class="header">

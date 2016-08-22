@@ -146,9 +146,27 @@ class JotSocket extends BaseSocket
                     }
                     break;
 
+                case 'getOwnBattleFieldData':
+                    $battle_field = unserialize($battle->battle_field);//Данные о поле битвы
+                    $own_cards = [];
+                    foreach($battle_field as $field => $rows){
+                        if($field != 'mid'){
+                            foreach($rows as $row => $cards){
+                                foreach($cards['warrior'] as $i => $card_data){
+                                    if($card_data['login'] == $users[$msg->ident->userId]['login']){
+                                        $own_cards[$field][$row][] = $card_data['card']->id;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    $result = ['message' => 'ownCardsData', 'battleData' => $own_cards, 'battleInfo' => $msg->ident->battleId];
+                    self::sendMessageToSelf($from, $result);
+                    break;
+                    
                 case 'userMadeCardAction':
                     echo date('Y-m-d H:i:s')."\n";
-                    if($battle -> fight_status == 2){echo "151\n";
+                    if($battle -> fight_status == 2){
                         //Данные о текущем пользователе
                         foreach($users as $user_id => $user_data){
                             if($user_id == $msg->ident->userId){
@@ -178,18 +196,14 @@ class JotSocket extends BaseSocket
                                     'user_current_deck'=> $user_data['user_current_deck']
                                 ];
                             }
-                        }echo"181\n";
+                        }
 
                         //Если пользователь не спасовал
                         if($user_array['round_passed'] == 0){
                             $card = json_decode(SiteGameController::getCardData($msg->card));//Получаем данные о карте
-                            switch($msg->field){ //Порядковый номер поля
-                                case 'meele':       $field_row = 0; break;
-                                case 'range':       $field_row = 1; break;
-                                case 'superRange':  $field_row = 2; break;
-                                case 'sortable-cards-field-more': $field_row = 3; break;
-                            }echo"191\n";
-
+                            
+                            $field_row = self::strRowToInt($msg->field);
+                            
                             if((in_array($field_row, $card->action_row, true)) || ($msg->field == 'sortable-cards-field-more')){ //Если номер поля не подделал пользователь
 
                                 if($battle->creator_id == $msg->ident->userId){ //Если пользователь является создателем стола (р1 -создатель)
@@ -213,7 +227,7 @@ class JotSocket extends BaseSocket
                                             $oponent_battle_field_identificator = 'p2';
                                         }
                                     }
-                                }echo"216\n";
+                                }
 
                                 $battle_field = unserialize($battle->battle_field);//Данные о поле битвы
 
@@ -240,12 +254,12 @@ class JotSocket extends BaseSocket
                                             }else{
                                                 $battle_field[$user_battle_field_identificator][$field_row]['special'] = ['card' => $card, 'strength' => $card->strength, 'login' => $user_array['login']];
                                             }
-                                        }echo"243\n";
+                                        }
                                     }
                                 //Если карта относится к картам воинов 
                                 }else{
                                     $battle_field[$user_battle_field_identificator][$field_row]['warrior'][] = ['card'=>$card, 'strength'=>$card->strength, 'login' => $user_array['login']];
-                                }echo"248\n";
+                                }
 
                                 /*Перебор действий карты*/
                                 $new_cards = []; //Добавочные карты в руке
@@ -267,8 +281,8 @@ class JotSocket extends BaseSocket
 
                                             $user_array['user_deck'] = array_values($user_array['user_deck']);
                                             $deck_card_count = count($user_array['user_deck']);
-                                        }echo"270\n";
-                                    }echo"271\n";
+                                        }
+                                    }
                                     //END OF ШПИОН
 
                                     //УБИЙЦА
@@ -420,8 +434,8 @@ class JotSocket extends BaseSocket
                                                     }
                                                 }
                                             }
-                                        }echo"423\n";
-                                    }echo"424\n";
+                                        }
+                                    }
                                     //END OF УБИЙЦА
 
                                     //РАЗВЕДЧИК
@@ -435,8 +449,8 @@ class JotSocket extends BaseSocket
                                             unset($user_array['user_deck'][$rand_item]);
 
                                             $user_array['user_deck'] = array_values($user_array['user_deck']);
-                                        }echo"438\n";
-                                    }echo"439\n";
+                                        }
+                                    }
                                     //END OF РАЗВЕДЧИК
 
                                     //CТРАШНЫЙ
@@ -460,8 +474,8 @@ class JotSocket extends BaseSocket
                                                     }
                                                 }
                                             }
-                                        }echo"463\n";
-                                    }echo"464\n";
+                                        }
+                                    }
                                     //END OF CТРАШНЫЙ
 
                                     //ИСЦЕЛЕНИЕ
@@ -480,8 +494,8 @@ class JotSocket extends BaseSocket
                                                     }
                                                 }
                                             }
-                                        }echo"483\n";
-                                    }echo"484\n";
+                                        }
+                                    }
                                     //END OF ИСЦЕЛЕНИЕ
                                     
                                     //ОДУРМАНИВАНИЕ
@@ -489,52 +503,67 @@ class JotSocket extends BaseSocket
                                         $cards_can_be_obscured = [];
                                         $min_strength = 999;
                                         $max_strength = 0;
-                                        
-                                        foreach($battle_field[$oponent_array['user_identificator']] as $row => $cards){
-                                            if(in_array($row, $action_data->CAobscure_ActionRow)){
-                                                foreach($cards['warrior'] as $i => $card_data){
-                                                    if($card_data['strength'] <= $action_data->CAobscure_maxCardStrong){
+                                        echo "506\n";
+                                        foreach($battle_field[$oponent_array['user_identificator']] as $row => $cards){echo "507\n";
+                                            if(in_array($row, $action_data->CAobscure_ActionRow)){echo "508\n";
+                                                foreach($cards['warrior'] as $i => $card_data){echo "509\n";
+                                                    if($card_data['strength'] <= $action_data->CAobscure_maxCardStrong){echo "510\n";
                                                         $max_strength = ($card_data['strength'] > $max_strength) ? $card_data['strength'] : $max_strength;
                                                         $min_strength = ($card_data['strength'] < $min_strength) ? $card_data['strength'] : $max_strength;
                                                         $cards_can_be_obscured[] = ['card'=>$card_data['card'], 'strength' => $card_data['strength'], 'row'=>$row];
                                                     }
                                                 } 
                                             }
+                                        }echo "517\n";
+                                        
+                                        if(!empty($cards_can_be_obscured)){
+                                            switch($action_data->CAobscure_strenghtOfCardToObscure){
+                                                case '0': $card_strength_to_obscure = $min_strenght; break;//Самую слабую
+                                                case '1': $card_strength_to_obscure = $max_strenght; break;//Самую сильную
+                                                case '2':
+                                                    $random = rand(0, count($cards_can_be_obscured)-1);
+                                                    $card_strength_to_obscure = $cards_can_be_obscured[$random]['strength'];
+                                                    break;
+                                            } echo "526\n";
                                         }
                                         
-                                        switch($action_data->CAobscure_strenghtOfCardToObscure){
-                                            case '0': $card_strength_to_obscure = $min_strenght; break;//Самую слабую
-                                            case '1': $card_strength_to_obscure = $max_strenght; break;//Самую сильную
-                                            case '2':
-                                                $random = rand(0, count($cards_can_be_obscured)-1);
-                                                $card_strength_to_obscure = $cards_can_be_obscured[$random]['strength'];
-                                                break;
-                                        }
                                         $cards_to_obscure = [];
-                                        for($i=0; $i<$action_data->CAobscure_quantityOfCardToObscure; $i++){
-                                            for($j=0; $j<count($cards_can_be_obscured); $j++){
-                                                if($card_strength_to_obscure == $cards_can_be_obscured[$j]['strength']){
-                                                    $cards_to_obscure[] = $cards_can_be_obscured[$j];
-                                                    break;
+                                        if(!empty($cards_can_be_obscured)){
+                                            for($i=0; $i<$action_data->CAobscure_quantityOfCardToObscure; $i++){ echo "528\n";
+                                                for($j=0; $j<count($cards_can_be_obscured); $j++){ echo "529\n";
+                                                    if($card_strength_to_obscure == $cards_can_be_obscured[$j]['strength']){ echo "530\n";
+                                                        $cards_to_obscure[] = $cards_can_be_obscured[$j];
+                                                        break;
+                                                    }
                                                 }
                                             }
                                         }
-                                        for($i=0; $i<count($cards_to_obscure); $i++){
-                                            foreach($battle_field[$oponent_array['user_identificator']][$cards_to_obscure[$i]['row']]['warrior'] as $j => $card_data){
-                                                if(Crypt::decrypt($cards_to_obscure[$i]['card']->id) == Crypt::decrypt($card_data['card']->id)){
+                                        for($i=0; $i<count($cards_to_obscure); $i++){ echo "536\n";
+                                            foreach($battle_field[$oponent_array['user_identificator']][$cards_to_obscure[$i]['row']]['warrior'] as $j => $card_data){ echo "537\n";
+                                                if(Crypt::decrypt($cards_to_obscure[$i]['card']->id) == Crypt::decrypt($card_data['card']->id)){ echo "538\n";
                                                     $battle_field[$user_array['user_identificator']][$cards_to_obscure[$i]['row']]['warrior'][] = $card_data;
-                                                    unset($battle_field[$oponent_array['user_identificator']][$cards_to_obscure[$i]['row']]['warrior'][$j]);
+                                                    unset($battle_field[$oponent_array['user_identificator']][$cards_to_obscure[$i]['row']]['warrior'][$j]); echo "540\n";
                                                     $battle_field[$oponent_array['user_identificator']][$cards_to_obscure[$i]['row']]['warrior'] = array_values($battle_field[$oponent_array['user_identificator']][$cards_to_obscure[$i]['row']]['warrior']);
                                                     break;
                                                 }
                                             }
-                                        }echo"531\n";
-                                    }echo"532\n";
+                                        }
+                                    }
                                     //END OF ОДУРМАНИВАНИЕ
                                     
                                     //ПЕРЕГРУППИРОВКА
+                                    if($action_data->action == '24'){
+                                        foreach($battle_field[$msg->player][$field_row]['warrior'] as $i => $card_data){
+                                            if($card_data['card']->id == $msg->retrieve){
+                                                unset($battle_field[$msg->player][$field_row]['warrior'][$i]);
+                                                $battle_field[$msg->player][$field_row]['warrior'] = array_values($battle_field[$msg->player][$field_row]['warrior']);
+                                                $user_array['user_hand'][] = get_object_vars($card_data['card']);
+                                                $new_cards[] = get_object_vars($card_data['card']);
+                                            }
+                                        }
+                                    }
                                     //END OF ПЕРЕГРУППИРОВКА
-                                }echo"534\n";
+                                }
                                 /*END OF Перебор действий карты*/
 
                                 $battle_field = self::recalculateStrengthByMid($battle_field, $user_array, $oponent_array);
@@ -545,7 +574,7 @@ class JotSocket extends BaseSocket
                                         unset($user_array['user_hand'][$i]);//Сносим карту с руки
                                         break;
                                     }
-                                }echo"545\n";
+                                }
 
                                 if(count($user_array['user_hand']) == 0){//Если у пользлвателя закончились карты на руках - делаем ему автопас
                                     \DB::table('tbl_battle_members')->where('id', '=', $user_array['battle_id'])->update(['round_passed' => '1']);
@@ -574,7 +603,7 @@ class JotSocket extends BaseSocket
 
                                 if($user_hand_count == 0){
                                     \DB::table('tbl_battle_members')->where('id', '=', $user_array['battle_id'])->update(['round_passed' => '1']);
-                                }echo"574\n";
+                                }
 
                                 /*
                                  * Выход:
@@ -692,9 +721,9 @@ class JotSocket extends BaseSocket
     }
 
 
-    protected static function recalculateStrengthByMid($battle_field, $user_array, $oponent_array){echo"692\n";
+    protected static function recalculateStrengthByMid($battle_field, $user_array, $oponent_array){
         $actions_array = []; //Массив действий
-        foreach($battle_field as $field => $rows){echo"694\n";
+        foreach($battle_field as $field => $rows){
             if($field != 'mid'){
                 foreach ($rows as $row => $cards){
                     foreach($cards['warrior'] as $i => $card_data){                        
@@ -704,15 +733,15 @@ class JotSocket extends BaseSocket
                             }
                         }
                     }
-                }echo"704\n";
+                }
             }else{
                 foreach($rows as $card_data){
-                    if(!isset($actions_array[Crypt::decrypt($card_data['card']->id)])){echo"707\n";
+                    if(!isset($actions_array[Crypt::decrypt($card_data['card']->id)])){
                         $actions_array[Crypt::decrypt($card_data['card']->id)] = $card_data;
                     }
                 }
             }
-        }echo"712\n";
+        }
 
         $battle_field = self::resetBattleFieldCardsStrength($battle_field);
 
@@ -776,6 +805,16 @@ class JotSocket extends BaseSocket
         if($equal == '='){
             return \DB::table('tbl_battle_members')->select('id','user_id','battle_id','battle_field')->where('battle_id', '=', $msg->ident->battleId)->where('user_id', '=', $msg->ident->userId)->get();
         }
+    }
+    
+    protected static function strRowToInt($field){
+        switch($field){ //Порядковый номер поля
+            case 'meele':       $field_row = 0; break;
+            case 'range':       $field_row = 1; break;
+            case 'superRange':  $field_row = 2; break;
+            case 'sortable-cards-field-more': $field_row = 3; break;
+        }
+        return $field_row;
     }
 
     protected static function sendMessageToOthers($from, $result, $battles){
