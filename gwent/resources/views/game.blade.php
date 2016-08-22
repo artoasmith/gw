@@ -24,12 +24,14 @@ $errors = $errors->all();
             </div>
 
             @include('layouts.sidebar')
-
-            <input name="createTable" type="button" value="Создать Стол">
-
+            {{ Form::open(['route' => 'user-create-table', 'method' => 'POST']) }}
+                <input name="league" type="hidden" value="{{ $league }}">
+                <input name="deck_weight" type="hidden" value="{{ $deck_weight }}">
+                <input  name="players" type="hidden" value="2">
+                {{ Form::submit('Создать Стол') }}
+            {{ Form::close() }}
             <div class="tables-list">
-
-                @foreach($battles as $key => $value)
+                @foreach($battles as $value)
                     <p style="margin: 10px;">
                         Стол №{{ $value->id }}
                         @if($user['id'] != $value->creator_id)
@@ -44,7 +46,7 @@ $errors = $errors->all();
                             <a class="play-game" href="/play/{{ $value->id }}" id="{{ $value->id }}">Вернуться за стол</a>
                         @endif
 
-                        Количество игроков за столом -> {{ \DB::table('tbl_battle_members')->select('battle_id')->where('battle_id', '=', $value->id)->count()}}
+                        Количество игроков за столом -> {{ (isset($battlesCount[$value->id])?$battlesCount[$value->id]:0)}}
                     </p>
                 @endforeach
 
@@ -53,7 +55,7 @@ $errors = $errors->all();
     </div>
 
 
-
+    {{--
     <div class="market-buy-popup" id="createTable">
         <div class="close-popup">X</div>
 
@@ -73,7 +75,7 @@ $errors = $errors->all();
             </div>
             {{ Form::close() }}
         </div>
-    </div>
+    </div> --}}
 
 @endif
 @stop
