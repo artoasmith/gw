@@ -267,12 +267,12 @@ class JotSocket extends BaseSocket
                                 foreach($card->actions as $action_iter => $action_data){
                                     //ШПИОН
                                     if($action_data->action == '12'){
-                                        $deck_card_count = count($user_array['user_deck']);
+                                        $deck_card_count = count($user_array['user_deck']);echo "270\n";
 
                                         $n = ($deck_card_count >= $action_data->CAspy_get_cards_num) ? $action_data->CAspy_get_cards_num : $deck_card_count;
-                                        for($i=0; $i<$n; $i++){
+                                        for($i=0; $i<$n; $i++){echo "273\n";
 
-                                            $rand_item = rand(0, $deck_card_count-1);
+                                            $rand_item = rand(0, $deck_card_count-1);echo "275\n";
                                             $random_card = $user_array['user_deck'][$rand_item];
                                             $user_array['user_hand'][] = $random_card;
                                             $new_cards[] = $random_card;
@@ -616,10 +616,18 @@ class JotSocket extends BaseSocket
                                 $user_turn = self::changeUserTurn($msg->ident->battleId);
                                 $user = $users[$user_turn];
 
+                                $user_array['user_discard'] = unserialize($user_array['user_discard']);
+                                $user_discard = [];
+                                for($i=0; $i<$user_discard_count; $i++){
+                                    $user_discard[] = SiteGameController::getCardData($user_array[$i]);
+                                }
+                                
                                 $result = [
                                     'message'   => 'userMadeAction',
                                     'field_data'=> $battle_field,
                                     'new_cards' => $new_cards,
+                                    'user_deck' => unserialize($user_array['user_deck']),
+                                    'user_discard' => $user_discard,
                                     'counts'    => [
                                         'user_deck'    => $user_deck_count,
                                         'user_discard' => $user_discard_count,

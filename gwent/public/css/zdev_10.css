@@ -1725,6 +1725,29 @@ ul.cards-row-wrap li{
     box-shadow: inset 0 0 5px 5px #0e0;
 }
 
+ul.deck-cards-list{
+    display: none;
+    position: relative;
+    z-index: 3;
+    text-align: center;
+}
+ul.deck-cards-list li{
+    position: absolute;
+    top: -20px;
+    left: 0;
+    overflow: hidden;
+    max-width: 100px;
+    max-height: 150px;
+    text-align: center;
+}
+ul.deck-cards-list li:hover{
+    left: 50px;
+    z-index: 100 !important;
+}
+ul.deck-cards-list.active{
+    display:block;
+}
+
 .image-inside-line img, ul.cards-row-wrap li img{max-height: 100px;}
 
 ul.can-i-use-useless img{max-height: 125px;}

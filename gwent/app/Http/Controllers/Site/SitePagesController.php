@@ -79,7 +79,7 @@ class SitePagesController extends BaseController
         $battles = BattleModel::where('league','=',$current_user_league)->where('fight_status', '<', 2)->get();
 
         $battlesCount = [];
-        if($battles){
+        if($battles->toArray()){
             //DB::table('tbl_battle_members')->select('battle_id')->where('battle_id', '=', $value->id)->count()
             $BattlesIDArray = [];
             foreach ($battles->toArray() as $a){
