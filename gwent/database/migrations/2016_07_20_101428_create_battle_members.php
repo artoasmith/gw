@@ -25,6 +25,7 @@ class CreateBattleMembers extends Migration
             $table->tinyInteger('user_ready')->unsigned();
             $table->tinyInteger('round_passed')->unsigned();
             $table->tinyInteger('rounds_won')->unsigned();
+            $table->string('card_source',32);
             $table->timestamps();
         });
     }

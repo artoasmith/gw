@@ -39,17 +39,11 @@
             
         }
         
-        $discard = unserialize($value -> user_discard);
-        $user_discard = [];
-        for($i=0; $i<count($discard); $i++){
-            $user_discard[] = json_decode(\App\Http\Controllers\Site\SiteGameController::getCardData($discard[$i]));
-        }
-        
         if($user['id'] == $value->user_id){
             
             $players['allied'] = [
                 'user_deck'     => unserialize($value -> user_deck),
-                'user_discard'  => $user_discard,
+                'user_discard'  => unserialize($value -> user_discard),
                 'user_deck_race'=> $race_name[0] -> title,
                 'user_energy'   => $value -> user_energy,
                 'user_hand'     => unserialize($value -> user_hand),
@@ -62,7 +56,7 @@
             $players['enemy'] = [
                 'user_deck'     => unserialize($value -> user_deck),
                 'user_deck_race'=> $race_name[0] -> title,
-                'user_discard'  => $user_discard,
+                'user_discard'  => unserialize($value -> user_discard),
                 'user_energy'   => $value -> user_energy,
                 'user_img'      => $player_data[0] -> img_url,
                 'user_magic'    => $user_magic,

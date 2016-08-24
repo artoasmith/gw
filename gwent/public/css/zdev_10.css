@@ -1740,7 +1740,7 @@ ul.deck-cards-list li{
     max-height: 150px;
     text-align: center;
 }
-ul.deck-cards-list li:hover{
+ul.deck-cards-list li:hover, ul.deck-cards-list li.active{
     left: 50px;
     z-index: 100 !important;
 }
