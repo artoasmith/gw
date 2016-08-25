@@ -692,19 +692,41 @@ class SiteFunctionsController extends BaseController
         //Все магические эффекты пользователя
         $user_magic_effects = unserialize($user_data[0]->user_magic_effects);
 
-        //Активные еффекты
-        $active_effects = [];
-
-        foreach ($user_magic_effects as $key => $value){
-            if( 0 != $value['active'] ){
-                $active_effects[] = $key;
-            }
-        }
-
-        //максимальное количество активных магических эффектов
-        $maximum_active_magic = \DB::table('tbl_etc_data')->select('meta_key', 'meta_value')->where('meta_key', '=', 'base_max_magic')->get();
-
         if($data['is_active'] == 'false') {
+
+            //Активные еффекты
+            $active_effects = [];
+
+            // return json_encode([$data,$user_magic_effects]);
+            $magicList = [$data['status_id']];
+            foreach ($user_magic_effects as $key => $value){
+                if( 0 != $value['active'] ){
+                    $magicList[] = $key;
+                }
+            }
+
+            //получаем список всех активных обектов, для проверки доступного количества по расе активируемого эфекта
+            $magic = MagicEffectsModel::find($magicList);
+            $active_race = [];
+            $others_rece = [];
+            foreach ($magic as $m){
+                if($m['id'] == $data['status_id']){
+                    $active_race = unserialize($m['race']);
+                } else {
+                    $others_rece[$m['id']] = unserialize($m['race']);
+                }
+            }
+
+            foreach ($active_race as $ar){
+                foreach ($others_rece as $magic_id=>$or){
+                    if(in_array($ar,$or))
+                        $active_effects[] = $magic_id;
+                }
+            }
+            $active_effects = array_unique($active_effects);
+
+            //максимальное количество активных магических эффектов
+            $maximum_active_magic = \DB::table('tbl_etc_data')->select('meta_key', 'meta_value')->where('meta_key', '=', 'base_max_magic')->get();
 
             if ($maximum_active_magic[0]->meta_value > count($active_effects)) {
                 $user_magic_effects[$data['status_id']]['active'] = 1;

@@ -146,6 +146,24 @@ class JotSocket extends BaseSocket
                     }
                     break;
 
+                case 'getOwnBattleFieldData':
+                    $battle_field = unserialize($battle->battle_field);//Данные о поле битвы
+                    $own_cards = [];
+                    foreach($battle_field as $field => $rows){
+                        if($field != 'mid'){
+                            foreach($rows as $row => $cards){
+                                foreach($cards['warrior'] as $i => $card_data){
+                                    if($card_data['login'] == $users[$msg->ident->userId]['login']){
+                                        $own_cards[$field][$row][] = $card_data['card']->id;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    $result = ['message' => 'ownCardsData', 'battleData' => $own_cards, 'battleInfo' => $msg->ident->battleId];
+                    self::sendMessageToSelf($from, $result);
+                    break;
+                    
                 case 'userMadeCardAction':
                     echo date('Y-m-d H:i:s')."\n";
                     if($battle -> fight_status == 2){echo "151\n";

@@ -639,6 +639,7 @@ function userChangesMagicEffectStatus(){
 							headers: {'X-CSRF-TOKEN': token},
 							data: {status_id: status_id, is_active: is_active},
 							success: function (data) {
+								console.log(data);
 								var res = JSON.parse(data);
 								if (res[0] == 'success') {
 									if (res[1] == 0) {

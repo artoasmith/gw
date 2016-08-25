@@ -1,7 +1,6 @@
 <?php
 namespace App\Http\Controllers\Site;
 
-use App\BattleMembersModel;
 use App\EtcDataModel;
 use App\RaceModel;
 use App\LeagueModel;
@@ -17,7 +16,6 @@ use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Foundation\Auth\Access\AuthorizesResources;
 use Illuminate\Http\Request;
-use Illuminate\Database\Eloquent\Collection;
 
 class SitePagesController extends BaseController
 {
@@ -48,10 +46,10 @@ class SitePagesController extends BaseController
         //Текущие колоды пользователя
         $current_deck = unserialize($user_data[0]->user_cards_in_deck);
 
-        //Вес колоды
-        $deck_weight = 0;
-
         if(!empty($current_deck[$request->input('currentRace')])) {
+            //Вес колоды
+            $deck_weight = 0;
+
             //Подсчет веса колоды
             foreach($current_deck[$request->input('currentRace')] as $key => $value){
                 $card = CardsModel::where('id', '=', $key)->get();
@@ -70,29 +68,8 @@ class SitePagesController extends BaseController
         }
         //Расы
         $races = RaceModel::where('race_type', '=', 'race')->orderBy('position','asc')->get();
-        /**
-         * Активные для данной лиги столы
-         *
-         * @var Collection $battles
-         * @var BattleModel $a
-         */
+        //Активные для данной лиги столы
         $battles = BattleModel::where('league','=',$current_user_league)->where('fight_status', '<', 2)->get();
-
-        $battlesCount = [];
-        if($battles){
-            //DB::table('tbl_battle_members')->select('battle_id')->where('battle_id', '=', $value->id)->count()
-            $BattlesIDArray = [];
-            foreach ($battles->toArray() as $a){
-                $BattlesIDArray[] = $a['id'];
-            }
-            $bmm = new BattleMembersModel();
-            $query = sprintf('SELECT m.`battle_id` as id, COUNT(1) as cnt FROM %s as m WHERE m.`battle_id` IN (%s) GROUP BY m.`battle_id`',$bmm->getTable(),implode(', ',$BattlesIDArray));
-            if($result = \DB::select($query)){
-                foreach ($result as $r){
-                    $battlesCount[$r->id] = $r->cnt;
-                }
-            }
-        }
 
         $user_to_update = User::find($user['id']);
         $user_to_update -> user_current_deck = $request->input('currentRace');
@@ -102,7 +79,6 @@ class SitePagesController extends BaseController
             'races'         => $races,
             'deck_weight'   => base64_encode($deck_weight),
             'battles'       => $battles,
-            'battlesCount'  => $battlesCount,
             'league'        => base64_encode($current_user_league)
         ]);
     }
@@ -188,7 +164,6 @@ class SitePagesController extends BaseController
     //Страцница WM fail
     public function WM_fail(){
         SiteFunctionsController::updateConnention();
-
         return view('payment.wm_fail');
     }
 }
