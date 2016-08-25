@@ -69,7 +69,6 @@ $(window).load(function(){
                             }
                         }
                         break;
-
                     case 'userMadeAction':
                         $('.mezhdyblock #sortable-cards-field-more, .convert-battle-front #p1 .cards-row-wrap, .convert-battle-front #p1 .image-inside-line, .convert-battle-front #p2 .cards-row-wrap, .convert-battle-front #p2 .image-inside-line').empty();
 
@@ -270,7 +269,7 @@ $(window).load(function(){
                         allowActions = 0;
                         userMadeAction = 1;
                     });
-                    
+
                     $('.convert-battle-front .convert-cards .convert-stuff .cards-row-wrap').on('click', 'li.glow', function(){
                         var card = $('#sortableUserCards .active').attr('data-cardid');
                         var field = $(this).parents('.field-for-cards').attr('id');
@@ -292,6 +291,7 @@ $(window).load(function(){
                         allowActions = 0;
                         userMadeAction = 1;
                     });
+
                 }
             }
 
@@ -477,7 +477,6 @@ $(window).load(function(){
             })
         );
     }
-
     function intRowToField(row){
         switch(row.toString()){
             case '0': var field = '#meele'; break;
