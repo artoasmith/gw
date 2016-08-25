@@ -254,9 +254,7 @@ $(window).load(function(){
                             case 'deck':    var card = $('.convert-left-info #card-give-more-user li[data-field=deck] ul.deck-cards-list li.glow.active').attr('data-cardid'); break;
                             case 'discard': var card = $('.convert-left-info #card-give-more-user li[data-field=discard] ul.deck-cards-list li.glow.active').attr('data-cardid'); break;
                         }
-                        
                         var field = $(this).attr('id');
-
                         if((allowActions !== 0) && (allowActions !== undefined)){
                             conn.send(
                                 JSON.stringify({
@@ -271,7 +269,29 @@ $(window).load(function(){
                         allowActions = 0;
                         userMadeAction = 1;
                     });
-                    //$()
+
+                    $('.convert-battle-front .convert-cards .convert-stuff .cards-row-wrap').on('click', 'li.glow', function(){
+                        var card = $('#sortableUserCards .active').attr('data-cardid');
+                        var field = $(this).parents('.field-for-cards').attr('id');
+                        var player = $(this).parents('.convert-cards').attr('id');
+                        var retrieve = $(this).attr('data-cardid'); 
+                        if((allowActions !== 0) && (allowActions !== undefined)){
+                            conn.send(
+                                JSON.stringify({
+                                    action: 'userMadeCardAction',
+                                    ident: ident,
+                                    card: card,
+                                    field: field,
+                                    source: 'hand',
+                                    retrieve: retrieve,
+                                    player: player
+                                })
+                            );
+                        }
+                        allowActions = 0;
+                        userMadeAction = 1;
+                    });
+
                 }
             }
 
@@ -292,7 +312,7 @@ $(window).load(function(){
                             }
 
                             if($(this).hasClass('active')){
-                                showCardActiveRow($(this).attr('data-cardid'));
+                                showCardActiveRow($(this).attr('data-cardid'), conn, ident);
                             }
                         });
                     }else{
@@ -309,7 +329,7 @@ $(window).load(function(){
                             }
 
                             if($(this).hasClass('active')){
-                                showCardActiveRow($(this).attr('data-cardid'));
+                                showCardActiveRow($(this).attr('data-cardid'), conn, ident);
                             }
                         });
                     }
@@ -374,7 +394,7 @@ $(window).load(function(){
     });
     
     
-    function showCardActiveRow(card){
+    function showCardActiveRow(card, conn, ident){
         $.ajax({
             url:     '/game_get_card_data',
             type:    'GET',
