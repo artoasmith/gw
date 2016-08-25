@@ -705,6 +705,7 @@ class SiteFunctionsController extends BaseController
                 }
             }
 
+
             //получаем список всех активных обектов, для проверки доступного количества по расе активируемого эфекта
             $magic = MagicEffectsModel::find($magicList);
             $active_race = [];
