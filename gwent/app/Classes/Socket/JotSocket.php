@@ -778,7 +778,7 @@ class JotSocket extends BaseSocket
                             }
                             
                             if($action->action == '17'){
-                                $actions_array_support[Crypt::decrypt($card_data['card']->id)] = $card_data;
+                                $actions_array_support[$field.'_'.$row.'_'.$i] = $card_data;
                             }
                         }
                     }
@@ -872,6 +872,8 @@ class JotSocket extends BaseSocket
                 }
             }
         }echo __LINE__."\n";
+
+
         
         foreach($actions_array_support as $card_id => $card_data){
             if($card_data['login'] == $user_array['login']){
@@ -885,9 +887,9 @@ class JotSocket extends BaseSocket
                 if($actions->action == '17'){
                     $target_rows = $actions->CAsupport_ActionRow;
                     if($actions->CAsupport_selfCast == 0){
-                        $self_cast = 1;
-                    }else{
                         $self_cast = 0;
+                    }else{
+                        $self_cast = 1;
                     }
                     
                     if( (isset($action_data->CAsupport_actionToGroupOrAll)) && ($action_data->CAsupport_actionToGroupOrAll != 0)){
@@ -897,41 +899,43 @@ class JotSocket extends BaseSocket
                     }
                 }
             }
-            
-            foreach($players as $field){
+            var_dump($players);
+            var_dump($target_rows);
+            foreach($players as $fields){
+                
                 foreach($target_rows as $row){
-                    foreach($battle_field[$field][$row]['warrior'] as $i => $cards){
+                    
+                    foreach($battle_field[$fields][$row]['warrior'] as $i => $card){
                         
                         if(!empty($groups)){
                             foreach($cards['card']->groups as $groups_ident => $group_id){
                                 if(in_array($group_id, $groups)){
                                     
-                                    if($cards['card']->id == $card_data['card']->id){
-                                        if($self_cast != 0){
-                                            $strength = $card_data['strength'];
-                                            $self_cast = 0;
+                                    if(($card['card']->id == $card_data['card']->id) && ($card_id == $fields.'_'.$row.'_'.$i)){
+                                        if($self_cast == 0){
+                                            $strength = $card['strength'];
+                                            $self_cast = 1;
                                         }else{
-                                            $strength = $card_data['strength'] + $actions->CAsupport_strenghtValue;
+                                            $strength = $card['strength'] + $actions->CAsupport_strenghtValue;
                                         }
                                     }else{
-                                        $strength = $card_data['strength'] + $actions->CAsupport_strenghtValue;
+                                        $strength = $card['strength'] + $actions->CAsupport_strenghtValue;
                                     }
-                                    $battle_field[$field][$row]['warrior'][$i]['strength'] = $strength;
+                                    $battle_field[$fields][$row]['warrior'][$i]['strength'] = $strength;
                                 }
                             }
                         }else{
-                            
-                            if($cards['card']->id == $card_data['card']->id){
-                                if($self_cast != 0){
-                                    $strength = $card_data['strength'];
-                                    $self_cast = 0;
+                            if(($card['card']->id == $card_data['card']->id) && ($card_id == $fields.'_'.$row.'_'.$i)){
+                                if($self_cast == 0){
+                                    $strength = $card['strength'];
+                                    $self_cast = 1;
                                 }else{
-                                    $strength = $card_data['strength'] + $actions->CAsupport_strenghtValue;
+                                    $strength = $card['strength'] + $actions->CAsupport_strenghtValue;
                                 }
                             }else{
-                                $strength = $card_data['strength'] + $actions->CAsupport_strenghtValue;
+                                $strength = $card['strength'] + $actions->CAsupport_strenghtValue;
                             }
-                            $battle_field[$field][$row]['warrior'][$i]['strength'] = $strength;
+                            $battle_field[$fields][$row]['warrior'][$i]['strength'] = $strength;
                         }
                     }
                 }
