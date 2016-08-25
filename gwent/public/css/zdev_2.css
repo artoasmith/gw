@@ -573,7 +573,7 @@ body {
       -webkit-box-shadow: 0px 0px 8px 0px rgba(255, 255, 255, 0.52);
       -moz-box-shadow: 0px 0px 8px 0px rgba(255, 255, 255, 0.52);
       box-shadow: 0px 0px 8px 0px rgba(255, 255, 255, 0.52);
-      margin: 0 20px 0 0;
+      margin: 0 20px 0 0;      
       cursor: pointer; }
       .convert-left-info .cards-bet ul li:nth-child(2) {
         margin: 0; }

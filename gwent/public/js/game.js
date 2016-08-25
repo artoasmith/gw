@@ -7,8 +7,11 @@ $(window).load(function(){
             userId: socketResult['user'],
             hash: socketResult['hash']
         };
+        
         var allowActions = 0;
         var userMadeAction = 0;
+        var cardSource = 'hand';
+        var allowCardChoise = 1;
 
         $(document).ready(function(){
             var conn = new WebSocket('ws://' + socketResult['dom'] + ':8080');
@@ -43,7 +46,7 @@ $(window).load(function(){
                             data:   {battle_id: result.battleInfo},
                             success:function(data){
                                 data = JSON.parse(data);
-                                if(data['message'] == 'success'){                                    
+                                if(data['message'] == 'success'){
                                     //Формирование данных пользователей и окна выбора карт
                                     buildRoomPreview(data['userData']);
                                     console.log('room builded');
@@ -66,19 +69,18 @@ $(window).load(function(){
                             }
                         }
                         break;
-                        
                     case 'userMadeAction':
                         $('.mezhdyblock #sortable-cards-field-more, .convert-battle-front #p1 .cards-row-wrap, .convert-battle-front #p1 .image-inside-line, .convert-battle-front #p2 .cards-row-wrap, .convert-battle-front #p2 .image-inside-line').empty();
-                        changeTurnIndicator(result.login);
-                        for(var fieldType in result.field_data){
+
+                        changeTurnIndicator(result.login);//смена индикатора хода
+                        for(var fieldType in result.field_data){ //Отображения поле битвы
                             if(fieldType == 'mid'){
                                 for(var i=0; i<result.field_data['mid'].length; i++){
                                     $('.mezhdyblock #sortable-cards-field-more').append(createFieldCardView(result.field_data['mid'][i]['card'], 0, false));
-                                }                                
+                                }
                             }else{
                                 for(var i=0; i<result.field_data[fieldType].length; i++){
                                     var row = intRowToField(i);
-                                    
                                     for(var j=0; j<result.field_data[fieldType][i]['warrior'].length; j++){
                                         $('.convert-battle-front #'+fieldType+' .convert-stuff '+row+' .cards-row-wrap').append(createFieldCardView(result.field_data[fieldType][i]['warrior'][j]['card'], result.field_data[fieldType][i]['warrior'][j]['strength'], false));
                                     }
@@ -88,7 +90,7 @@ $(window).load(function(){
                                 }
                             }
                         }
-                        
+
                         //Данные о колоде и отое пользователей
                         if(result.counts !== undefined){
                             //колода противника
@@ -105,29 +107,33 @@ $(window).load(function(){
                             }
                             //колода игрока
                             if(parseInt(result.counts['user_deck']) > 0){
-                                $('#card-give-more-user li[data-field=deck]').empty().append(createDeckCardPreview(result.counts['user_deck'], true));
+                                if(result.user_deck != undefined){
+                                    $('#card-give-more-user li[data-field=deck]').empty().append(createDeckCardPreview(result.counts['user_deck'], true, result.user_deck));
+                                }
                             }else{
                                 $('#card-give-more-user li[data-field=deck]').empty().append('<div class="nothinh-for-swap"></div>');
                             }
                             //отбой игрока
                             if(parseInt(result.counts['user_discard']) > 0){
-                                $('#card-give-more-user li[data-field=discard]').empty().append(createDeckCardPreview(result.counts['user_discard'], true));
+                                if(result.user_discard != undefined){
+                                    $('#card-give-more-user li[data-field=discard]').empty().append(createDeckCardPreview(result.counts['user_discard'], true, result.user_discard));
+                                }
                             }else{
                                 $('#card-give-more-user li[data-field=discard]').empty().append('<div class="nothinh-for-swap"></div>');
-                            }                            
+                            }
                         }
-                        
+                        createDeckLayers();
+
                         if( (result.new_cards !== undefined) && (result.new_cards.length > 0) ){
                             for(var i in result.new_cards){
                                 $('.user-card-stash #sortableUserCards').append(createFieldCardView(result.new_cards[i], result.new_cards[i]['strength'], true));
-                                console.log(result.new_cards[i]);
                             }
                         }
-                        
-                        if(result.login != $('.user-describer').attr('id')){
+
+                        if( (result.login != $('.user-describer').attr('id')) || ((result.cardSource != 'hand') && (result.login = $('.user-describer').attr('id')) ) ){
                             $('#sortableUserCards .active').remove();
                             $('#sortableUserCards li').removeClass('active');
-                        }                        
+                        }
                         createCardLayers($('#sortableUserCards li'));
 
                         $('.oponent .convert-stuff .field-for-cards').each(function(){
@@ -138,10 +144,11 @@ $(window).load(function(){
                             var handler = $('.user #'+$(this).attr('id')+' .cards-row-wrap li');
                             createCardLayers(handler);
                         });
+
                         createCardLayers($('.mezhdyblock #sortable-cards-field-more li'));
                         recalculateBattleField();
                         break;
-                        
+
                     case 'roundEnds':
                         allowActions = 0;
                         break;
@@ -155,58 +162,29 @@ $(window).load(function(){
                         allowActions = 0;
                     }
                 }
-                userMakeAction(allowActions, conn)
-            }
 
+                
+                if((result.message == 'allUsersAreReady') || (result.message == 'userMadeAction')){
+                    if(result.cardSource != undefined){
+                        cardSource = result.cardSource;
 
-            function buildRoomPreview(userData){
-                //очищение списков поп-апа выбора карт
-                $('#selecthandCardsPopup #handCards').empty();
+                        if(cardSource != 'hand'){
+                            var cardList = $('.convert-left-info #card-give-more-user li[data-field='+cardSource+']');
 
-                //Отображаем данные пользователей
-                for(var key in userData){
-                    if( $('.convert-right-info #'+key).length <1){
-                        //Установить никнейм оппонета в правом сайдбаре
-                        $('.convert-right-info .oponent-describer').attr('id',key);
-                        //Установить никнейм оппонента в отображение колоды
-                        $('.field-battle .cards-bet #card-give-more-oponent').attr('data-user', key);
-                        //Установить логин оппонента в его поле битвы
-                        $('.convert-battle-front .oponent').attr('data-user', key);
-                    }
-                    //Создать описание пользователей
-                    createUserDescriber(key, userData[key]['img_url'], userData[key]['deck_title']);
-
-                    //Количество карт в колоде
-                    $('.convert-left-info .cards-bet ul[data-user='+key+'] .deck .counter').text(userData[key]['deck_count']);
-
-                    //Если у пользователя есть магические эффекты
-                    if(userData[key]['magic'].length > 0){
-                        //Вывод текущей магии пользователей
-                        $('.convert-right-info #' + key + ' .useless-card').children().children('.magic-effects-wrap').empty();
-                        createUserMagicFieldCards(key, userData[key]['magic']);
-                    }
-
-                    //Если пользователь не готов (не выбраны карты для игры)
-                    if( 0 == parseInt(userData[key]['ready'])){
-                        console.log('is _not_ready')
-                        if (userData[key]['hand'].length > 0) {
-                            //Вывод карт руки и колоды
-                            $('#selecthandCardsPopup .cards-select-message-wrap span').text(userData[key]['can_change_cards']);
-                            for(var i=0; i<userData[key]['hand'].length; i++){
-                                $('#selecthandCardsPopup #handCards').append(createFieldCardView(userData[key]['hand'][i], userData[key]['hand'][i]['strength'], true));
-                            }
-                            //Изменение ширины карт при выборе Карт "Руки"
-                            $('#selecthandCardsPopup').show(300, function(){
-                                var cardsSelectBlockWidth = $('#selecthandCardsPopup #handCards').width();
-                                var singleCardBlockLength = Math.floor(cardsSelectBlockWidth/$('#selecthandCardsPopup #handCards li').length)-1;
-                                $('#selecthandCardsPopup #handCards li').css({'width': singleCardBlockLength, 'padding-left': '1px'});
-                                $('#selecthandCardsPopup #handCards li img').css({'width': singleCardBlockLength});
-                            });
-
-                            //Пользователь поменял карты
-                            userChangeDeck(userData[key]['can_change_cards']);
+                            cardList.children('.card-my-init').children('ul.deck-cards-list').addClass('active');
+                            cardList.children('.card-my-init').children('ul.deck-cards-list').children('li:not([data-relative=special])').addClass('glow');
+                        }
+                        if(result.login == $('.user-describer').attr('id')){
+                            allowCardChoise = 1;
                         }
                     }
+                    
+                    showDecks(cardSource);
+                    
+                }
+                
+                if(result.message != 'ownCardsData'){
+                    userMakeAction(allowActions, conn, cardSource)
                 }
             }
 
@@ -268,20 +246,25 @@ $(window).load(function(){
             }
 
             //Пользователь должен сделать действие
-            function userMakeAction(allowActions, conn){
-                console.log('allowActions='+allowActions+' userMadeAction='+userMadeAction);
-                console.log((allowActions !== 0) && (userMadeAction === 0));
+            function userMakeAction(allowActions, conn, cardSource){
                 if((allowActions !== 0) && (userMadeAction === 0) && (allowActions !== undefined)){
-                    $('.convert-battle-front .convert-stuff, .mezhdyblock .bor-beutifull-box').on('click', 'div.active, ul.active',function(){                        
+                    $('.convert-battle-front .convert-stuff, .mezhdyblock .bor-beutifull-box').on('click', 'div.active, ul.active',function(){
                         var card = $('#sortableUserCards .active').attr('data-cardid');
+                        switch(cardSource){
+                            case 'deck':    var card = $('.convert-left-info #card-give-more-user li[data-field=deck] ul.deck-cards-list li.glow.active').attr('data-cardid'); break;
+                            case 'discard': var card = $('.convert-left-info #card-give-more-user li[data-field=discard] ul.deck-cards-list li.glow.active').attr('data-cardid'); break;
+                        }
+                        
                         var field = $(this).attr('id');
+
                         if((allowActions !== 0) && (allowActions !== undefined)){
                             conn.send(
                                 JSON.stringify({
                                     action: 'userMadeCardAction',
                                     ident: ident,
                                     card: card,
-                                    field: field
+                                    field: field,
+                                    source: cardSource
                                 })
                             );
                         }
@@ -294,73 +277,158 @@ $(window).load(function(){
 
             createCardLayers($('#sortableUserCards li'));
 
-            $('.convert-battle-front ul.cards-row-wrap, .user-card-stash #sortableUserCards').on('click', 'li', function(){
-                if($(this).hasClass('active')){
-                    $(this).removeClass('active');
-                    clearRowSelection();
-                    $('#notSortableOne').empty().css({'opacity': 0});
-                }else{
-                    $(this).parents('ul').children('li').removeClass('active');
-                    $(this).addClass('active');
+            
+            function showDecks(cardSource){
+                if(allowCardChoise == 1){
+                    if(cardSource == 'hand'){
+                        $('.convert-battle-front ul.cards-row-wrap, .user-card-stash #sortableUserCards').on('click', 'li', function(){
+                            if($(this).hasClass('active')){
+                                $(this).removeClass('active');
+                                clearRowSelection();
+                                $('#notSortableOne').empty().css({'opacity': 0});
+                            }else{
+                                $(this).parents('ul').children('li').removeClass('active');
+                                $(this).addClass('active');
+                            }
+
+                            if($(this).hasClass('active')){
+                                showCardActiveRow($(this).attr('data-cardid'));
+                            }
+                        });
+                    }else{
+                        $('.convert-left-info #card-give-more-user li[data-field='+cardSource+'] .card-my-init').css({'pointer-events':'none'});
+                        $('.convert-left-info #card-give-more-user li[data-field='+cardSource+'] ul.deck-cards-list').css({'pointer-events':'auto'});
+                        $('.convert-left-info #card-give-more-user li[data-field='+cardSource+'] ul.deck-cards-list li.glow').css({'pointer-events':'auto'});
+                        $('.convert-left-info #card-give-more-user li[data-field='+cardSource+'] ul.deck-cards-list').on('click', 'li.glow', function(){
+                            if($(this).hasClass('active')){
+                                $(this).removeClass('active');
+                                clearRowSelection();
+                            }else{
+                                $(this).parents('ul').children('li').removeClass('active');
+                                $(this).addClass('active');
+                            }
+
+                            if($(this).hasClass('active')){
+                                showCardActiveRow($(this).attr('data-cardid'));
+                            }
+                        });
+                    }
+                    
+                    allowCardChoise = 0;
                 }
+                
+            }
+            
+            
+            function buildRoomPreview(userData){
+                //очищение списков поп-апа выбора карт
+                $('#selecthandCardsPopup #handCards').empty();
 
-                if($(this).hasClass('active')){
-                    $.ajax({
-                        url:     '/game_get_card_data',
-                        type:    'GET',
-                        data:    {card:$(this).attr('data-cardid')},
-                        success: function(data){
-                            data = JSON.parse(data);
-                            $('#notSortableOne').animate({'opacity':'1'}, 240);
+                //Отображаем данные пользователей
+                for(var key in userData){
+                    if( $('.convert-right-info #'+key).length <1){
+                        //Установить никнейм оппонета в правом сайдбаре
+                        $('.convert-right-info .oponent-describer').attr('id',key);
+                        //Установить никнейм оппонента в отображение колоды
+                        $('.field-battle .cards-bet #card-give-more-oponent').attr('data-user', key);
+                        //Установить логин оппонента в его поле битвы
+                        $('.convert-battle-front .oponent').attr('data-user', key);
+                    }
+                    //Создать описание пользователей
+                    createUserDescriber(key, userData[key]['img_url'], userData[key]['deck_title']);
 
-                            $('#notSortableOne').empty().append('' +
-                            '<li class="content-card-item chossen-card" id="'+data['id']+'" data-type="'+data['type']+'" data-row="'+data['action_row']+'" >' +
-                                '<div class="content-card-item-main" style="background-image: url(/img/card_images/'+data['img_url']+')">' +
-                                    '<div class="label-power-card">' +
-                                        '<span class="label-power-card-wrap"><span>'+data['strength']+'</span></span>' +
-                                    '</div>' +
-                                    '<div class="hovered-items">' +
-                                        '<div class="card-name-property"><p>'+data['title']+'</p></div>' +
-                                        '<div class="block-describe">' +
-                                            '<div class="block-text-describe">' +
-                                                '<div class="block-text-describe-wrap">' +
-                                                    '<div class="block-text-describe-main">' +
-                                                        '<div class="block-text-describe-main-wrap"><p>'+data['descript']+'</p></div>' +
-                                                    '</div>' +
-                                                '</div>' +
-                                            '</div>' +
+                    //Количество карт в колоде
+                    $('.convert-left-info .cards-bet ul[data-user='+key+'] .deck .counter').text(userData[key]['deck_count']);
+
+                    //Если у пользователя есть магические эффекты
+                    if(userData[key]['magic'].length > 0){
+                        //Вывод текущей магии пользователей
+                        $('.convert-right-info #' + key + ' .useless-card').children().children('.magic-effects-wrap').empty();
+                        createUserMagicFieldCards(key, userData[key]['magic']);
+                    }
+
+                    //Если пользователь не готов (не выбраны карты для игры)
+                    if( 0 == parseInt(userData[key]['ready'])){
+                        console.log('is _not_ready')
+                        if (userData[key]['hand'].length > 0) {
+                            //Вывод карт руки и колоды
+                            $('#selecthandCardsPopup .cards-select-message-wrap span').text(userData[key]['can_change_cards']);
+                            for(var i=0; i<userData[key]['hand'].length; i++){
+                                $('#selecthandCardsPopup #handCards').append(createFieldCardView(userData[key]['hand'][i], userData[key]['hand'][i]['strength'], true));
+                            }
+                            //Изменение ширины карт при выборе Карт "Руки"
+                            $('#selecthandCardsPopup').show(300, function(){
+                                var cardsSelectBlockWidth = $('#selecthandCardsPopup #handCards').width();
+                                var singleCardBlockLength = Math.floor(cardsSelectBlockWidth/$('#selecthandCardsPopup #handCards li').length)-1;
+                                $('#selecthandCardsPopup #handCards li').css({'width': singleCardBlockLength, 'padding-left': '1px'});
+                                $('#selecthandCardsPopup #handCards li img').css({'width': singleCardBlockLength});
+                            });
+
+                            //Пользователь поменял карты
+                            userChangeDeck(userData[key]['can_change_cards']);
+                        }
+                    }
+                }
+            }
+        });
+    });
+    
+    
+    function showCardActiveRow(card){
+        $.ajax({
+            url:     '/game_get_card_data',
+            type:    'GET',
+            data:    {card:card},
+            success: function(data){
+                data = JSON.parse(data);
+                $('#notSortableOne').animate({'opacity':'1'}, 240);
+
+                $('#notSortableOne').empty().append('' +
+                '<li class="content-card-item chossen-card" id="'+data['id']+'" data-type="'+data['type']+'" data-row="'+data['action_row']+'" >' +
+                    '<div class="content-card-item-main" style="background-image: url(/img/card_images/'+data['img_url']+')">' +
+                        '<div class="label-power-card">' +
+                            '<span class="label-power-card-wrap"><span>'+data['strength']+'</span></span>' +
+                        '</div>' +
+                        '<div class="hovered-items">' +
+                            '<div class="card-name-property"><p>'+data['title']+'</p></div>' +
+                            '<div class="block-describe">' +
+                                '<div class="block-text-describe">' +
+                                    '<div class="block-text-describe-wrap">' +
+                                        '<div class="block-text-describe-main">' +
+                                            '<div class="block-text-describe-main-wrap"><p>'+data['descript']+'</p></div>' +
                                         '</div>' +
                                     '</div>' +
                                 '</div>' +
-                            '</li>');
+                            '</div>' +
+                        '</div>' +
+                    '</div>' +
+                '</li>');
 
+                clearRowSelection();
+                if(data['type'] == 'special'){
+
+                    for(var i=0; i<data['actions'].length; i++){
+                        var action = ''+data['actions'][i]['action'];
+                        if(action == '21')illuminateAside();
+                        if((action == '13')||(action == '26')) illuminateOpponent();
+                        if((action == '25')||(action == '27')||(action == '28')||(action == '29')) illuminateSelf();
+                        if(action == '24') illuminateCards(conn, ident);
+                    }
+                }else{
+                    illuminateCustom('.user', data['action_row']);
+                    for(var i=0; i<data['actions'].length; i++){
+                        var action = ''+data['actions'][i]['action'];
+
+                        if(action == '12'){ 
                             clearRowSelection();
-                            if(data['type'] == 'special'){
-                               
-                                for(var i=0; i<data['actions'].length; i++){
-                                    var action = ''+data['actions'][i]['action'];
-                                    if(action == '21')illuminateAside();
-                                    if((action == '13')||(action == '26')) illuminateOpponent();
-                                    if((action == '25')||(action == '27')||(action == '28')||(action == '29')) illuminateSelf();
-                                    if(action == '24') illuminateCards(conn, ident);
-                                }
-                            }else{
-                                illuminateCustom('.user', data['action_row']);
-                                for(var i=0; i<data['actions'].length; i++){
-                                    var action = ''+data['actions'][i]['action'];
-
-                                    if(action == '12'){ 
-                                        clearRowSelection();
-                                        illuminateCustom('.oponent', data['action_row']);
-                                    }
-                                }
-                            }
+                            illuminateCustom('.oponent', data['action_row']);
                         }
-                    });
+                    }
                 }
-            });
+            }
         });
-    });
+    }
+    
 
     //Отмена подсветки ряда действий карты
     function clearRowSelection(){
@@ -370,14 +438,14 @@ $(window).load(function(){
             $(this).children('.fields-for-cards-wrap').children('.cards-row-wrap').children('li').removeClass('glow');
         });
     }
-    
+
     //Подсветка рядов действия карты
     function illuminateAside(){$('.mezhdyblock .bor-beutifull-box #sortable-cards-field-more').addClass('active');}
     function illuminateOpponent(){$('.oponent .convert-stuff .field-for-cards').addClass('active');}
     function illuminateSelf(){$('.user .convert-stuff .field-for-cards').addClass('active');}
     function illuminateCustom(parent, row){
         for(var i=0 ;i<row.length; i++){
-            var field = intRowToField(row[i]);            
+            var field = intRowToField(row[i]);
             $('.convert-battle-front '+parent+' .convert-one-field '+field).addClass('active');
         }
     }
@@ -389,7 +457,6 @@ $(window).load(function(){
             })
         );
     }
-    
     function intRowToField(row){
         switch(row.toString()){
             case '0': var field = '#meele'; break;
@@ -457,12 +524,12 @@ $(window).load(function(){
             zIndex++;
         });
     }
-    
+
     //Пересчет Силы рядов
     function recalculateBattleField(){
         var players = {"oponent-meele":0,"oponent-range":0,"oponent-superRange":0,"user-meele":0,"user-range":0,"user-superRange":0};
         var total = {"oponent":0, "user":0}
-        
+
         $('.convert-battle-front .convert-stuff .field-for-cards').each(function(){
             var _this = $(this);
             var prefix = 'oponent';
@@ -474,7 +541,7 @@ $(window).load(function(){
                 total[prefix] += parseInt($(this).children('.card-wrap').children('.label-power-card').text());
             });
         });
-        
+
         for(var key in players){
             var temp = key.split('-');
             $('.convert-battle-front .'+temp[0]+' .convert-stuff #'+temp[1]).parents('.convert-stuff').children('.field-for-sum').text(players[key]);
@@ -484,18 +551,18 @@ $(window).load(function(){
         }
     }
     recalculateBattleField();
-    
+
     $('.oponent .convert-stuff .field-for-cards').each(function(){
         var handler = $('.oponent #'+$(this).attr('id')+' .cards-row-wrap li');
         if(handler.length){
             createCardLayers(handler);
-        }        
+        }
     });
     $('.user .convert-stuff .field-for-cards').each(function(){
         var handler = $('.user #'+$(this).attr('id')+' .cards-row-wrap li');
         if(handler.length){
             createCardLayers(handler);
-        }   
+        }
     });
     createCardLayers($('.mezhdyblock #sortable-cards-field-more li'));
 
@@ -503,7 +570,7 @@ $(window).load(function(){
         $('.market-buy-popup .popup-content-wrap').html('<p>' + ms + '</p>');
         $('.market-buy-popup').show(300);
     }
-    
+
     function changeTurnIndicator(login){
         if(login == $('.user-describer').attr('id')){
             $('.user-turn-wrap .turn-indicator').addClass('active');
@@ -511,14 +578,42 @@ $(window).load(function(){
             $('.user-turn-wrap .turn-indicator').removeClass('active');
         }
     }
-    
-    function createDeckCardPreview(count, is_user){
+
+    function createDeckCardPreview(count, is_user, deck){
         var divClass = (is_user) ? 'card-my-init cards-take-more' : 'card-init';
+        var cardList = '';
+        if(deck != undefined){
+            for(var i=0; i<deck.length; i++){
+                cardList += createFieldCardView(deck[i], deck[i]['strength'], true);
+            }
+            cardList ='<ul class="deck-cards-list">'+cardList+'</ul>';
+        }
         return ''+
         '<div class="'+divClass+'">'+
+            cardList+
             '<div class="card-otboy-counter deck">'+
                 '<div class="counter">'+count+'</div>'+
             '</div>'+
         '</div>';
     }
+
+    function createDeckLayers(){
+        $('#card-give-more-user li').each(function(){
+            var shift = 0;
+            var zIndex = 100;
+            $(this).children('.card-my-init').children('ul.deck-cards-list').children('li').each(function(){
+                $(this).css({'top': -shift+'px', 'z-index':zIndex});
+                shift += 40;
+                zIndex--;
+            });
+        });
+    }
+
+    $('.convert-left-info .cards-bet #card-give-more-user').on('click', '.card-my-init', function(){
+        if($(this).css('pointer-events') != 'none'){
+            $(this).children('ul.deck-cards-list').toggleClass('active');
+        }
+    });
+
+    createDeckLayers();
 });

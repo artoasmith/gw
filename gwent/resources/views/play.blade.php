@@ -65,6 +65,7 @@
         }
         $players_count++;
     }
+    //dd($players['allied']['user_discard']);
     ?>
 
 <header class="header">
@@ -159,6 +160,22 @@
                 <li data-field="deck">
                 @if( (isset($players['allied']['user_deck'])) and (count($players['allied']['user_deck']) != 0) )
                     <div class="card-my-init cards-take-more">
+                        <!--Список карт колоды -->
+                        @if(!empty($players['allied']['user_deck']))
+                        <ul class="deck-cards-list">
+                            @foreach($players['allied']['user_deck'] as $i => $card)
+                            <li data-cardid="{{ $card['id']}}" data-relative="{{ $card['type'] }}"  title="{{ $card['title']}}">
+                                <div class="card-wrap">
+                                    <img src="{{ URL::asset('/img/card_images/'.$card['img_url']) }}" alt="">
+                                    <div class="label-power-card">{{ $card['strength'] }}</div>
+                                    <div class="hovered-items">
+                                        <div class="card-name-property"><p>{{ $card['title'] }}</p></div>
+                                    </div>
+                                </div>
+                            </li>
+                            @endforeach
+                        </ul>
+                        @endif
                         <!-- Количество карт в колоде -->
                         <div class="card-take-more-counter deck">
                             <div class="counter">{{ count($players['allied']['user_deck'])}}</div>
@@ -172,6 +189,22 @@
                 <li data-field="discard">
                 @if( (isset($players['allied']['user_discard'])) and (count($players['allied']['user_discard']) != 0) )
                     <div class="card-my-init cards-take-more">
+                        <!--Список карт отбоя -->
+                        @if(!empty($players['allied']['user_discard']))
+                        <ul class="deck-cards-list">
+                            @foreach($players['allied']['user_discard'] as $i => $card)
+                            <li data-cardid="{{ $card->id }}" data-relative="{{ $card->type }}"  title="{{ $card->title }}">
+                                <div class="card-wrap">
+                                    <img src="{{ URL::asset('/img/card_images/'.$card->img_url) }}" alt="">
+                                    <div class="label-power-card">{{ $card->strength }}</div>
+                                    <div class="hovered-items">
+                                        <div class="card-name-property"><p>{{ $card->title }}</p></div>
+                                    </div>
+                                </div>
+                            </li>
+                            @endforeach
+                        </ul>
+                        @endif
                         <!-- Количество карт в отбое -->
                         <div class="card-take-more-counter deck">
                             <div class="counter">{{ count($players['allied']['user_discard'])}}</div>

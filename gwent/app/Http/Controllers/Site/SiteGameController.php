@@ -125,6 +125,7 @@ class SiteGameController extends BaseController
                 'user_ready'    => 0,
                 'round_passed'  => 0,
                 'rounds_won'    => 0,
+                'card_source'   => 'hand'
             ]);
         }else{
             $user_battle = BattleMembersModel::find($user_is_battle_member[0]->id);
@@ -138,6 +139,7 @@ class SiteGameController extends BaseController
             $user_battle -> user_ready      = 0;
             $user_battle -> round_passed    = 0;
             $user_battle -> rounds_won      = 0;
+            $user_battle -> card_source     = 'hand';
             $result =  $user_battle -> save();
         }
         return $result;

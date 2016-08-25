@@ -146,10 +146,9 @@ class UserAuthController extends BaseController
                 ]);
 
                 if($result !== false){
-                    \Mail::send('email.welcome', ['code' => $activation_code], function($u) use ($new_user){
-                        $u -> from('dragon_heart@xmail.com');
-                        $u -> to($new_user->email);
-                        $u -> subject('Подтвердите регистрацию');
+                    \Mail::send('email.welcome', ['code' => $activation_code], function($mess) use ($new_user){
+                        $mess -> from('dragon_heart@xmail.com');
+                        $mess -> to($new_user->email)-> subject('Подтвердите регистрацию');
                     });
                     return redirect(route('user-home'))->withErrors(['Регистрация почти завершена.<br>Вам необходимо подтвердить e-mail, указанный при регистрации, перейдя по ссылке в письме.']);
                 }

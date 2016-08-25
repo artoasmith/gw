@@ -71,6 +71,22 @@ class SitePagesController extends BaseController
         //Активные для данной лиги столы
         $battles = BattleModel::where('league','=',$current_user_league)->where('fight_status', '<', 2)->get();
 
+        $battlesCount = [];
+        if($battles->toArray()){
+
+            $BattlesIDArray = [];
+            foreach ($battles->toArray() as $a){
+                $BattlesIDArray[] = $a['id'];
+            }
+            $bmm = new BattleMembersModel();
+            $query = sprintf('SELECT m.`battle_id` as id, COUNT(1) as cnt FROM %s as m WHERE m.`battle_id` IN (%s) GROUP BY m.`battle_id`',$bmm->getTable(),implode(', ',$BattlesIDArray));
+            if($result = \DB::select($query)){
+                foreach ($result as $r){
+                    $battlesCount[$r->id] = $r->cnt;
+                }
+            }
+        }
+
         $user_to_update = User::find($user['id']);
         $user_to_update -> user_current_deck = $request->input('currentRace');
         $user_to_update -> save();
