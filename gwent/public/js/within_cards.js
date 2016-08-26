@@ -283,14 +283,13 @@ $(document).ready(function(){
                 //создание целевых рас array[0 - json-массив, 1- строка описания]
                 var temp = setCheckboxesToJson($('td .container-wrap input[name=CAfury_enemyRace]:checked'));
                 realActionRow += ', "CAfury_enemyRace": ' + temp[0];
-                displayActionRow += ' - Действует на рассу - ' + temp[1];
-
+                displayActionRow += ' - Карты противника имеют расу - ' + temp[1];
+                
                 //Условие "У противника есть определенная группа карт"
                 temp = checkGroupTable($('select[name=CAfury_group]'));
 
                 realActionRow += ', "CAfury_group": ' + temp[0];
                 displayActionRow += ' - Противник имеет карту из группы: ' + temp[1];
-
 
                 //Условие "Противник имеет определенное количество воинов в ряду"
                 realActionRow += ', "CAfury_enemyHasSuchNumWarriors" : "' + $('input[name=CAfury_enemyHasSuchNumWarriors]').val() + '"';

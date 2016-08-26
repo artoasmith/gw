@@ -193,12 +193,14 @@
                         @if(!empty($players['allied']['user_discard']))
                         <ul class="deck-cards-list">
                             @foreach($players['allied']['user_discard'] as $i => $card)
-                            <li data-cardid="{{ $card->id }}" data-relative="{{ $card->type }}"  title="{{ $card->title }}">
+                                @if(!is_array($card)){{$card = get_object_vars($card)}}@endif
+                            
+                            <li data-cardid="{{ $card['id'] }}" data-relative="{{ $card['type'] }}"  title="{{ $card['title'] }}">
                                 <div class="card-wrap">
-                                    <img src="{{ URL::asset('/img/card_images/'.$card->img_url) }}" alt="">
-                                    <div class="label-power-card">{{ $card->strength }}</div>
+                                    <img src="{{ URL::asset('/img/card_images/'.$card['img_url']) }}" alt="">
+                                    <div class="label-power-card">{{ $card['strength'] }}</div>
                                     <div class="hovered-items">
-                                        <div class="card-name-property"><p>{{ $card->title }}</p></div>
+                                        <div class="card-name-property"><p>{{ $card['title'] }}</p></div>
                                     </div>
                                 </div>
                             </li>
