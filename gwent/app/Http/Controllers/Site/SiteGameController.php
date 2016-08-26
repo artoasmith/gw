@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Site;
 use App\BattleLogModel;
 use App\BattleModel;
 use App\BattleMembersModel;
+use App\MagicEffectsModel;
 use Crypt;
 use App\User;
 use App\UserAdditionalDataModel;
@@ -494,6 +495,29 @@ class SiteGameController extends BaseController
             'action_row'=> unserialize($card_data[0]->allowed_rows),
             'actions'   => unserialize($card_data[0]->card_actions),
             'groups'    => unserialize($card_data[0]->card_groups)
+        ]);
+    }
+
+    public function getMagicDataByRequest(Request $request){
+        $data = $request->get('id');
+        return self::getMagicData($data);
+    }
+
+    public function getMagicData($id){
+        $id = intval($id);
+        if($id<=0)
+            return '';
+
+        $magic = MagicEffectsModel::find($id);
+        if(!$magic)
+            return '';
+
+        return json_encode([
+            'id'        => $magic['id'],
+            'title'     => $magic['title'],
+            'img_url'   => $magic['img_url'],
+            'descript'  => $magic['description'],
+            'energy_cost'  => $magic['energy_cost'],
         ]);
     }
 }

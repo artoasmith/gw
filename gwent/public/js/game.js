@@ -297,7 +297,6 @@ $(window).load(function(){
 
             createCardLayers($('#sortableUserCards li'));
 
-            
             function showDecks(cardSource){
                 if(allowCardChoise == 1){
                     if(cardSource == 'hand'){
@@ -637,3 +636,38 @@ $(window).load(function(){
 
     createDeckLayers();
 });
+
+function showMagic(source) {
+    var id = source.data('id');
+
+    $.ajax({
+        url:     '/game_get_magic_data',
+        type:    'GET',
+        data:    {id:id},
+        success: function(data){
+            data = JSON.parse(data);console.log(data);
+            $('#notSortableOne').animate({'opacity':'1'}, 240);
+
+            $('#notSortableOne').empty().append('' +
+                '<li class="content-card-item chossen-card" id="'+data['id']+'" >' +
+                '<div class="content-card-item-main" style="background-image: url(/img/card_images/'+data['img_url']+')">' +
+                '<div class="label-power-card">' +
+                '<span class="label-power-card-wrap"><span>'+data['energy_cost']+'</span></span>' +
+                '</div>' +
+                '<div class="hovered-items">' +
+                '<div class="card-name-property"><p>'+data['title']+'</p></div>' +
+                '<div class="block-describe">' +
+                '<div class="block-text-describe">' +
+                '<div class="block-text-describe-wrap">' +
+                '<div class="block-text-describe-main">' +
+                '<div class="block-text-describe-main-wrap"><p>'+data['descript']+'</p></div>' +
+                '</div>' +
+                '</div>' +
+                '</div>' +
+                '</div>' +
+                '</div>' +
+                '</div>' +
+                '</li>');
+        }
+    });
+}

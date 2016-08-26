@@ -65,7 +65,7 @@
         }
         $players_count++;
     }
-    //dd($players['allied']['user_discard']);
+    //dd($players['allied']);
     ?>
 
 <header class="header">
@@ -156,7 +156,7 @@
 
         <div class="cards-bet cards-main">
             <!-- Колода и отбой игрока-->
-            <ul id="card-give-more-user" data-user="{{ $players['allied']['user_nickname'] }}">
+            <ul id="card-give-more-user" data-user="{{ (isset($players['allied']['user_nickname'])?$players['allied']['user_nickname']:'') }}">
                 <li data-field="deck">
                 @if( (isset($players['allied']['user_deck'])) and (count($players['allied']['user_deck']) != 0) )
                     <div class="card-my-init cards-take-more">
@@ -343,7 +343,7 @@
         <div class="mezdyline"></div>
 
         <!-- Поле пользователя -->
-        <div class="convert-cards user" data-user="{{ $players['allied']['user_nickname'] }}" id="{{$user_field_identificator}}">
+        <div class="convert-cards user" data-user="{{ (isset($players['allied']['user_nickname'])?$players['allied']['user_nickname']:'') }}" id="{{$user_field_identificator}}">
             <div class="convert-card-box">
                 <!-- Ближние Юниты пользователя -->
                 <div class="convert-stuff">
@@ -478,7 +478,7 @@
 
             <!-- Карты руки пользователя -->
             <ul id="sortableUserCards" class="user-hand-cards-wrap cfix">
-            @if($players['allied']['user_ready'] > 0)
+            @if(isset($players['allied']['user_ready']) && $players['allied']['user_ready'] > 0)
                 @foreach($players['allied']['user_hand'] as $i => $card)
                 <li data-cardid="{{ $card['id'] }}" data-relative="{{ $card['type'] }}">
                     <div class="card-wrap">
@@ -611,7 +611,7 @@
         </div>
 
         <!-- Данные пользователя -->
-        <div class="user-describer" id="{{ $players['allied']['user_nickname'] }}">
+        <div class="user-describer" id="{{ (isset($players['allied']['user_nickname'])?$players['allied']['user_nickname']:'') }}">
             <div class="stash-about">
                 <div class="power-element">
                     <div class="power-text  power-text-user"><!-- Сумарная сила воинов во всех рядах противника --></div>
@@ -640,8 +640,8 @@
                     </div>
 
                     <div class="naming-user">
-                        <div class="name">{{$players['allied']['user_nickname']}}<!-- Имя игрока --></div>
-                        <div class="rasa">{{$players['allied']['user_deck_race']}}<!-- Колода игрока --></div>
+                        <div class="name">{{ (isset($players['allied']['user_nickname'])?$players['allied']['user_nickname']:'') }}<!-- Имя игрока --></div>
+                        <div class="rasa">{{ (isset($players['allied']['user_deck_race'])?$players['allied']['user_deck_race']:'') }}<!-- Колода игрока --></div>
                     </div>
 
                 </div>
@@ -652,17 +652,17 @@
                             <div class="greencard-num"><!-- Количество карт на руках --></div>
                         </div>
                     </div>
-                    <div class="stats-shit">{{$players['allied']['user_energy']}}<!-- Количество Энергии игрока --></div>
+                    <div class="stats-shit">{{ (isset($players['allied']['user_energy'])?$players['allied']['user_energy']:'') }}<!-- Количество Энергии игрока --></div>
                 </div>
             </div>
             <div class="useless-card">
                 <div class="inside-for-some-block">
                     <ul class="magic-effects-wrap">
                     <!-- Активная магия -->
-                    @if(!empty($players['allied']['user_magic']))
+                    @if(isset($players['allied']['user_magic']) && !empty($players['allied']['user_magic']))
                         @foreach($players['allied']['user_magic'] as $i => $value)
-                        <li data-cardid="{{ $value->id }}">
-                        <img src="/img/card_images/{{$value->img_url }}" alt="{{$value->slug}}" title="{{$value->title}}">
+                        <li data-cardid="{{ $value->id }}" >
+                            <img src="/img/card_images/{{$value->img_url }}" alt="{{$value->slug}}" title="{{$value->title}}" onclick="showMagic($(this));" data-id="{{ $value->id }}">
                         </li>
                         @endforeach
                     @endif

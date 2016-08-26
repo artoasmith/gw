@@ -160,7 +160,10 @@ Route::get('/validate_deck', [
 Route::get('/game_get_card_data', [
     'uses' => 'Site\SiteGameController@getCardDataByRequest'
 ]);
-
+//получить данные о магии
+Route::get('/game_get_magic_data', [
+    'uses' => 'Site\SiteGameController@getMagicDataByRequest'
+]);
 
 //Изменение пользовательских данных
 //Обновление колоды пользователя
