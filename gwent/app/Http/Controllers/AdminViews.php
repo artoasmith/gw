@@ -80,7 +80,7 @@ class AdminViews extends BaseController
                 $has_cards_ids = unserialize($group['has_cards_ids']);
                 //если в массиве "ID карт" есть текщая id -> добавляем ссылку на нее
                 if(in_array($card_id, $has_cards_ids)){
-                    $result .= '<a href="/admin/cards/groups/'.$card_id.'">'.$group['title'].'</a>, ';
+                    $result .= '<a href="/admin/cards/groups/edit/'.$group->id.'">'.$group['title'].'</a>, ';
                 }
             }
             return substr($result, 0, -2);
@@ -196,7 +196,7 @@ class AdminViews extends BaseController
         $actions = unserialize($actions);
 
         $result = '';
-
+        
         foreach ($actions as $key => $value) {
             $current_action = \DB::table('tbl_card_actions')->select('id','title')->find($value->action);
             $result .= $current_action->title.', ';
@@ -322,6 +322,14 @@ class AdminViews extends BaseController
             //Печаль
             if(isset($action -> CAsorrow_ActionRow)){
                 $result .= ' - Действует на ряд: '.self::createActionsRowRange($action -> CAsorrow_ActionRow);
+                
+                $result .= ' - Область действия: ';
+                if(0 == $action -> CAsorrow_actionToAll){
+                    $result .= 'Действует в целевом ряду<br>';
+                }else{
+                    $result .= 'Действует на все ряды<br>';
+                }
+                
                 $result .= ' - Действует на своих: ';
                 if(0 == $action -> CAsorrow_actionTeamate){
                     $result .= 'Нет';

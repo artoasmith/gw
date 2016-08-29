@@ -7,7 +7,6 @@ use App\LeagueModel;
 use App\BattleModel;
 use App\BattleMembersModel;
 use App\User;
-use App\BattleMembersModel;
 use Validator;
 use App\CardsModel;
 use App\UserAdditionalDataModel;

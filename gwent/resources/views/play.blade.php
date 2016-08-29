@@ -193,7 +193,9 @@
                         @if(!empty($players['allied']['user_discard']))
                         <ul class="deck-cards-list">
                             @foreach($players['allied']['user_discard'] as $i => $card)
-                                @if(!is_array($card)){{$card = get_object_vars($card)}}@endif
+                            <?php
+                            if(!is_array($card)) $card = get_object_vars($card);
+                            ?>
                             
                             <li data-cardid="{{ $card['id'] }}" data-relative="{{ $card['type'] }}"  title="{{ $card['title'] }}">
                                 <div class="card-wrap">

@@ -351,6 +351,9 @@ $(document).ready(function(){
                 realActionRow += ', "CAsorrow_ActionRow": ' + temp[0];
                 displayActionRow += " - Действует на ряд: " + temp[1];
 
+                //Условие "Область действия"
+                realActionRow += ', "CAsorrow_actionToAll": "'+ $('input[name=CAsorrow_actionToAll]:checked').val() + '"';
+                displayActionRow += ' - Область действия: ' + $('input[name=CAsorrow_actionToAll]:checked').next().text() + ';<br>';
                 //Условие "Действует на своих"
                 realActionRow += ', "CAsorrow_actionTeamate": "' + $('input[name=CAsorrow_actionTeamate]:checked').val() + '"}';
                 displayActionRow += ' - Действует на своих: ' + $('input[name=CAsorrow_actionTeamate]:checked').next().text() + ';<br>';
