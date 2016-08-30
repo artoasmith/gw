@@ -8,6 +8,18 @@
     @endif
 
     <?php
+    
+    function cardView($card){
+        return 
+        '<li data-cardid="'.$card['card']['id'].'" data-relative="'.$card['card']['type'].'"  title="'.$card['card']['title'].'">
+            <div class="card-wrap">
+                <img src="'.URL::asset('/img/card_images/'.$card['card']['img_url']).'" alt="">
+                <div class="label-power-card">'.$card['strength'].'</div>
+            </div>
+        </li>';
+        
+    }
+    
     $user = Auth::user();
 
     $battle_members = \App\BattleMembersModel::where('battle_id','=',$battle_data->id)->get();
@@ -252,12 +264,7 @@
                                 <ul class="cards-row-wrap">
                                     
                                 @foreach($battle_field[$opponent_field_identificator][2]['warrior'] as $i => $card)
-                                    <li data-cardid="{{ $card['card']->id}}" data-relative="{{ $card['card']->type }}"  title="{{ $card['card']->title}}">
-                                        <div class="card-wrap">
-                                            <img src="{{ URL::asset('/img/card_images/'.$card['card']->img_url) }}" alt="">
-                                            <div class="label-power-card">{{ $card['strength'] }}</div>
-                                        </div>
-                                    </li>
+                                    {!! cardView($card) !!}
                                 @endforeach
                                 </ul>
                                 <!-- END OF Список сверхдальних карт-->
@@ -289,12 +296,7 @@
                                 <!-- Список дальних карт-->
                                 <ul class="cards-row-wrap">
                                 @foreach($battle_field[$opponent_field_identificator][1]['warrior'] as $i => $card)
-                                    <li data-cardid="{{ $card['card']->id}}" data-relative="{{ $card['card']->type }}" title="{{ $card['card']->title}}">
-                                        <div class="card-wrap">
-                                            <img src="{{ URL::asset('/img/card_images/'.$card['card']->img_url) }}" alt="">
-                                            <div class="label-power-card">{{ $card['strength'] }}</div>
-                                        </div>
-                                    </li>
+                                    {!! cardView($card) !!}
                                 @endforeach
                                 </ul>
                                 <!-- END OF Список дальних карт-->
@@ -325,12 +327,7 @@
                                 <!-- Список ближних карт-->
                                 <ul class="cards-row-wrap">
                                 @foreach($battle_field[$opponent_field_identificator][0]['warrior'] as $i => $card)
-                                    <li data-cardid="{{ $card['card']->id}}" data-relative="{{ $card['card']->type }}" title="{{ $card['card']->title}}">
-                                        <div class="card-wrap">
-                                            <img src="{{ URL::asset('/img/card_images/'.$card['card']->img_url) }}" alt="">
-                                            <div class="label-power-card">{{ $card['strength'] }}</div>
-                                        </div>
-                                    </li>
+                                    {!! cardView($card) !!}
                                 @endforeach
                                 </ul>
                                 <!-- END OF Список ближних карт-->
@@ -370,12 +367,7 @@
                                 <!-- Список ближних карт-->
                                 <ul class="cards-row-wrap">
                                 @foreach($battle_field[$user_field_identificator][0]['warrior'] as $i => $card)
-                                    <li data-cardid="{{ $card['card']->id}}" data-relative="{{ $card['card']->type }}" title="{{ $card['card']->title}}">
-                                        <div class="card-wrap">
-                                            <img src="{{ URL::asset('/img/card_images/'.$card['card']->img_url) }}" alt="">
-                                            <div class="label-power-card">{{ $card['strength'] }}</div>
-                                        </div>
-                                    </li>
+                                    {!! cardView($card) !!}
                                 @endforeach
                                 </ul>
                                 <!-- END OF Список ближних карт-->
@@ -407,12 +399,7 @@
                                 <!-- Список дальних карт-->
                                 <ul class="cards-row-wrap">
                                 @foreach($battle_field[$user_field_identificator][1]['warrior'] as $i => $card)
-                                    <li data-cardid="{{ $card['card']->id}}" data-relative="{{ $card['card']->type }}" title="{{ $card['card']->title}}">
-                                        <div class="card-wrap">
-                                            <img src="{{ URL::asset('/img/card_images/'.$card['card']->img_url) }}" alt="">
-                                            <div class="label-power-card">{{ $card['strength'] }}</div>
-                                        </div>
-                                    </li>
+                                    {!! cardView($card) !!}
                                 @endforeach
                                 </ul>
                                 <!-- END OF Список дальних карт-->
@@ -445,12 +432,7 @@
                                 <!-- Список сверхдальних карт-->
                                 <ul class="cards-row-wrap">
                                 @foreach($battle_field[$user_field_identificator][2]['warrior'] as $i => $card)
-                                    <li data-cardid="{{ $card['card']->id}}" data-relative="{{ $card['card']->type }}" title="{{ $card['card']->title}}">
-                                        <div class="card-wrap">
-                                            <img src="{{ URL::asset('/img/card_images/'.$card['card']->img_url) }}" alt="">
-                                            <div class="label-power-card">{{ $card['strength'] }}</div>
-                                        </div>
-                                    </li>
+                                    {!! cardView($card) !!}
                                 @endforeach
                                 </ul>
                                 <!-- END OF Список сверхдальнихдальних карт-->

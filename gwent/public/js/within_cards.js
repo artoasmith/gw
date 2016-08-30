@@ -369,7 +369,6 @@ $(document).ready(function(){
                 displayActionRow += ' - Группа карт, которые будут призываться: ' + temp[1];
 
                 //Условие "Откуда брать карты"
-
                 temp = setCheckboxesToJson($('.container-wrap input[name=CAmasder_cardSource]:checked'));
                 realActionRow += ', "CAmasder_cardSource": ' + temp[0];
                 displayActionRow += ' - Карты берутся из: ' + temp[1];

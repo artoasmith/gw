@@ -327,7 +327,7 @@ class AdminViews extends BaseController
                 if(0 == $action -> CAsorrow_actionToAll){
                     $result .= 'Действует в целевом ряду<br>';
                 }else{
-                    $result .= 'Действует на все ряды<br>';
+                    $result .= 'Действует на выбраные ряды<br>';
                 }
                 
                 $result .= ' - Действует на своих: ';
