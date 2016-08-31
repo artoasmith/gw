@@ -10,16 +10,14 @@
     <?php
     
     function cardView($card){
-        return 
-        '<li data-cardid="'.$card['card']['id'].'" data-relative="'.$card['card']['type'].'"  title="'.$card['card']['title'].'">
+        if(!is_array($card['card'])) $card['card'] = get_object_vars($card['card']);
+        return '<li data-cardid="'.$card['card']['id'].'" data-relative="'.$card['card']['type'].'"  title="'.$card['card']['title'].'">
             <div class="card-wrap">
                 <img src="'.URL::asset('/img/card_images/'.$card['card']['img_url']).'" alt="">
                 <div class="label-power-card">'.$card['strength'].'</div>
             </div>
         </li>';
-        
-    }
-    
+    }    
     $user = Auth::user();
 
     $battle_members = \App\BattleMembersModel::where('battle_id','=',$battle_data->id)->get();
@@ -77,7 +75,6 @@
         }
         $players_count++;
     }
-    //dd($players['allied']);
     ?>
 
 <header class="header">
@@ -585,12 +582,7 @@
             <div class="bor-beutifull-box">
                 <ul id="sortable-cards-field-more" class="can-i-use-useless sort">
                 @foreach($battle_field['mid'] as $i => $card)
-                    <li data-cardid="{{ $card['card']->id }}" data-relative="{{ $card['card']->type }}">
-                        <div class="card-wrap">
-                            <img src="{{ URL::asset('/img/card_images/'.$card['card']->img_url)}}" alt="">
-                            <div class="label-power-card">{{ $card['card']->strength }}</div>
-                        </div>
-                    </li>
+                    {!! cardView($card) !!}
                 @endforeach
                 </ul>
             </div>

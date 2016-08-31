@@ -121,6 +121,14 @@ $(window).load(function(){
                             }else{
                                 $('#card-give-more-user li[data-field=discard]').empty().append('<div class="nothinh-for-swap"></div>');
                             }
+                            //рука игрока
+                            if( (result.user_hand !== undefined) && (result.user_hand.length > 0) ){
+                                $('.user-card-stash #sortableUserCards').empty();
+                                for(var i in result.user_hand){
+                                    $('.user-card-stash #sortableUserCards').append(createFieldCardView(result.user_hand[i], result.user_hand[i]['strength'], true));
+                                }
+                                createCardLayers($('#sortableUserCards li'));
+                            }
                         }
                         createDeckLayers();
 

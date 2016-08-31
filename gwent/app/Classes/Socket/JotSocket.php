@@ -239,21 +239,25 @@ class JotSocket extends BaseSocket
 
                                 //Если карта выкинута на поле спец карт
                                 if($user_battle_field_identificator == 'mid'){
-
+                                    $battle_field['mid'][] = ['card' => $card, 'strength' => $card->strength, 'login' => $user_array['login']];
+                                    var_dump(count($battle_field['mid']));
                                     //Если карт на поле спец карт больше 6ти
                                     if(count($battle_field['mid']) > 6){
                                         //Кидает первую карту в отбой
                                         if($user_array['login'] == $battle_field['mid'][0]['login']){
-                                            $user_array['user_discard'][] = $battle_field['mid'][0];
+                                            $user_array['user_discard'][] = $battle_field['mid'][0]['card'];
                                         }else{
-                                            $opponent_array['user_discard'][] = $battle_field['mid'][0];
+                                            $opponent_array['user_discard'][] = $battle_field['mid'][0]['card'];
                                         }
                                         //Удаляем первую карту
                                         unset($battle_field['mid'][0]);
+                                        var_dump('---yeap---');
                                     }
                                     //Добавляем текущую карту на поле боя и её принадлежность пользователю
-                                    $battle_field['mid'][] = ['card' => $card, 'strength' => $card->strength, 'login' => $user_array['login']];
+                                    
                                     $battle_field['mid'] = array_values($battle_field['mid']);
+                                    
+                                    var_dump($battle_field['mid']);
 
                                 }else{
 
@@ -281,8 +285,6 @@ class JotSocket extends BaseSocket
                             }
                             
                             //Перебор действий карты
-                            $new_cards = []; //Добавочные карты в руке
-                            
                             switch($msg->source){
                                 case 'hand':
                                     $user_array['user_hand'] = self::dropCardFromDeck($user_array['user_hand'], $card);
@@ -293,7 +295,7 @@ class JotSocket extends BaseSocket
                                 case 'discard':
                                     $user_array['user_discard'] = self::dropCardFromDeck($user_array['user_discard'], $card);
                                     break;
-                            }
+                            }echo __LINE__."\n";
 
                             foreach($card->actions as $action_iter => $action_data){
                                 //ШПИОН
@@ -306,14 +308,13 @@ class JotSocket extends BaseSocket
                                         $rand_item = rand(0, $deck_card_count-1);
                                         $random_card = $user_array['user_deck'][$rand_item];
                                         $user_array['user_hand'][] = $random_card;
-                                        $new_cards[] = $random_card;
 
                                         unset($user_array['user_deck'][$rand_item]);
 
                                         $user_array['user_deck'] = array_values($user_array['user_deck']);
                                         $deck_card_count = count($user_array['user_deck']);
                                     }
-                                }
+                                }echo __LINE__."\n";
                                 //END OF ШПИОН
 
                                 //УБИЙЦА
@@ -348,10 +349,12 @@ class JotSocket extends BaseSocket
                                                 if(in_array($row, $action_data->CAkiller_ActionRow)){
                                                     //Если данное поле является полем противника
                                                     foreach($battle_field[$enemy_player][$row]['warrior'] as $i => $card_data){
+                                                        if(!is_array($card_data['card'])) $card_data['card'] = get_object_vars ($card_data['card']);
+                                                        
                                                         $rows_strength += $card_data['strength'];//Сумарная сила выбраных рядов
 
                                                         $can_kill_this_card = 1; //Имунитет к убийству 1 - не имеет иммунитет; 0 - не имеет
-                                                        foreach($card_data['card']->actions as $j => $action_immune){
+                                                        foreach($card_data['card']['actions'] as $j => $action_immune){
                                                             if($action_immune->action == '18'){
                                                                 $can_kill_this_card = 0;
                                                             }
@@ -399,12 +402,13 @@ class JotSocket extends BaseSocket
                                                     }
 
                                                     foreach($cards['warrior'] as $card_iterator => $card_data){
-
+                                                        if(!is_array($card_data['card'])) $card_data['card'] = get_object_vars ($card_data['card']);
+                                                        
                                                         if($card_data['strength'] < $action_data->CAkiller_enemyStrenghtLimitToKill){
                                                             //Игнор к иммунитету
                                                             $allow_to_kill_by_immune = 1; //Разрешено убивать карту т.к. иммунитет присутствует
 
-                                                            foreach($card_data['card']->actions as $card_action_i => $card_current_action){
+                                                            foreach($card_data['card']['actions'] as $card_action_i => $card_current_action){
                                                                 if($card_current_action->action == '18'){
                                                                     $allow_to_kill_by_immune = 0;
                                                                 }
@@ -418,13 +422,13 @@ class JotSocket extends BaseSocket
                                                             if( ($allow_to_kill_by_force_amount == 1) && ($card_data['strength'] == $card_strength_to_kill) && ($allow_to_kill_by_immune == 1) ){
                                                                 //Массив карт которые возможно уничтожить
                                                                 if(!empty($groups)){
-                                                                    foreach($card_data['card']->groups as $groups_ident => $group_id){
+                                                                    foreach($card_data['card']['groups'] as $groups_ident => $group_id){
                                                                         if(in_array($group_id, $groups)){
-                                                                            $cards_can_be_destroyed[] = ['player' => $fields, 'card_id' => $card_data['card']->id];
+                                                                            $cards_can_be_destroyed[] = ['player' => $fields, 'card_id' => $card_data['card']['id']];
                                                                         }
                                                                     }
                                                                 }else{
-                                                                    $cards_can_be_destroyed[] = ['player' => $fields, 'card_id' => $card_data['card']->id];
+                                                                    $cards_can_be_destroyed[] = ['player' => $fields, 'card_id' => $card_data['card']['id']];
                                                                 }
                                                             }
                                                         }
@@ -432,7 +436,7 @@ class JotSocket extends BaseSocket
                                                 }
                                             }
                                         }
-                                    }
+                                    }echo __LINE__."\n";
 
                                     $cards_to_destroy = [];
                                     if( (isset($action_data->CAkiller_killAllOrSingle)) && ($action_data->CAkiller_killAllOrSingle == 0) ){
@@ -449,7 +453,9 @@ class JotSocket extends BaseSocket
                                     for($i=0; $i<$cards_to_destroy_count; $i++){
                                         foreach($battle_field[$cards_to_destroy[$i]['player']] as $rows => $cards){
                                             foreach($cards['warrior'] as $card_iterator => $card_data){
-                                                if($card_data['card']->id == $cards_to_destroy[$i]['card_id']){
+                                                if(!is_array($card_data['card'])) $card_data['card'] = get_object_vars ($card_data['card']);
+                                            
+                                                if($card_data['card']['id'] == $cards_to_destroy[$i]['card_id']){
 
                                                     if($user_array['player'] == $cards_to_destroy[$i]['player']){
                                                         $user_array['user_discard'][] = $card_data['card'];
@@ -463,7 +469,7 @@ class JotSocket extends BaseSocket
                                             }
                                         }
                                     }
-                                }
+                                }echo __LINE__."\n";
                                 //END OF УБИЙЦА
 
                                 //РАЗВЕДЧИК
@@ -473,12 +479,11 @@ class JotSocket extends BaseSocket
                                         $rand_item = rand(0, $deck_card_count-1);
                                         $random_card = $user_array['user_deck'][$rand_item];
                                         $user_array['user_hand'][] = $random_card;
-                                        $new_cards[] = $random_card;
                                         unset($user_array['user_deck'][$rand_item]);
 
                                         $user_array['user_deck'] = array_values($user_array['user_deck']);
                                     }
-                                }
+                                }echo __LINE__."\n";
                                 //END OF РАЗВЕДЧИК
 
                                 //CТРАШНЫЙ
@@ -503,27 +508,25 @@ class JotSocket extends BaseSocket
                                             }
                                         }
                                     }
-                                }
+                                }echo __LINE__."\n";
                                 //END OF CТРАШНЫЙ
 
                                 //ИСЦЕЛЕНИЕ
                                 if($action_data->action == '25'){
                                     foreach($battle_field['mid'] as $i => $card_data){
                                         foreach($card_data['card']->actions as $action_iterrator => $action){
-                                            if($action->action == '21'){
-                                                if(in_array($field_row, $action->CAfear_ActionRow)){
-                                                    if($user_array['login'] == $card_data['login']){
-                                                        $user_array['user_discard'][] = $card_data['card'];
-                                                    }else{
-                                                        $opponent_array['user_discard'][] = $card_data['card'];
-                                                    }
-                                                    unset($battle_field['mid'][$i]);
-                                                    $battle_field['mid'] = array_values($battle_field['mid']);
+                                            if(in_array($field_row, $action->CAfear_ActionRow)){
+                                                if($user_array['login'] == $card_data['login']){
+                                                    $user_array['user_discard'][] = $card_data['card'];
+                                                }else{
+                                                    $opponent_array['user_discard'][] = $card_data['card'];
                                                 }
+                                                unset($battle_field['mid'][$i]);
                                             }
                                         }
                                     }
-                                }
+                                    $battle_field['mid'] = array_values($battle_field['mid']);
+                                }echo __LINE__."\n";
                                 //END OF ИСЦЕЛЕНИЕ
 
                                 //ОДУРМАНИВАНИЕ
@@ -577,7 +580,7 @@ class JotSocket extends BaseSocket
                                             }
                                         }
                                     }
-                                }
+                                }echo __LINE__."\n";
                                 //END OF ОДУРМАНИВАНИЕ
 
                                 //ПЕРЕГРУППИРОВКА
@@ -587,10 +590,9 @@ class JotSocket extends BaseSocket
                                             unset($battle_field[$msg->player][$field_row]['warrior'][$i]);
                                             $battle_field[$msg->player][$field_row]['warrior'] = array_values($battle_field[$msg->player][$field_row]['warrior']);
                                             $user_array['user_hand'][] = get_object_vars($card_data['card']);
-                                            $new_cards[] = get_object_vars($card_data['card']);
                                         }
                                     }
-                                }
+                                }echo __LINE__."\n";
                                 //END OF ПЕРЕГРУППИРОВКА
                                 
                                 //ПРИЗЫВ
@@ -612,7 +614,7 @@ class JotSocket extends BaseSocket
                                         $user_turn_id = $user_array['id'];
                                         $card_source = 'deck';
                                     }                                    
-                                }
+                                }echo __LINE__."\n";
                                 //END OF ПРИЗЫВ
                                 
                                 //ЛЕКАРЬ
@@ -634,7 +636,7 @@ class JotSocket extends BaseSocket
                                         $user_turn_id = $user_array['id'];
                                         $card_source = 'discard';
                                     }
-                                }
+                                }echo __LINE__."\n";
                                 //END OF ЛЕКАРЬ
                                 
                                 //ПЕЧАЛЬ
@@ -667,7 +669,7 @@ class JotSocket extends BaseSocket
                                             }
                                         }
                                     }
-                                }
+                                }echo __LINE__."\n";
                                 //END OF ПЕЧАЛЬ
                                 
                                 //ПОВЕЛИТЕЛЬ
@@ -725,17 +727,17 @@ class JotSocket extends BaseSocket
                                             $user_array[$deck] = array_values($user_array[$deck]);
                                         }
                                     }
-                                }
+                                }echo __LINE__."\n";
                                 //END OF ПОВЕЛИТЕЛЬ
                             }
                             //END OF Перебор действий карты
-                        }echo __LINE__."\n";
+                        }
 
-                        $battle_field = self::recalculateStrengthByMid($battle_field, $user_array, $opponent_array);echo __LINE__."\n";
+                        $battle_field = self::recalculateStrengthByMid($battle_field, $user_array, $opponent_array);
                         
                         if(count($user_array['user_hand']) == 0){//Если у пользлвателя закончились карты на руках - делаем ему автопас
                             \DB::table('tbl_battle_members')->where('id', '=', $msg->ident->battleId)->update(['round_passed' => '1']);
-                        }
+                        }echo __LINE__."\n";
 
                         $user_discard_count = count($user_array['user_discard']);
                         $user_deck_count = count($user_array['user_deck']);
@@ -770,7 +772,7 @@ class JotSocket extends BaseSocket
                         $result = [
                             'message'       => 'userMadeAction',
                             'field_data'    => $battle_field,
-                            'new_cards'     => $new_cards,
+                            'user_hand'     => unserialize($user_array['user_hand']),
                             'user_deck'     => unserialize($user_array['user_deck']),
                             'user_discard'  => unserialize($user_array['user_discard']),
                             'counts'        => [
@@ -868,8 +870,7 @@ class JotSocket extends BaseSocket
 
     protected static function recalculateStrengthByMid($battle_field, $user_array, $opponent_array){
         //Сброс значений силы
-        $battle_field = self::resetBattleFieldCardsStrength($battle_field);echo __LINE__."\n";
-        
+        $battle_field = self::resetBattleFieldCardsStrength($battle_field);
         $actions_array_fear = [];//Массив действий "Страшный"
         $actions_array_support = [];//Массив действий "Поддержка"
         $actions_array_fury = [];//Массив действий "Неистовство"
@@ -880,39 +881,37 @@ class JotSocket extends BaseSocket
                 foreach ($rows as $row => $cards){
                     foreach($cards['warrior'] as $i => $card_data){
                         
-                        if(!is_array($card_data['card'])){
-                            $card_array_data = get_object_vars($card_data['card']);
-                        }else{
-                            $card_array_data = $card_data['card'];
-                        }
+                        if(!is_array($card_data['card'])) $card_data['card'] = get_object_vars($card_data['card']);
                         
-                        foreach($card_array_data['actions'] as $j => $action){echo __LINE__."\n";
-                            if($action->action == '16'){echo __LINE__."\n";
-                                $actions_array_brotherhood[$field][Crypt::decrypt($card_data['card']->id)] = $card_data;echo __LINE__."\n";
+                        foreach($card_data['card']['actions'] as $j => $action){
+                            if(!is_array($action)) $action = get_object_vars ($action);
+                            if($action['action'] == '16'){
+                                $actions_array_brotherhood[$field][Crypt::decrypt($card_data['card']['id'])] = $card_data;
                                 break;
                             }
                             
-                            if($action->action == '17'){
+                            if($action['action'] == '17'){
                                 $actions_array_support[$field.'_'.$row.'_'.$i] = $card_data;
                             }
                             
-                            if($action->action == '19'){
+                            if($action['action'] == '19'){
                                 $actions_array_fury[$field.'_'.$row.'_'.$i] = $card_data;
                             }
                             
-                            if($action->action == '21'){
-                                $actions_array_fear[Crypt::decrypt($card_data['card']->id)] = $card_data;
+                            if($action['action'] == '21'){
+                                $actions_array_fear[$field][Crypt::decrypt($card_data['card']['id'])] = $card_data;
                             }
                         }
                     }
                 }
             }else{
-                foreach($rows as $card_data){ echo __LINE__."\n";
-                    foreach($card_data['card']->actions as $j => $action){
-                        
-                        if($action->action == '21'){
-                            if(!isset($actions_array_fear[Crypt::decrypt($card_data['card']->id)])){
-                                $actions_array_fear[Crypt::decrypt($card_data['card']->id)] = $card_data;
+                foreach($rows as $card_data){
+                    if(!is_array($card_data['card'])) $card_data['card'] = get_object_vars($card_data['card']);
+                    foreach($card_data['card']['actions']as $j => $action){
+                        if(!is_array($action)) $action = get_object_vars ($action);
+                        if($action['action'] == '21'){
+                            if(!isset($actions_array_fear[Crypt::decrypt($card_data['card']['id'])])){
+                                $actions_array_fear['mid'][Crypt::decrypt($card_data['card']['id'])] = $card_data;
                             }
                         }
                     }
@@ -921,69 +920,79 @@ class JotSocket extends BaseSocket
         }echo __LINE__."\n";
 
         //Применение действия "Страшный" к картам
-        foreach($actions_array_fear as $card_id => $card_data){
-            foreach($card_data['card']->actions as $i => $action){
-
-                //Карта действует на всех или только на противника
-                if($action->CAfear_actionTeamate == 1){
-                    $players = ['p1', 'p2'];
-                }else{
-                    if($card_data['login'] == $user_array['login']){
-                        $players = [$user_array['player']];
-                    }else{
-                        $players = [$opponent_array['player']];
-                    }
-                }
-
-                foreach($players as $field){
-                    $user_current_deck = ($user_array['player'] == $field) ? $user_current_deck = $user_array['current_deck'] : $user_current_deck = $opponent_array['current_deck'];
-
-                    if(in_array($user_current_deck, $action->CAfear_enemyRace)){
-                        foreach($battle_field[$field] as $row => $cards){
-                            if(in_array($row, $action->CAfear_ActionRow)){
-                                $allow_fear = true;
-                                //Если в ряду оказаалась карта "Исцеление"
-                                if(!empty($cards['special'])){
-                                    foreach($cards['special']['card']->actions as $j => $current_card_action){
-                                         if($current_card_action -> action == '25'){
-                                             $allow_fear = false;
-                                         }
-                                    }
-                                }
-                                if($allow_fear){
-                                    foreach($cards['warrior'] as $card_iter => $card_data){
-                                        //Если действие приемлемо только к группе
-                                        if( (isset($action_data->CAfear_actionToGroupOrAll)) && ($action_data->CAfear_actionToGroupOrAll != 0)){
-                                            $groups = $action_data->CAfear_actionToGroupOrAll;
-                                        }else{
-                                            $groups = [];
-                                        }
-                                        //Если у карты есть имммунитет
-                                        $immune = false;
-                                        foreach($card_data['card']->actions as $j => $current_card_action){
-                                            if($current_card_action -> action == '18'){
-                                                $immune = true;
+        foreach($actions_array_fear as $source => $cards){
+            
+            foreach($cards as $card_id => $card_data){
+                if(!is_array($card_data)) $card_data = get_object_vars($card_data);
+                
+                $user_current_deck = ($card_data['login'] == $user_array['player']) ? $user_array['current_deck'] : $opponent_array['current_deck'];
+                
+                foreach($card_data['card']['actions'] as $action_iter => $action){
+                    if($action -> action == '21'){
+                        //Карта действует на всех или только на противника
+                        if($action->CAfear_actionTeamate == 1){
+                            $players = ['p1', 'p2'];
+                        }else{
+                            if($card_data['login'] == $user_array['login']){
+                                $players = [$opponent_array['player']];
+                            }else{
+                                $players = [$user_array['player']];
+                            }
+                        }
+                        
+                        //Карта действует на группу
+                        if(isset($action->CAfear_actionToGroupOrAll)){
+                            $groups = $action->CAfear_actionToGroupOrAll;
+                        }else{
+                            $groups = [];
+                        }
+                        
+                        if(in_array($user_current_deck, $action->CAfear_enemyRace)){
+                            
+                            for($i=0; $i<count($players); $i++){
+                                foreach($battle_field[$players[$i]] as $row => $cards_to_fear){
+                                    
+                                    if(in_array($row, $action->CAfear_ActionRow)){
+                                        $allow_fear = true;
+                                        //Если в ряду оказаалась карта "Исцеление"
+                                        if(!empty($cards_to_fear['special'])){
+                                            foreach($cards_to_fear['special']['card']->actions as $card_to_fear_action_iterator => $card_to_fear_action){
+                                                if($card_to_fear_action -> action == '25'){
+                                                    $allow_fear = false;
+                                                }
                                             }
                                         }
                                         
-                                        if(($card_data['strength'] > 0) && (!$immune)){
-                                            //Если действие приемлемо только к группе
-                                            if(!empty($groups)){
-                                                foreach($card_data['card']->groups as $groups_ident => $group_id){
-                                                    if(in_array($group_id, $groups)){
-                                                        $strength = $card_data['strength'] - $action->CAfear_strenghtValue;
+                                        if($allow_fear){
+                                            foreach($cards_to_fear['warrior'] as $cards_to_fear_iter => $card_to_fear_data){
+                                                //Если у карты есть имммунитет
+                                                $immune = false;
+                                                foreach($card_to_fear_data['card']['actions'] as $imune_iter => $current_card_action){
+                                                    if($current_card_action -> action == '18'){
+                                                        $immune = true;
+                                                    }
+                                                }
+                                                
+                                                if(($card_to_fear_data['strength'] > 0) && (!$immune)){
+                                                    //Если действие приемлемо только к группе
+                                                    if(!empty($groups)){
+                                                        foreach($card_to_fear_data['card']->groups as $groups_ident => $group_id){
+                                                            if(in_array($group_id, $groups)){
+                                                                $strength = $card_to_fear_data['strength'] - $action->CAfear_strenghtValue;
+                                                                if($strength < 1){
+                                                                    $strength = 1;
+                                                                }
+                                                                $battle_field[$players[$i]][$row]['warrior'][$cards_to_fear_iter]['strength'] = $strength;
+                                                            }
+                                                        }
+                                                    }else{
+                                                        $strength = $card_to_fear_data['strength'] - $action->CAfear_strenghtValue;
                                                         if($strength < 1){
                                                             $strength = 1;
                                                         }
-                                                        $battle_field[$field][$row]['warrior'][$card_iter]['strength'] = $strength;
+                                                        $battle_field[$players[$i]][$row]['warrior'][$cards_to_fear_iter]['strength'] = $strength;
                                                     }
                                                 }
-                                            }else{
-                                                $strength = $card_data['strength'] - $action->CAfear_strenghtValue;
-                                                if($strength < 1){
-                                                    $strength = 1;
-                                                }
-                                                $battle_field[$field][$row]['warrior'][$card_iter]['strength'] = $strength;
                                             }
                                         }
                                     }
@@ -994,17 +1003,19 @@ class JotSocket extends BaseSocket
                 }
             }
         }echo __LINE__."\n";
-
+        
         //Применение "Поддержка" к картам
         foreach($actions_array_support as $card_id => $card_data){
+            if(!is_array($card_data['card'])) $card_data['card'] = get_object_vars($card_data['card']);
+            
             if($card_data['login'] == $user_array['login']){
-                $players = [$user_array['player']];
+                $player = $user_array['player'];
             }else{
-                $players = [$opponent_array['player']];
+                $player = $opponent_array['player'];
             }
             
             $target_rows = [];
-            foreach($card_data['card']->actions as $i => $actions){
+            foreach($card_data['card']['actions'] as $i => $actions){
                 if($actions->action == '17'){
                     $target_rows = $actions->CAsupport_ActionRow;
                     if($actions->CAsupport_selfCast == 0){
@@ -1013,61 +1024,59 @@ class JotSocket extends BaseSocket
                         $self_cast = true;
                     }
                     
-                    if( (isset($action_data->CAsupport_actionToGroupOrAll)) && ($action_data->CAsupport_actionToGroupOrAll != 0)){
-                        $groups = $action_data->CAsupport_actionToGroupOrAll;
+                    if( (isset($actions->CAsupport_actionToGroupOrAll)) && ($actions->CAsupport_actionToGroupOrAll != 0)){
+                        $groups = $actions->CAsupport_actionToGroupOrAll;
                     }else{
                         $groups = [];
                     }
                 }
             }
             
-            foreach($players as $fields){
-                
-                foreach($target_rows as $row){
+            foreach($target_rows as $row_iter => $row){
+                foreach($battle_field[$player][$row]['warrior'] as $i => $card){
                     
-                    foreach($battle_field[$fields][$row]['warrior'] as $i => $card){
-                        
-                        $allow_support = 1;
-                        
-                        foreach($card['card']->actions as $j => $action){
-                            if($action->action == '18'){
-                                if($action->CAimmumity_type == 1){
-                                    $allow_support = 0;
-                                }
+                    if(!is_array($card['card'])) $card['card'] = get_object_vars ($card['card']);
+
+                    $allow_support = true;
+                    foreach($card['card']['actions'] as $j => $action){
+                        if($action->action == '18'){
+                            if($action->CAimmumity_type == 1){
+                                $allow_support = false;
                             }
                         }
-                        
-                        if($allow_support == 1){
-                            if(!empty($groups)){
-                                foreach($cards['card']->groups as $groups_ident => $group_id){
-                                    if(in_array($group_id, $groups)){
+                    }
+                    
+                    if($allow_support){
+                        if(!empty($groups)){
+                            foreach($card['card']['groups'] as $groups_ident => $group_id){
+                                
+                                if(in_array($group_id, $groups)){
 
-                                        if(($card['card']->id == $card_data['card']->id) && ($card_id == $fields.'_'.$row.'_'.$i)){
-                                            if($self_cast){
-                                                $strength = $card['strength'] + $actions->CAsupport_strenghtValue;
-                                            }else{
-                                                $strength = $card['strength'];
-                                                $self_cast = true;
-                                            }
-                                        }else{
+                                    if(($card['card']['id'] == $card_data['card']['id']) && ($card_id == $player.'_'.$row.'_'.$i)){
+                                        if($self_cast){
                                             $strength = $card['strength'] + $actions->CAsupport_strenghtValue;
+                                        }else{
+                                            $strength = $card['strength'];
+                                            $self_cast = true;
                                         }
-                                        $battle_field[$fields][$row]['warrior'][$i]['strength'] = $strength;
+                                    }else{
+                                        $strength = $card['strength'] + $actions->CAsupport_strenghtValue;
                                     }
+                                    $battle_field[$player][$row]['warrior'][$i]['strength'] = $strength;
+                                }
+                            }
+                        }else{
+                            if(($card['card']['id'] == $card_data['card']['id']) && ($card_id == $player.'_'.$row.'_'.$i)){
+                                if($self_cast){
+                                    $strength = $card['strength'] + $actions->CAsupport_strenghtValue;
+                                }else{
+                                    $strength = $card['strength'];
+                                    $self_cast = true;
                                 }
                             }else{
-                                if(($card['card']->id == $card_data['card']->id) && ($card_id == $fields.'_'.$row.'_'.$i)){
-                                    if($self_cast){
-                                        $strength = $card['strength'] + $actions->CAsupport_strenghtValue;
-                                    }else{
-                                        $strength = $card['strength'];
-                                        $self_cast = true;
-                                    }
-                                }else{
-                                    $strength = $card['strength'] + $actions->CAsupport_strenghtValue;
-                                }
-                                $battle_field[$fields][$row]['warrior'][$i]['strength'] = $strength;
+                                $strength = $card['strength'] + $actions->CAsupport_strenghtValue;
                             }
+                            $battle_field[$player][$row]['warrior'][$i]['strength'] = $strength;
                         }
                     }
                 }
@@ -1084,7 +1093,7 @@ class JotSocket extends BaseSocket
             
             $allow_fury_by_race = false; //Неистовость запрещена
             
-            foreach($card_data['card']->actions as $action_iter => $action){
+            foreach($card_data['card']['actions'] as $action_iter => $action){
                 if($action->action == '19'){
                     //Колода противника вызывает у карты неистовство
                     if($card_data['login'] == $user_array['login']){
@@ -1130,28 +1139,31 @@ class JotSocket extends BaseSocket
         $cards_to_brotherhood = [];
         foreach($actions_array_brotherhood as $player => $cards_array){
             foreach($cards_array as $card_id => $card_data){
-                foreach($card_data['card']->actions as $action_iter => $action){
+                if(!is_array($card_data['card'])) $card_data['card'] = get_object_vars($card_data['card']);
+                
+                foreach($card_data['card']['actions'] as $action_iter => $action){
+                    if(!is_array($action)) $action = get_object_vars($action);
                     
-                    if($action->action == '16'){
-                        if($action->CAbloodBro_actionToGroupOrSame == 0){
+                    if($action['action'] == '16'){
+                        if($action['CAbloodBro_actionToGroupOrSame'] == 0){
                             $count_same = 0;
                             $mult_same = 1;
                             foreach($battle_field[$player] as $rows => $cards){
                                 foreach($cards['warrior'] as $card_iter => $card){
-                                    if(Crypt::decrypt($card_data['card']->id) == Crypt::decrypt($card['card']->id)){
+                                    if(Crypt::decrypt($card_data['card']['id']) == Crypt::decrypt($card['card']['id'])){
                                         $count_same++;
                                     }
                                 }
                             }
                             if($count_same > 0){
                                 $mult_same = $count_same;
-                                if($mult_same > $action->CAbloodBro_strenghtMult){
-                                    $mult_same = $action->CAbloodBro_strenghtMult;
+                                if($mult_same > $action['CAbloodBro_strenghtMult']){
+                                    $mult_same = $action['CAbloodBro_strenghtMult'];
                                 }
                             }
                             foreach($battle_field[$player] as $rows => $cards){
                                 foreach($cards['warrior'] as $card_iter => $card){
-                                    if(Crypt::decrypt($card_data['card']->id) == Crypt::decrypt($card['card']->id)){
+                                    if(Crypt::decrypt($card_data['card']['id']) == Crypt::decrypt($card['card']['id'])){
                                         $battle_field[$player][$rows]['warrior'][$card_iter]['strength'] *= $mult_same;
                                     }
                                 }
@@ -1160,10 +1172,10 @@ class JotSocket extends BaseSocket
                         }else{
                             foreach($battle_field[$player] as $rows => $cards){
                                 foreach($cards['warrior'] as $card_iter => $card){
-                                    for($i=0; $i<count($card['card']->groups); $i++){
-                                        if(in_array($card['card']->groups[$i], $action->CAbloodBro_actionToGroupOrSame)){
+                                    for($i=0; $i<count($card['card']['groups']); $i++){
+                                        if(in_array($card['card']['groups'][$i], $action['CAbloodBro_actionToGroupOrSame'])){
                                             
-                                            $cards_to_brotherhood[$player][$card['card']->groups[$i].'_'.$action->CAbloodBro_strenghtMult][] = Crypt::decrypt($card['card']->id);
+                                            $cards_to_brotherhood[$player][$card['card']['groups'][$i].'_'.$action['CAbloodBro_strenghtMult']][] = Crypt::decrypt($card['card']['id']);
                                         }
                                     }
                                 }
@@ -1188,7 +1200,7 @@ class JotSocket extends BaseSocket
                     $mult_group = 1;
                     foreach($battle_field[$player] as $row => $cards){
                         foreach($cards['warrior'] as $card_iter => $card){
-                            if(in_array(Crypt::decrypt($card['card']->id), $cards_ids)){
+                            if(in_array(Crypt::decrypt($card['card']['id']), $cards_ids)){
                                 $count_group++;
                             }
                         }
@@ -1202,7 +1214,7 @@ class JotSocket extends BaseSocket
                     
                     foreach($battle_field[$player] as $row => $cards){
                         foreach($cards['warrior'] as $card_iter => $card){
-                            if(in_array(Crypt::decrypt($card['card']->id), $cards_ids)){
+                            if(in_array(Crypt::decrypt($card['card']['id']), $cards_ids)){
                                 $battle_field[$player][$row]['warrior'][$card_iter]['strength'] *= $mult_group;
                             }
                         }
