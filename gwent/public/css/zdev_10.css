@@ -1017,7 +1017,7 @@
       display: table;
       padding-top: 3px;
       overflow: hidden;
-      display: none; }
+      display: table;/*none*/ }
       .content-card-item-main .hovered-items .block-describe .block-image-describe {
         display: table-cell;
         background-position: center;
