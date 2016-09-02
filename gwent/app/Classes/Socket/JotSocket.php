@@ -24,10 +24,8 @@ class JotSocket extends BaseSocket
         $this->clients->attach($conn); //Добавление клиента
         echo 'New connection ('.$conn->resourceId.')'."\n\r";
     }
-
+    //Обработчик каждого сообщения
     public function onMessage(ConnectionInterface $from, $msg){
-        //Обработчик каждого сообщения
-
         $msg = json_decode($msg); // сообщение от пользователя arr[action, ident[battleId, UserId, Hash]]
         var_dump($msg);
 
@@ -38,11 +36,13 @@ class JotSocket extends BaseSocket
         if(!$this->battles[$msg->ident->battleId]->contains($from)){
             $this->battles[$msg->ident->battleId]->attach($from);
         }
+        $SplBattleObj = $this->battles;
 
         $battle = BattleModel::find($msg->ident->battleId); //Даные битвы
 
         $battle_members = BattleMembersModel::where('battle_id', '=', $msg->ident->battleId)->get(); //Данные о участвующих в битве
 
+        //Создание массивов пользовательских данных
         foreach($battle_members as $key => $value){
             $current_user = \DB::table('users')->select('id','login','user_current_deck')->where('id','=',$value->user_id)->get();
             
@@ -52,14 +52,14 @@ class JotSocket extends BaseSocket
                 $user_array = [
                     'id'            => $value->user_id,
                     'login'         => $current_user[0]->login,
-                    'player'        => $user_identificator,
-                    'user_deck'     => unserialize($value->user_deck),
-                    'user_hand'     => unserialize($value->user_hand),
-                    'user_discard'  => unserialize($value->user_discard),
-                    'current_deck'  => $current_user[0]->user_current_deck,
-                    'card_source'   => $value->card_source,
-                    'round_passed'  => $value->round_passed,
-                    'battle_member_id' => $value->id
+                    'player'        => $user_identificator,                     //Идентификатор поля пользователя
+                    'user_deck'     => unserialize($value->user_deck),          //Колода пользователя
+                    'user_hand'     => unserialize($value->user_hand),          //Рука пользователя
+                    'user_discard'  => unserialize($value->user_discard),       //Отбой пользователя
+                    'current_deck'  => $current_user[0]->user_current_deck,     //Название фракции текущей колоды пользоватля
+                    'card_source'   => $value->card_source,                     //Источник карт (рука/колода/отбой) текущего хода
+                    'round_passed'  => $value->round_passed,                    //Маркер паса
+                    'battle_member_id' => $value->id                            //ID текущей битвы
                 ];
             }else{
                 $opponent_array = [
@@ -82,7 +82,7 @@ class JotSocket extends BaseSocket
         switch($msg->action){
             //Пользователь готов
             case 'userReady':
-                if($battle -> fight_status == 1){
+                if($battle -> fight_status == 1){//Если пользователи присоединились но карты не выбраны
 
                     $ready_players_count = 0; //Количество игроков за столом готовых к игре
                     foreach ($battle_members as $key => $value){
@@ -91,18 +91,17 @@ class JotSocket extends BaseSocket
                         }
                     }
 
-                    if($ready_players_count == $battle->players_quantity){ //Если готовых к игре равное количество максимальному числу игроков за столом
+                    if($ready_players_count == 2){ //Если готовых к игре
                         if($battle -> user_id_turn == 0){ //Если игрок для хода не определен
-
                             //Игроки фракции "Проклятые"
                             $cursed_players = [];
                             if($user_array['current_deck'] == 'cursed') $cursed_players[] = ['id'=>$user_array['id'], 'login'=> $user_array['login']];
                             if($opponent_array['current_deck'] == 'cursed') $cursed_players[] = ['id'=>$opponent_array['id'], 'login'=> $opponent_array['login']];
-
-                            if(count($cursed_players) == 1){//Если за столом есть 1н игрок из фракции "Проклятые"
+                            //Если за столом есть 1н игрок из фракции "Проклятые"
+                            if(count($cursed_players) == 1){
                                 $players_turn = $cursed_players[0]['id'];
                                 $user = $cursed_players[0]['login'];
-                            }else{//Если оба игрока в фракции "Проклятые"
+                            }else{//Если оба игрока в фракции "Проклятые" или оба других фракций
                                 $rand = rand(0,1);
                                 if($rand == 0){
                                     $players_turn = $user_array['id'];
@@ -138,9 +137,10 @@ class JotSocket extends BaseSocket
                     }
                 }
                 break;
+
+
             //Пользователь присоединился
             case 'userJoinedToRoom':
-
                 if($battle -> user_id_turn != 0){
                     if($battle -> user_id_turn == $user_array['id']){
                         $user_turn = $user_array['login'];
@@ -150,7 +150,7 @@ class JotSocket extends BaseSocket
                 }else{
                     $user_turn = '';
                 }
-
+                
                 if($battle -> fight_status <= 1){
                     if(count($battle_members) == $battle->players_quantity){
                         if($battle -> fight_status === 0){
@@ -171,6 +171,7 @@ class JotSocket extends BaseSocket
                 }
                 break;
 
+            //Вернуть список пользовательских карт
             case 'getOwnBattleFieldData':
                 $battle_field = unserialize($battle->battle_field);//Данные о поле битвы
                 $own_cards = [];
@@ -189,6 +190,8 @@ class JotSocket extends BaseSocket
                 self::sendMessageToSelf($from, $result);
                 break;
 
+
+            //Пользователь спасовал
             case 'userPassed':
                 echo date('Y-m-d H:i:s')."\n";
                 $users_passed_count = self::userPassed($msg->ident->userId, $msg->ident->battleId);
@@ -204,56 +207,11 @@ class JotSocket extends BaseSocket
                     $battle->user_id_turn = $user_turn_id;
                     $battle->save();
 
-                    $user_discard_count = count($user_array['user_discard']);
-                    $user_deck_count = count($user_array['user_deck']);
-
-                    $oponent_discard_count = count($opponent_array['user_discard']);
-                    $oponent_deck_count = count($opponent_array['user_deck']);
-                    
-                    /*
-                     * Выход:
-                     * message = userMadeAction -> Пользователь сделал действие
-                     * field_data -> карты на поле
-                     * user_hand -> карты руки пользователя
-                     * counts [user_discard_count, opon_discard_count, opon_deck_count]
-                     */
-
-                    $result = [
-                        'message'       => 'userMadeAction',
-                        'field_data'    => $battle_field,
-                        'user_hand'     => $user_array['user_hand'],
-                        'user_deck'     => $user_array['user_deck'],
-                        'user_discard'  => $user_array['user_discard'],
-                        'counts'        => [
-                            'user_deck'    => $user_deck_count,
-                            'user_discard' => $user_discard_count,
-                            'opon_discard' => $oponent_discard_count,
-                            'opon_deck'    => $oponent_deck_count
-                        ],
-                        'battleInfo'    => $msg->ident->battleId,
-                        'login'         => $user_turn,
-                        'cardSource'    => 'hand'
-                    ];
-
-                    self::sendMessageToSelf($from, $result); //Отправляем результат отправителю
-                    $result = [
-                        'message'       => 'userMadeAction',
-                        'field_data'    => $battle_field,
-                        'user_discard'  => $opponent_array['user_discard'],
-                        'counts'        => [
-                            'user_deck'    => $oponent_deck_count,
-                            'user_discard' => $oponent_discard_count,
-                            'opon_discard' => $user_discard_count,
-                            'opon_deck'    => $user_deck_count
-                        ],
-                        'battleInfo'    => $msg->ident->battleId,
-                        'login'         => $user_turn
-                    ];
-                    self::sendMessageToOthers($from, $result, $this->battles[$msg->ident->battleId]);
-
+                    self::sendUserMadeActionData($msg, $user_array, $opponent_array, $battle_field, 'hand', $user_turn, $from, $SplBattleObj);
                 }
-                
-                if($users_passed_count == 2){//Если оба спасовали
+
+                //Если оба спасовали
+                if($users_passed_count == 2){
                     $battle_field = self::recalculateStrengthByMid($battle_field, $user_array, $opponent_array);//Финальный пересчет поля битвы
                     //Подсчет результатп раунда по очкам
                     $total_str = ['p1'=> 0, 'p2'=> 0];
@@ -307,38 +265,33 @@ class JotSocket extends BaseSocket
                     
                     //Очищение поля битвы от карт
                     $undead_cards = unserialize($battle->undead_cards);
+
+                    $user_can_left_card = false;
                     foreach($battle_field as $player => $rows){
                         if($player != 'mid'){
                             //Просчет рассовой способности монстров
-                            $monster_player = '';
                             if($user_array['player'] == $player){
                                 if($user_array['current_deck'] == 'monsters'){
-                                    $monster_player = $player;
-                                    $player_cards_count = 0;
-
+                                    $user_can_left_card = true;
                                     $card_to_left = self::cardsToLeft($battle_field, $player);
                                 }
                             }else{
                                 if($opponent_array['current_deck'] == 'monsters'){
-                                    $monster_player = $player;
-                                    $player_cards_count = 0;
-
+                                    $user_can_left_card = true;
                                     $card_to_left = self::cardsToLeft($battle_field, $player);
                                 }
                             }
-                            
 
                             foreach($rows as $row => $cards){
-
-                                //Заносим специальные карты в отбой
-                                if(!empty($cards['special'])){
+                                if($battle_field[$player][$row]['special'] != ''){
                                     if($player == $user_array['player']){
-                                        $user_array['user_discard'][] = $cards['special']['card'];
+                                        $user_array['user_discard'][] = $battle_field[$player][$row]['special'];
                                     }else{
-                                        $opponent_array['user_discard'][] = $cards['special']['card'];
+                                        $opponent_array['user_discard'][] = $battle_field[$player][$row]['special'];
                                     }
-                                    $cards['special'] = '';
                                 }
+                                $battle_field[$player][$row]['special'] = '';
+
                                 //Заносим карты воинов в отбой
                                 foreach($cards['warrior'] as $card_iter => $card_data){
                                     //Узнаем бессмертная ли текущая карта
@@ -369,47 +322,64 @@ class JotSocket extends BaseSocket
                                         }
 
                                     }else{
-                                        //Заносим карты воинов в отбой
-                                        if($player == $user_array['player']){
-                                            $user_array['user_discard'][] = $battle_field[$player][$row]['warrior'][$card_iter]['card'];
-                                        }else{
-                                            $opponent_array['user_discard'][] = $battle_field[$player][$row]['warrior'][$card_iter]['card'];
+                                        $allow_to_discard = true;
+                                        //если разрешено оставить карту после окончания раунда
+                                        if( (isset($card_to_left)) && ($user_can_left_card) ){
+                                            foreach($card_to_left as $key => $value){
+                                                $destignation = explode('_',$key);
+                                                if(($player == $destignation[0]) && ($row == $destignation[1]) && ($card_iter == $destignation[2])){
+                                                    $allow_to_discard = false;
+                                                    $user_can_left_card = false;
+                                                }
+                                            }
                                         }
-                                        unset($battle_field[$player][$row]['warrior'][$card_iter]);
-                                    }
-
-                                }
-                                if(isset($card_to_left)){
-                                    foreach($card_to_left as $key => $value){
-                                        $destignation = explode('_',$key);
-                                        $battle_field[$destignation[0]][$destignation[1]]['warrior'][] = ['card'=>$value['card'], 'strength'=>$value['card']['strength'], $value['login']];
+                                        
+                                        //Заносим карты воинов в отбой
+                                        if($allow_to_discard){
+                                            if($player == $user_array['player']){
+                                                $user_array['user_discard'][] = $battle_field[$player][$row]['warrior'][$card_iter]['card'];
+                                            }else{
+                                                $opponent_array['user_discard'][] = $battle_field[$player][$row]['warrior'][$card_iter]['card'];
+                                            }
+                                            unset($battle_field[$player][$row]['warrior'][$card_iter]);
+                                        }
                                     }
                                 }
                                 
                                 $battle_field[$player][$row]['warrior'] = array_values($battle_field[$player][$row]['warrior']);
                             }
+                        }else{
+                            foreach($battle_field[$player] as $card_iter => $card_data){
+                                if($card_data['login'] == $user_array['login']){
+                                    $user_array['user_discard'][] = self::transformObjToArr($battle_field[$player][$card_iter]['card']);
+                                }else{
+                                    $opponent_array['user_discard'][] = self::transformObjToArr($battle_field[$player][$card_iter]['card']);
+                                }
+                            }
                         }
                     }
-                    //очистка места под спецкарты
                     $battle_field['mid'] = [];
+                    $battle_field = self::recalculateStrengthByMid($battle_field, $user_array, $opponent_array);//Финальный пересчет поля битвы
                     
                     $battle->round_status = serialize($round_status);
                     $battle->user_id_turn = $user_turn_id;
                     $battle->battle_field = serialize($battle_field);
                     $battle->save();
+
+                    \DB::table('tbl_battle_members')->where('id', '=', $user_array['battle_member_id'])->update(['user_discard' => serialize($user_array['user_discard'])]);
+                    \DB::table('tbl_battle_members')->where('id', '=', $opponent_array['battle_member_id'])->update(['user_discard' => serialize($opponent_array['user_discard'])]);
+                    
                     //Обнуление значений пасования раундов
                     foreach($battle_members as $user_iter => $battle_data){
                         \DB::table('tbl_battle_members')->where('id', '=', $battle_data->id)->update(['round_passed' => 0]);
                     }
-                    $user_array['round_passed'] = 0;
-                    $opponent_array['round_passed'] = 0;
                     
-                    $result = ['message'=>'allUsersAreReady', 'cardSource'=>'hand', 'battleField' => $battle_field, 'battleInfo'=>$msg->ident->battleId, 'login'=>$user_turn];
-                    self::sendMessageToSelf($from, $result);
-                    self::sendMessageToOthers($from, $result, $this->battles[$msg->ident->battleId]);
+                    self::sendUserMadeActionData($msg, $user_array, $opponent_array, $battle_field, 'hand', $user_turn, $from, $SplBattleObj);
                 }
                 break;
 
+                
+            //Пользователь сделал действие
             case 'userMadeCardAction':
                 echo date('Y-m-d H:i:s')."\n";
                 if($battle -> fight_status == 2){
@@ -470,9 +440,9 @@ class JotSocket extends BaseSocket
                                 if(count($battle_field['mid']) > 6){
                                     //Кидает первую карту в отбой
                                     if($user_array['login'] == $battle_field['mid'][0]['login']){
-                                        $user_array['user_discard'][] = $battle_field['mid'][0]['card'];
+                                        $user_array['user_discard'][] = self::transformObjToArr($battle_field['mid'][0]['card']);
                                     }else{
-                                        $opponent_array['user_discard'][] = $battle_field['mid'][0]['card'];
+                                        $opponent_array['user_discard'][] = self::transformObjToArr($battle_field['mid'][0]['card']);
                                     }
                                     //Удаляем первую карту
                                     unset($battle_field['mid'][0]);
@@ -483,14 +453,14 @@ class JotSocket extends BaseSocket
                                 //Если логика карт предусматривает сразу уходить в отбой
                                 foreach($card->actions as $i => $action){
                                     if( (($action->action == '13')&&($card->type == 'special'))||($action->action == '24')||($action->action == '27')||($action->action == '29')){
-                                        $user_array['user_discard'][] = $card;
+                                        $user_array['user_discard'][] = self::transformObjToArr($card);
                                     }else{
                                         //Еcли в ряду уже есть спец карта
                                         if(!empty($battle_field[$user_battle_field_identificator][$field_row]['special'])){
                                             if($battle_field[$user_battle_field_identificator][$field_row]['special']['login'] == $user_array['login']){
-                                                $user_array['user_discard'][] = $battle_field[$user_battle_field_identificator][$field_row]['special']['card'];
+                                                $user_array['user_discard'][] = self::transformObjToArr($battle_field[$user_battle_field_identificator][$field_row]['special']['card']);
                                             }else{
-                                                $opponent_array['user_discard'][] = $battle_field[$user_battle_field_identificator][$field_row]['special']['card'];
+                                                $opponent_array['user_discard'][] = self::transformObjToArr($battle_field[$user_battle_field_identificator][$field_row]['special']['card']);
                                             }
                                         }
                                         $battle_field[$user_battle_field_identificator][$field_row]['special'] = ['card' => $card, 'strength' => $card->strength, 'login' => $user_array['login']];
@@ -499,7 +469,7 @@ class JotSocket extends BaseSocket
                             }
                         //Если карта относится к картам воинов 
                         }else{
-                            $battle_field[$user_battle_field_identificator][$field_row]['warrior'][] = ['card'=>  get_object_vars($card), 'strength'=>$card->strength, 'login' => $user_array['login']];
+                            $battle_field[$user_battle_field_identificator][$field_row]['warrior'][] = ['card'=>  self::transformObjToArr($card), 'strength'=>$card->strength, 'login' => $user_array['login']];
                         }
                         //Убираем карту из текущй колоды
                         switch($msg->source){
@@ -565,7 +535,7 @@ class JotSocket extends BaseSocket
                                             if(in_array($row, $action_data->CAkiller_ActionRow)){
                                                 //Если данное поле является полем противника
                                                 foreach($battle_field[$enemy_player][$row]['warrior'] as $i => $card_data){
-                                                    if(!is_array($card_data['card'])) $card_data['card'] = get_object_vars ($card_data['card']);
+                                                    $card_data['card'] = self::transformObjToArr($card_data['card']);
 
                                                     $rows_strength += $card_data['strength'];//Сумарная сила выбраных рядов
 
@@ -617,7 +587,7 @@ class JotSocket extends BaseSocket
                                                 }
 
                                                 foreach($cards['warrior'] as $card_iterator => $card_data){
-                                                    if(!is_array($card_data['card'])) $card_data['card'] = get_object_vars ($card_data['card']);
+                                                    $card_data['card'] = self::transformObjToArr($card_data['card']);
 
                                                     if($card_data['strength'] < $action_data->CAkiller_enemyStrenghtLimitToKill){
                                                         //Игнор к иммунитету
@@ -668,7 +638,7 @@ class JotSocket extends BaseSocket
                                 for($i=0; $i<$cards_to_destroy_count; $i++){
                                     foreach($battle_field[$cards_to_destroy[$i]['player']] as $rows => $cards){
                                         foreach($cards['warrior'] as $card_iterator => $card_data){
-                                            if(!is_array($card_data['card'])) $card_data['card'] = get_object_vars ($card_data['card']);
+                                            $card_data['card'] = self::transformObjToArr($card_data['card']);
 
                                             if($card_data['card']['id'] == $cards_to_destroy[$i]['card_id']){
 
@@ -731,9 +701,9 @@ class JotSocket extends BaseSocket
                                     foreach($card_data['card']->actions as $action_iterrator => $action){
                                         if(in_array($field_row, $action->CAfear_ActionRow)){
                                             if($user_array['login'] == $card_data['login']){
-                                                $user_array['user_discard'][] = $card_data['card'];
+                                                $user_array['user_discard'][] = self::transformObjToArr($card_data['card']);
                                             }else{
-                                                $opponent_array['user_discard'][] = $card_data['card'];
+                                                $opponent_array['user_discard'][] = self::transformObjToArr($card_data['card']);
                                             }
                                             unset($battle_field['mid'][$i]);
                                         }
@@ -803,7 +773,7 @@ class JotSocket extends BaseSocket
                                     if($card_data['card']->id == $msg->retrieve){
                                         unset($battle_field[$msg->player][$field_row]['warrior'][$i]);
                                         $battle_field[$msg->player][$field_row]['warrior'] = array_values($battle_field[$msg->player][$field_row]['warrior']);
-                                        $user_array['user_hand'][] = get_object_vars($card_data['card']);
+                                        $user_array['user_hand'][] = self::transformObjToArr($card_data['card']);
                                     }
                                 }
                             }
@@ -814,9 +784,7 @@ class JotSocket extends BaseSocket
                                 $allow_change_turn = 0;
                                 if(!empty($user_array['user_deck'])){
                                     foreach($user_array['user_deck'] as $i => $card_data){
-                                        if(!is_array($card_data)){
-                                            $card_data = get_object_vars($card_data);
-                                        }
+                                        $card_data = self::transformObjToArr($card_data);
                                         if($card_data['type'] != 'special'){
                                             $allow_change_turn = 1;
                                         }
@@ -836,9 +804,7 @@ class JotSocket extends BaseSocket
                                 $allow_change_turn = 0;
                                 if(!empty($user_array['user_discard'])){
                                     foreach($user_array['user_discard'] as $i => $card_data){
-                                        if(!is_array($card_data)){
-                                            $card_data = get_object_vars($card_data);
-                                        }
+                                        $card_data = self::transformObjToArr($card_data);
                                         if($card_data['type'] != 'special'){
                                             $allow_change_turn = 1;
                                         }
@@ -953,67 +919,32 @@ class JotSocket extends BaseSocket
                         \DB::table('tbl_battle_members')->where('id', '=', $msg->ident->battleId)->update(['round_passed' => '1']);
                     }
 
-                    $user_discard_count = count($user_array['user_discard']);
-                    $user_deck_count = count($user_array['user_deck']);
+                    $user_array['user_deck'] = array_values($user_array['user_deck']);
+                    $user_array['user_hand'] = array_values($user_array['user_hand']);
+                    $user_array['user_discard'] = array_values($user_array['user_discard']);
 
-                    $oponent_discard_count = count($opponent_array['user_discard']);
-                    $oponent_deck_count = count($opponent_array['user_deck']);
-
-                    $user_array['user_deck'] = serialize(array_values($user_array['user_deck']));
-                    $user_array['user_hand'] = serialize(array_values($user_array['user_hand']));
-                    $user_array['user_discard'] = serialize(array_values($user_array['user_discard']));
-
-                    $opponent_array['user_deck'] = serialize(array_values($opponent_array['user_deck']));
-                    $opponent_array['user_hand'] = serialize(array_values($opponent_array['user_hand']));
-                    $opponent_array['user_discard'] = serialize(array_values($opponent_array['user_discard']));
+                    $opponent_array['user_deck'] = array_values($opponent_array['user_deck']);
+                    $opponent_array['user_hand'] = array_values($opponent_array['user_hand']);
+                    $opponent_array['user_discard'] = array_values($opponent_array['user_discard']);
+                    
                     //Сохраняем руку, колоду и отбой опльзователя
-                    \DB::table('tbl_battle_members')->where('id', '=', $user_array['battle_member_id'])->update(['user_deck'=>$user_array['user_deck'], 'user_hand' => $user_array['user_hand'], 'user_discard' => $user_array['user_discard'], 'card_source'=>$card_source]);
-                    \DB::table('tbl_battle_members')->where('id', '=', $opponent_array['battle_member_id'])->update(['user_deck'=>$opponent_array['user_deck'], 'user_hand' => $opponent_array['user_hand'], 'user_discard' => $opponent_array['user_discard']]);
+                    \DB::table('tbl_battle_members')->where('id', '=', $user_array['battle_member_id'])->update([
+                        'user_deck'     => serialize($user_array['user_deck']),
+                        'user_hand'     => serialize($user_array['user_hand']),
+                        'user_discard'  => serialize($user_array['user_discard']),
+                        'card_source'   => $card_source
+                    ]);
+                    \DB::table('tbl_battle_members')->where('id', '=', $opponent_array['battle_member_id'])->update([
+                        'user_deck'     => serialize($opponent_array['user_deck']),
+                        'user_hand'     => serialize($opponent_array['user_hand']),
+                        'user_discard'  => serialize($opponent_array['user_discard'])
+                    ]);
                     //Сохраняем поле битвы
                     $battle->battle_field = serialize($battle_field);
                     $battle->user_id_turn = $user_turn_id;
                     $battle->save();
-
-                    /*
-                     * Выход:
-                     * message = userMadeAction -> Пользователь сделал действие
-                     * field_data -> карты на поле
-                     * user_hand -> карты руки пользователя
-                     * counts [user_discard_count, opon_discard_count, opon_deck_count]
-                     */
-
-                    $result = [
-                        'message'       => 'userMadeAction',
-                        'field_data'    => $battle_field,
-                        'user_hand'     => unserialize($user_array['user_hand']),
-                        'user_deck'     => unserialize($user_array['user_deck']),
-                        'user_discard'  => unserialize($user_array['user_discard']),
-                        'counts'        => [
-                            'user_deck'    => $user_deck_count,
-                            'user_discard' => $user_discard_count,
-                            'opon_discard' => $oponent_discard_count,
-                            'opon_deck'    => $oponent_deck_count
-                        ],
-                        'battleInfo'    => $msg->ident->battleId,
-                        'login'         => $user_turn,
-                        'cardSource'    => $card_source
-                    ];
-
-                    self::sendMessageToSelf($from, $result); //Отправляем результат отправителю
-                    $result = [
-                        'message'       => 'userMadeAction',
-                        'field_data'    => $battle_field,
-                        'user_discard'  => unserialize($opponent_array['user_discard']),
-                        'counts'        => [
-                            'user_deck'    => $oponent_deck_count,
-                            'user_discard' => $oponent_discard_count,
-                            'opon_discard' => $user_discard_count,
-                            'opon_deck'    => $user_deck_count
-                        ],
-                        'battleInfo'    => $msg->ident->battleId,
-                        'login'         => $user_turn
-                    ];
-                    self::sendMessageToOthers($from, $result, $this->battles[$msg->ident->battleId]);
+                    
+                    self::sendUserMadeActionData($msg, $user_array, $opponent_array, $battle_field, $card_source, $user_turn, $from, $SplBattleObj);
                 }
                 break;
         }
@@ -1053,7 +984,7 @@ class JotSocket extends BaseSocket
         $deck_card_count = count($deck);
         for($i=0; $i<$deck_card_count; $i++){
             if(!is_array($deck[$i])){
-                $deck[$i] = get_object_vars($deck[$i]);
+                $deck[$i] = self::transformObjToArr($deck[$i]);
             }
             if(Crypt::decrypt($deck[$i]['id']) == Crypt::decrypt($card->id)){//Если id сходятся
                 unset($deck[$i]);//Сносим карту из входящей колоды
@@ -1079,11 +1010,7 @@ class JotSocket extends BaseSocket
             if($field != 'mid'){
                 foreach($rows as $row => $cards){
                     foreach($cards['warrior'] as $i => $card_data){
-                        if(!is_array($card_data['card'])){;
-                            $card_array_data = get_object_vars($card_data['card']);
-                        }else{
-                            $card_array_data = $card_data['card'];
-                        }
+                        $card_array_data = self::transformObjToArr($card_data['card']);
                         $battle_field[$field][$row]['warrior'][$i]['strength'] = $card_array_data['strength'];
                     }
                 }
@@ -1106,10 +1033,10 @@ class JotSocket extends BaseSocket
                 foreach ($rows as $row => $cards){
                     foreach($cards['warrior'] as $i => $card_data){
 
-                        if(!is_array($card_data['card'])) $card_data['card'] = get_object_vars($card_data['card']);
+                        $card_data['card'] = self::transformObjToArr($card_data['card']);
 
                         foreach($card_data['card']['actions'] as $j => $action){
-                            if(!is_array($action)) $action = get_object_vars ($action);
+                            $action = self::transformObjToArr($action);
                             if($action['action'] == '16'){
                                 $actions_array_brotherhood[$field][Crypt::decrypt($card_data['card']['id'])] = $card_data;
                                 break;
@@ -1131,9 +1058,9 @@ class JotSocket extends BaseSocket
                 }
             }else{
                 foreach($rows as $card_data){
-                    if(!is_array($card_data['card'])) $card_data['card'] = get_object_vars($card_data['card']);
+                    $card_data['card'] = self::transformObjToArr($card_data['card']);
                     foreach($card_data['card']['actions']as $j => $action){
-                        if(!is_array($action)) $action = get_object_vars ($action);
+                        $action = self::transformObjToArr($action);
                         if($action['action'] == '21'){
                             if(!isset($actions_array_fear[Crypt::decrypt($card_data['card']['id'])])){
                                 $actions_array_fear['mid'][Crypt::decrypt($card_data['card']['id'])] = $card_data;
@@ -1143,12 +1070,12 @@ class JotSocket extends BaseSocket
                 }
             }
         }
-
+        
         //Применение действия "Страшный" к картам
         foreach($actions_array_fear as $source => $cards){
 
             foreach($cards as $card_id => $card_data){
-                if(!is_array($card_data)) $card_data = get_object_vars($card_data);
+                $card_data = self::transformObjToArr($card_data);
 
                 $user_current_deck = ($card_data['login'] == $user_array['player']) ? $user_array['current_deck'] : $opponent_array['current_deck'];
 
@@ -1231,7 +1158,7 @@ class JotSocket extends BaseSocket
 
         //Применение "Поддержка" к картам
         foreach($actions_array_support as $card_id => $card_data){
-            if(!is_array($card_data['card'])) $card_data['card'] = get_object_vars($card_data['card']);
+            $card_data['card'] = self::transformObjToArr($card_data['card']);
 
             if($card_data['login'] == $user_array['login']){
                 $player = $user_array['player'];
@@ -1259,8 +1186,7 @@ class JotSocket extends BaseSocket
 
             foreach($target_rows as $row_iter => $row){
                 foreach($battle_field[$player][$row]['warrior'] as $i => $card){
-
-                    if(!is_array($card['card'])) $card['card'] = get_object_vars ($card['card']);
+                    $card['card'] = self::transformObjToArr($card['card']);
 
                     $allow_support = true;
                     foreach($card['card']['actions'] as $j => $action){
@@ -1364,10 +1290,10 @@ class JotSocket extends BaseSocket
         $cards_to_brotherhood = [];
         foreach($actions_array_brotherhood as $player => $cards_array){
             foreach($cards_array as $card_id => $card_data){
-                if(!is_array($card_data['card'])) $card_data['card'] = get_object_vars($card_data['card']);
+                $card_data['card'] = self::transformObjToArr($card_data['card']);
 
                 foreach($card_data['card']['actions'] as $action_iter => $action){
-                    if(!is_array($action)) $action = get_object_vars($action);
+                    $action = self::transformObjToArr($action);
 
                     if($action['action'] == '16'){
                         if($action['CAbloodBro_actionToGroupOrSame'] == 0){
@@ -1466,6 +1392,7 @@ class JotSocket extends BaseSocket
                 }
             }
         }
+
         return $battle_field;
     }
 
@@ -1488,7 +1415,6 @@ class JotSocket extends BaseSocket
     
     
     protected static function cardsToLeft($battle_field, $player){
-        var_dump($player);
         $rows_to_card_left = [];
         $cards_to_left = [];
         foreach($battle_field[$player] as $row => $row_data){
@@ -1513,5 +1439,56 @@ class JotSocket extends BaseSocket
         
         $card_to_left = $cards_to_left[rand(0, count($cards_to_left)-1)];
         return $card_to_left;
+    }
+    
+    
+    public static function transformObjToArr($card){
+        if(!is_array($card)){
+            $card = get_object_vars($card);
+        }
+        return $card;
+    }
+
+
+    
+    public static function sendUserMadeActionData($msg, $user_array, $opponent_array, $battle_field, $card_source, $user_turn, $from, $SplBattleObj){
+        $user_discard_count = count($user_array['user_discard']);
+        $user_deck_count = count($user_array['user_deck']);
+
+        $oponent_discard_count = count($opponent_array['user_discard']);
+        $oponent_deck_count = count($opponent_array['user_deck']);
+
+        $result = [
+            'message'       => 'userMadeAction',
+            'field_data'    => $battle_field,
+            'user_hand'     => $user_array['user_hand'],
+            'user_deck'     => $user_array['user_deck'],
+            'user_discard'  => $user_array['user_discard'],
+            'counts'        => [
+                'user_deck'    => $user_deck_count,
+                'user_discard' => $user_discard_count,
+                'opon_discard' => $oponent_discard_count,
+                'opon_deck'    => $oponent_deck_count
+            ],
+            'battleInfo'    => $msg->ident->battleId,
+            'login'         => $user_turn,
+            'cardSource'    => $card_source
+        ];
+        self::sendMessageToSelf($from, $result); //Отправляем результат отправителю
+
+        $result = [
+            'message'       => 'userMadeAction',
+            'field_data'    => $battle_field,
+            'user_discard'  => $opponent_array['user_discard'],
+            'counts'        => [
+                'user_deck'    => $oponent_deck_count,
+                'user_discard' => $oponent_discard_count,
+                'opon_discard' => $user_discard_count,
+                'opon_deck'    => $user_deck_count
+            ],
+            'battleInfo'    => $msg->ident->battleId,
+            'login'         => $user_turn
+        ];
+        self::sendMessageToOthers($from, $result, $SplBattleObj[$msg->ident->battleId]);
     }
 }

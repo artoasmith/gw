@@ -59,13 +59,6 @@ $(window).load(function(){
                     //Все пользователи готовы к игре
                     case 'allUsersAreReady':
                         changeTurnIndicator(result.login);
-                        if(result.battleField !== undefined){
-                            console.log('buildBattleField is runed');
-                            buildBattleField(result.battleField);
-                            recalculateBattleField();
-                        }else{
-                            console.log('battleField is undefined');
-                        }
                     break;
                     //Сыграная карта пользователя предусматривает отыгрыш карты из отбоя или колоды
                     case 'ownCardsData':
