@@ -186,7 +186,8 @@ class SiteGameController extends BaseController
                         '2' => ['special' => '', 'warrior' => []]
                     ],
                     'mid'=>[]
-                ])
+                ]),
+                'undead_cards'      => serialize(['p1'=>[], 'p2'=>[]])
             ]);
 
             if($result === false){

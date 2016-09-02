@@ -59,11 +59,12 @@ $(window).load(function(){
                     //Все пользователи готовы к игре
                     case 'allUsersAreReady':
                         changeTurnIndicator(result.login);
-                        if( (result.battleField != undefined) && (result.battleField == 'empty') ){
-                            $('.convert-battle-front .convert-stuff .field-for-cards .image-inside-line').empty();
-                            $('.convert-battle-front .convert-stuff .field-for-cards .cards-row-wrap').empty();
+                        if(result.battleField !== undefined){
+                            console.log('buildBattleField is runed');
+                            buildBattleField(result.battleField);
+                            recalculateBattleField();
                         }else{
-                            console.log('no btlField result');
+                            console.log('battleField is undefined');
                         }
                     break;
                     //Сыграная карта пользователя предусматривает отыгрыш карты из отбоя или колоды
@@ -89,28 +90,10 @@ $(window).load(function(){
                     
                     //Пользователь произвел действие
                     case 'userMadeAction':
-                        //Очищение полей
-                        $('.mezhdyblock #sortable-cards-field-more, .convert-battle-front #p1 .cards-row-wrap, .convert-battle-front #p1 .image-inside-line, .convert-battle-front #p2 .cards-row-wrap, .convert-battle-front #p2 .image-inside-line').empty();
-
-                        changeTurnIndicator(result.login);//смена индикатора хода
+                        //смена индикатора хода
+                        changeTurnIndicator(result.login);
                         //Отображение поля битвы
-                        for(var fieldType in result.field_data){
-                            if(fieldType == 'mid'){
-                                for(var i=0; i<result.field_data['mid'].length; i++){
-                                    $('.mezhdyblock #sortable-cards-field-more').append(createFieldCardView(result.field_data['mid'][i]['card'], 0, false));
-                                }
-                            }else{
-                                for(var i=0; i<result.field_data[fieldType].length; i++){
-                                    var row = intRowToField(i);
-                                    for(var j=0; j<result.field_data[fieldType][i]['warrior'].length; j++){
-                                        $('.convert-battle-front #'+fieldType+' .convert-stuff '+row+' .cards-row-wrap').append(createFieldCardView(result.field_data[fieldType][i]['warrior'][j]['card'], result.field_data[fieldType][i]['warrior'][j]['strength'], false));
-                                    }
-                                    if(result.field_data[fieldType][i]['special'] != ''){
-                                        $('.convert-battle-front #'+fieldType+' .convert-stuff '+row+' .image-inside-line').append(createCardDescriptionView(result.field_data[fieldType][i]['special']['card'], 0, false));
-                                    }
-                                }
-                            }
-                        }
+                        buildBattleField(result.field_data);
                         //Данные о колоде и отбое пользователей
                         if(result.counts !== undefined){
                             //колода противника
@@ -156,19 +139,7 @@ $(window).load(function(){
                         }
                         createDeckLayers();//Переформирование отображения отбоя и колоды
                         createCardLayers($('#sortableUserCards li'));//Переформирование отображения руки
-                        //Переформирование отображения поля битвы противника
-                        $('.oponent .convert-stuff .field-for-cards').each(function(){
-                            var handler = $('.oponent #'+$(this).attr('id')+' .cards-row-wrap li');
-                            createCardLayers(handler);
-                        });
-                        //Переформирование отображения поля битвы пользователя
-                        $('.user .convert-stuff .field-for-cards').each(function(){
-                            var handler = $('.user #'+$(this).attr('id')+' .cards-row-wrap li');
-                            createCardLayers(handler);
-                        });
-                        //Переформирование отображения поля боковых спец. карт
-                        createCardLayers($('.mezhdyblock #sortable-cards-field-more li'));
-                        recalculateBattleField();//Пересчет значений силы
+                        
                     break;
                 }
                 //Просчет перехода хода и дальнейших действий
@@ -668,6 +639,42 @@ $(window).load(function(){
                 '</li>');
             }
         });
+    }
+    
+    function buildBattleField(fieldData){
+        //Очищение полей
+        $('.mezhdyblock #sortable-cards-field-more, .convert-battle-front #p1 .cards-row-wrap, .convert-battle-front #p1 .image-inside-line, .convert-battle-front #p2 .cards-row-wrap, .convert-battle-front #p2 .image-inside-line').empty();
+        for(var fieldType in fieldData){
+            if(fieldType == 'mid'){
+                for(var i=0; i<fieldData['mid'].length; i++){
+                    $('.mezhdyblock #sortable-cards-field-more').append(createFieldCardView(fieldData['mid'][i]['card'], 0, false));
+                }
+            }else{
+                for(var i=0; i<fieldData[fieldType].length; i++){
+                    var row = intRowToField(i);
+                    for(var j=0; j<fieldData[fieldType][i]['warrior'].length; j++){
+                        $('.convert-battle-front #'+fieldType+' .convert-stuff '+row+' .cards-row-wrap').append(createFieldCardView(fieldData[fieldType][i]['warrior'][j]['card'], fieldData[fieldType][i]['warrior'][j]['strength'], false));
+                    }
+                    if(fieldData[fieldType][i]['special'] != ''){
+                        $('.convert-battle-front #'+fieldType+' .convert-stuff '+row+' .image-inside-line').append(createCardDescriptionView(fieldData[fieldType][i]['special']['card'], 0, false));
+                    }
+                }
+            }
+        }
+        //Переформирование отображения поля битвы противника
+        $('.oponent .convert-stuff .field-for-cards').each(function(){
+            var handler = $('.oponent #'+$(this).attr('id')+' .cards-row-wrap li');
+            createCardLayers(handler);
+        });
+        //Переформирование отображения поля битвы пользователя
+        $('.user .convert-stuff .field-for-cards').each(function(){
+            var handler = $('.user #'+$(this).attr('id')+' .cards-row-wrap li');
+            createCardLayers(handler);
+        });
+        //Переформирование отображения поля боковых спец. карт
+        createCardLayers($('.mezhdyblock #sortable-cards-field-more li'));
+        recalculateBattleField();//Пересчет значений силы
+        console.log('battleField id builted');
     }
     //Действия по умолчанию
     //Пересчет сил пользователей

@@ -22,6 +22,7 @@ class CreateBattleTabe extends Migration
             $table->integer('user_id_turn')->unsigned(); //ID Последнего походившего пользователя (не того который сейчас ходит)
             $table->text('round_status'); //массив array[p1 => 'количество выграных раундов', p2 => 'количество выграных раундов']
             $table->text('battle_field');
+            $table->text('undead_cards');//массив отыгравших карт с действием "Бессмертный"
             $table->timestamps();
         });
     }
