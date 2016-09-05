@@ -80,6 +80,15 @@ $(window).load(function(){
                         allowCardChoise = 0;
                         changeTurnIndicator(null);
                     break;
+                    //Игра закончена
+                    case 'gameEnds':
+                        showPopup('<p>Игра окончена.</p>'+result.gameResult+'<p>Вы можете <a href="/">вернуться в меню</a> или остаться и наслаждаться победой/проиграшем (нужное подчеркнуть)</p>');
+                        allowActions = 0;
+                        userMadeAction = 1;
+                        cardSource = 'hand';
+                        allowCardChoise = 0;
+                        changeTurnIndicator(null);
+                    break;
                     
                     //Пользователь произвел действие
                     case 'userMadeAction':

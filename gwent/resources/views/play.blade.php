@@ -75,6 +75,7 @@
         }
         $players_count++;
     }
+    //dd($players['allied']);
     ?>
 
 <header class="header">
