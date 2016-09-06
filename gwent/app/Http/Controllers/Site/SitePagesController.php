@@ -71,7 +71,7 @@ class SitePagesController extends BaseController
         //Расы
         $races = RaceModel::where('race_type', '=', 'race')->orderBy('position','asc')->get();
         //Активные для данной лиги столы
-        $battles = BattleModel::where('league','=',$current_user_league)->where('fight_status', '<', 3)->where('')->get();
+        $battles = BattleModel::where('league','=',$current_user_league)->where('fight_status', '<', 3)->get();
 
         $battlesCount = [];
         if($battles->toArray()){
@@ -92,7 +92,7 @@ class SitePagesController extends BaseController
         $user_to_update = User::find($user['id']);
         $user_to_update -> user_current_deck = $request->input('currentRace');
         $user_to_update -> save();
-
+        
         return view('game', [
             'races'         => $races,
             'deck_weight'   => Crypt::encrypt($deck_weight),
@@ -100,7 +100,8 @@ class SitePagesController extends BaseController
             'league'        => Crypt::encrypt($current_user_league)
         ]);
     }
-
+    
+    
     //Страница боя
     public function play($id){
         SiteFunctionsController::updateConnention();

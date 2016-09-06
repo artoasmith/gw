@@ -125,7 +125,8 @@ class SiteGameController extends BaseController
                 'user_ready'    => 0,
                 'round_passed'  => 0,
                 'rounds_won'    => 0,
-                'card_source'   => 'hand'
+                'card_source'   => 'hand',
+                'card_to_play'  => 'a:0:{}'
             ]);
         }else{
             $user_battle = BattleMembersModel::find($user_is_battle_member[0]->id);
@@ -140,6 +141,7 @@ class SiteGameController extends BaseController
             $user_battle -> round_passed    = 0;
             $user_battle -> rounds_won      = 0;
             $user_battle -> card_source     = 'hand';
+            $user_battle -> card_to_play    = 'a:0:{}';
             $result =  $user_battle -> save();
         }
         return $result;
@@ -186,7 +188,8 @@ class SiteGameController extends BaseController
                     ],
                     'mid'=>[]
                 ]),
-                'undead_cards'      => serialize(['p1'=>[], 'p2'=>[]])
+                'undead_cards'      => serialize(['p1'=>[], 'p2'=>[]]),
+                'magic_usage'       => serialize(['p1'=>[], 'p2'=>[]])
             ]);
 
             if($result === false){
@@ -502,21 +505,22 @@ class SiteGameController extends BaseController
         return self::getMagicData($data);
     }
 
-    public function getMagicData($id){
-        $id = intval($id);
-        if($id<=0)
-            return '';
+    public static function getMagicData($id){
+        if(strlen($id) > 11){
+            $id = Crypt::decrypt($id);
+        }
+        if($id<=0) return '';
 
         $magic = MagicEffectsModel::find($id);
-        if(!$magic)
-            return '';
+        if(!$magic) return '';
 
         return json_encode([
-            'id'        => $magic['id'],
+            'id'        => Crypt::encrypt($magic['id']),
             'title'     => $magic['title'],
             'img_url'   => $magic['img_url'],
             'descript'  => $magic['description'],
             'energy_cost'  => $magic['energy_cost'],
+            'actions'   => unserialize($magic['effect_actions'])
         ]);
     }
 }

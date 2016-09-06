@@ -26,7 +26,8 @@
     $players_count = 0;   
 
     $battle_field = unserialize($battle_data->battle_field);
-    //dd($battle_field);
+    
+    $magic_usage = unserialize($battle_data->magic_usage);
 
     if($user['id'] == $battle_data->creator_id){
         $user_field_identificator = 'p1';
@@ -640,8 +641,8 @@
                     <!-- Активная магия -->
                     @if(isset($players['allied']['user_magic']) && !empty($players['allied']['user_magic']))
                         @foreach($players['allied']['user_magic'] as $i => $value)
-                        <li data-cardid="{{ $value->id }}" >
-                            <img src="/img/card_images/{{$value->img_url }}" alt="{{$value->slug}}" title="{{$value->title}}" onclick="showMagic($(this));" data-id="{{ $value->id }}">
+                        <li data-cardid="{{ \Crypt::encrypt($value->id) }}" class="@if(in_array($value->id,$magic_usage[$user_field_identificator])){{disactive}}@endif">
+                            <img src="/img/card_images/{{$value->img_url }}" alt="{{$value->slug}}" title="{{$value->title}}">
                         </li>
                         @endforeach
                     @endif

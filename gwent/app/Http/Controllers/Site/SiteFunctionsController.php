@@ -412,9 +412,9 @@ class SiteFunctionsController extends BaseController
     }
 
 
-	//Если пользователь начал проявлять активность - делаем его активным
-	public static function updateConnention(){
-		$user = Auth::user();
+    //Если пользователь начал проявлять активность - делаем его активным
+    public static function updateConnention(){
+        $user = Auth::user();
         $user_plying_status = self::checkUserIsPlaying();
         //Если пользователь не в бою
         if($user_plying_status === 0){
@@ -422,10 +422,10 @@ class SiteFunctionsController extends BaseController
                 User::where('login', '=', $user['login'])->update(['updated_at' => date('Y-m-d H:i:s'), 'user_online' => '1']);
             }
         }
-	}
+    }
 
-    //Если пользователь начал проявлять активность - делаем его активным (Force метод)
-	public static function updateUserInBattleConnection($user_id = 0){
+//Если пользователь начал проявлять активность - делаем его активным (Force метод)
+    public static function updateUserInBattleConnection($user_id = 0){
         $user = Auth::user();
 	    if($user_id == 0){
             $user_id = $user['id'];
