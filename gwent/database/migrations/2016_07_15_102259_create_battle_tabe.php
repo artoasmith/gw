@@ -23,6 +23,7 @@ class CreateBattleTabe extends Migration
             $table->text('round_status'); //массив array[p1 => 'количество выграных раундов', p2 => 'количество выграных раундов']
             $table->text('battle_field');
             $table->text('undead_cards');//массив отыгравших карт с действием "Бессмертный"
+            $table->text('magic_usage');//массив отыгравших магических эффектов
             $table->timestamps();
         });
     }
