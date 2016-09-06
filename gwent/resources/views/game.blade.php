@@ -32,7 +32,6 @@ $errors = $errors->all();
                 {{ Form::submit('Создать Стол') }}
             {{ Form::close() }}
 
-
             <div class="tables-list">
                 @foreach($battles as $value)
                     <p style="margin: 10px;">

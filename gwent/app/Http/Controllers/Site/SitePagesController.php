@@ -1,22 +1,23 @@
 <?php
 namespace App\Http\Controllers\Site;
 
-use App\EtcDataModel;
-use App\RaceModel;
-use App\LeagueModel;
 use App\BattleModel;
-use App\User;
 use App\BattleMembersModel;
-use Validator;
 use App\CardsModel;
+use App\EtcDataModel;
+use App\LeagueModel;
+use App\RaceModel;
+use App\User;
 use App\UserAdditionalDataModel;
-use  Illuminate\Support\Facades\Auth;
-use Illuminate\Foundation\Bus\DispatchesJobs;
-use Illuminate\Routing\Controller as BaseController;
-use Illuminate\Foundation\Validation\ValidatesRequests;
+use Crypt;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Foundation\Auth\Access\AuthorizesResources;
+use Illuminate\Foundation\Bus\DispatchesJobs;
+use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controller as BaseController;
+use Illuminate\Support\Facades\Auth;
+use Validator;
 
 class SitePagesController extends BaseController
 {
@@ -70,7 +71,7 @@ class SitePagesController extends BaseController
         //Расы
         $races = RaceModel::where('race_type', '=', 'race')->orderBy('position','asc')->get();
         //Активные для данной лиги столы
-        $battles = BattleModel::where('league','=',$current_user_league)->where('fight_status', '<', 2)->get();
+        $battles = BattleModel::where('league','=',$current_user_league)->where('fight_status', '<', 3)->where('')->get();
 
         $battlesCount = [];
         if($battles->toArray()){
@@ -94,9 +95,9 @@ class SitePagesController extends BaseController
 
         return view('game', [
             'races'         => $races,
-            'deck_weight'   => base64_encode($deck_weight),
+            'deck_weight'   => Crypt::encrypt($deck_weight),
             'battles'       => $battles,
-            'league'        => base64_encode($current_user_league)
+            'league'        => Crypt::encrypt($current_user_league)
         ]);
     }
 
@@ -110,14 +111,13 @@ class SitePagesController extends BaseController
         }
 
         $sec = intval(getenv('GAME_SEC_TIMEOUT'));
-        if($sec<=0)
-            $sec = 60;
-        
+        if($sec<=0) $sec = 60;
+
         $user = Auth::user();
         $hash = md5(getenv('SECRET_MD5_KEY').$user->id);
         return view('play', [
             'battle_data' => $battle_data,
-            'hash'=>$hash, 
+            'hash'=>$hash,
             'user'=>$user,
             'dom'=>getenv('APP_DOMEN_NAME'),
             'timeOut'=>$sec
@@ -143,7 +143,7 @@ class SitePagesController extends BaseController
         $races = RaceModel::orderBy('position','asc')->get();
         return view('market', ['races' => $races]);
     }
-    
+
     //Страница "Волшебство"
     public function marketEffects(){
         SiteFunctionsController::updateConnention();

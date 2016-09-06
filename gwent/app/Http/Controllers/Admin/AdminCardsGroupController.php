@@ -49,9 +49,11 @@ class AdminCardsGroupController extends BaseController
             'has_cards_ids' => serialize($cards)
         ]);
 
-        $group = serialize([$result->id]);
         foreach($cards as $i => $card_id){
-            \DB::table('tbl_card')->where('id','=',$card_id)->update(['card_groups' => $group]);
+            $card_data = \DB::table('tbl_card')->select('id','card_groups')->where('id','=',$card_id)->get();
+            $card_groups = unserialize($card_data[0]->card_groups);
+            $card_groups[] = $result->id;
+            \DB::table('tbl_card')->where('id','=',$card_id)->update(['card_groups' => serialize($card_groups)]);
         }
 
         if($result !== false){
@@ -66,19 +68,52 @@ class AdminCardsGroupController extends BaseController
         //Превращаем название в транслитезированую ссылку
         $slug = AdminFunctions::str2url($data['title']);
 
-        //Массив карт входящих в группу
-        $cards = array_values(array_unique(json_decode($data['cards'])));
-        foreach($cards as $i => $card_id){
-            \DB::table('tbl_card')->where('id','=',$card_id)->update(['card_groups' => $group]);
+        $new_cards_in_group = array_values(array_unique(json_decode($data['cards'])));
+        
+        $old_cards_in_group = [];
+        $temp = \DB::table('tbl_card')->select('id','card_groups')->where('card_groups','like','%'.$data['id'].'%')->get();
+
+        foreach($temp as $card_iter => $card_data){
+            $card_groups = unserialize($card_data->card_groups);
+            if(in_array($data['id'], $card_groups)){
+                $old_cards_in_group[] = $card_data->id;
+            }
         }
-
-        //Изменение группы
-        $group_data = CardGroupsModel::find($data['id']);
-        $group_data -> title            = $data['title'];
-        $group_data -> slug             = $slug;
-        $group_data -> has_cards_ids    = serialize($cards);
-
-        $result = $group_data -> save();
+        $old_cards_in_group = array_values(array_unique($old_cards_in_group));
+        
+        $card_array_to_drop_from_group = [];
+        
+        foreach($old_cards_in_group as $card_iter => $card_id){
+            if(!in_array($card_id, $new_cards_in_group)){
+                $card_array_to_drop_from_group[] = $card_id;
+            }
+        }
+        
+        foreach($card_array_to_drop_from_group as $card_iter => $card_id){
+            $card_data = \DB::table('tbl_card')->select('id','card_groups')->where('id','=',$card_id)->get();
+            $card_groups = unserialize($card_data[0]->card_groups);
+            for($i=0; $i<count($card_groups); $i++){
+                if($card_groups[$i] == $data['id']){
+                    unset($card_groups[$i]);
+                }
+            }
+            $card_groups = array_values(array_unique($card_groups));
+            \DB::table('tbl_card')->where('id','=',$card_id)->update(['card_groups' => serialize($card_groups)]);
+        }
+        
+        foreach($new_cards_in_group as $card_iter => $card_id){
+            $card_data = \DB::table('tbl_card')->select('id','card_groups')->where('id','=',$card_id)->get();
+            $card_groups = unserialize($card_data[0]->card_groups);
+            $card_groups[] = $data['id'];
+            $card_groups = array_values(array_unique($card_groups));
+            \DB::table('tbl_card')->where('id','=',$card_id)->update(['card_groups' => serialize($card_groups)]);
+        }
+        
+        $result = CardGroupsModel::find($data['id']);
+        $result -> title = $data['title'];
+        $result -> slug = $slug;
+        $result -> has_cards_ids = serialize($new_cards_in_group);
+        $result -> save();
 
         if($result != false){
             return 'success';

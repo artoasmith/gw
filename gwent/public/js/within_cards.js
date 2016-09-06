@@ -283,14 +283,13 @@ $(document).ready(function(){
                 //создание целевых рас array[0 - json-массив, 1- строка описания]
                 var temp = setCheckboxesToJson($('td .container-wrap input[name=CAfury_enemyRace]:checked'));
                 realActionRow += ', "CAfury_enemyRace": ' + temp[0];
-                displayActionRow += ' - Действует на рассу - ' + temp[1];
-
+                displayActionRow += ' - Карты противника имеют расу - ' + temp[1];
+                
                 //Условие "У противника есть определенная группа карт"
                 temp = checkGroupTable($('select[name=CAfury_group]'));
 
                 realActionRow += ', "CAfury_group": ' + temp[0];
                 displayActionRow += ' - Противник имеет карту из группы: ' + temp[1];
-
 
                 //Условие "Противник имеет определенное количество воинов в ряду"
                 realActionRow += ', "CAfury_enemyHasSuchNumWarriors" : "' + $('input[name=CAfury_enemyHasSuchNumWarriors]').val() + '"';
@@ -352,6 +351,9 @@ $(document).ready(function(){
                 realActionRow += ', "CAsorrow_ActionRow": ' + temp[0];
                 displayActionRow += " - Действует на ряд: " + temp[1];
 
+                //Условие "Область действия"
+                realActionRow += ', "CAsorrow_actionToAll": "'+ $('input[name=CAsorrow_actionToAll]:checked').val() + '"';
+                displayActionRow += ' - Область действия: ' + $('input[name=CAsorrow_actionToAll]:checked').next().text() + ';<br>';
                 //Условие "Действует на своих"
                 realActionRow += ', "CAsorrow_actionTeamate": "' + $('input[name=CAsorrow_actionTeamate]:checked').val() + '"}';
                 displayActionRow += ' - Действует на своих: ' + $('input[name=CAsorrow_actionTeamate]:checked').next().text() + ';<br>';
@@ -367,7 +369,6 @@ $(document).ready(function(){
                 displayActionRow += ' - Группа карт, которые будут призываться: ' + temp[1];
 
                 //Условие "Откуда брать карты"
-
                 temp = setCheckboxesToJson($('.container-wrap input[name=CAmasder_cardSource]:checked'));
                 realActionRow += ', "CAmasder_cardSource": ' + temp[0];
                 displayActionRow += ' - Карты берутся из: ' + temp[1];

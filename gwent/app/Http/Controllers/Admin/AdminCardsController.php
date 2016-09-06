@@ -182,7 +182,7 @@ class AdminCardsController extends BaseController
         } else {
             $card_is_leader = 1;
         }
-
+       
         //Находим в БД редактируемую карту
         $editedCard = CardsModel::find($data['id']);
         $editedCard->title              = $data['title'];

@@ -5,11 +5,11 @@ use App\BattleLogModel;
 use App\BattleModel;
 use App\BattleMembersModel;
 use App\MagicEffectsModel;
-use Crypt;
 use App\User;
 use App\UserAdditionalDataModel;
-use Illuminate\Routing\Controller as BaseController;
+use Crypt;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controller as BaseController;
 use Illuminate\Support\Facades\Auth;
 
 class SiteGameController extends BaseController
@@ -49,7 +49,6 @@ class SiteGameController extends BaseController
 
         return ['deck' => $user_deck, 'magic_effects' => $user_magic];
     }
-
 
 
     //Изменение данных пользовотеля об участии в столах
@@ -157,9 +156,9 @@ class SiteGameController extends BaseController
             $user = Auth::user();
 
             //Силиа колоды
-            $deck_weight = base64_decode($data['deck_weight']);
+            $deck_weight = Crypt::decrypt($data['deck_weight']);
             //Лига
-            $league = base64_decode($data['league']);
+            $league = Crypt::decrypt($data['league']);
 
             //Вторичные данные пользователя
             $user_data = UserAdditionalDataModel::where('user_id', '=', $user['id'])->get();
@@ -186,7 +185,8 @@ class SiteGameController extends BaseController
                         '2' => ['special' => '', 'warrior' => []]
                     ],
                     'mid'=>[]
-                ])
+                ]),
+                'undead_cards'      => serialize(['p1'=>[], 'p2'=>[]])
             ]);
 
             if($result === false){
@@ -412,7 +412,7 @@ class SiteGameController extends BaseController
 
         $user_deck = unserialize($user_battle[0]->user_deck); //Колода игрока
         $deck_card_count = count($user_deck);
-        
+
         for($i=0; $i<$cards_to_change_count; $i++){ //перемещаем N рандомных карт из колоды в руку
             $rand_item = rand(0, $deck_card_count-1);
             $user_hand[] = $user_deck[$rand_item];
@@ -427,10 +427,10 @@ class SiteGameController extends BaseController
             $user_deck[] = ['id' => Crypt::decrypt($cards_to_change[$i])];
         }
         $deck_card_count = count($user_deck);
-        
+
         $hand = self::buildCardDeck($user_hand, []);
         $deck = self::buildCardDeck($user_deck, []);
-        
+
         $users_result_data[$user['login']] = [
             'deck_count'=> $deck_card_count,
             'hand'      => $hand,
@@ -454,7 +454,6 @@ class SiteGameController extends BaseController
     }
 
 
-
     public function socketSettings(){
         $user = Auth::user();
 
@@ -473,17 +472,17 @@ class SiteGameController extends BaseController
             'timeOut'   => $sec
         ]);
     }
-    
-    
+
+
     public function getCardDataByRequest(Request $request){
         $data = $request->all();
         return self::getCardData($data['card']);
     }
-    
+
     public static function getCardData($id){
         if(strlen($id) > 11){
             $id = Crypt::decrypt($id);
-        }      
+        }
         $card_data = \DB::table('tbl_card')->select('id','title','slug','card_type','card_strong','card_groups','img_url','short_description', 'allowed_rows', 'card_actions')->where('id', '=', $id)->get();
         return json_encode([
             'id'        => Crypt::encrypt($card_data[0]->id),

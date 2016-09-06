@@ -1017,7 +1017,7 @@
       display: table;
       padding-top: 3px;
       overflow: hidden;
-      display: none; }
+      display: table;/*none*/ }
       .content-card-item-main .hovered-items .block-describe .block-image-describe {
         display: table-cell;
         background-position: center;
@@ -1554,10 +1554,11 @@
 #sortableTwo .card-load-info .maxCountInDeck-wrap{display: none;}
 .connected-sortable .card-load-info .maxCountInDeck-wrap{
   position: absolute;
-  bottom: 30px;
-  left: 10px;
+  top: 10px;
+  right: 10px;
   color: #ef0;
   font-size: 12px;
+  z-index: 100;
 }
 
 .marker-price-gold{
