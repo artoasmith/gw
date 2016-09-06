@@ -159,9 +159,7 @@ function validate(form, options) {
                     });
                 }
             };
-
         });
-
     }
 }
 

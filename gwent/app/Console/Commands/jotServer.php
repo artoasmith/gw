@@ -41,16 +41,23 @@ class jotServer extends Command
      */
     public function handle()
     {
-        $this->info('Start');
-
-        $server = IoServer::factory(
-            new HttpServer(
-                new WsServer(
-                    new JotSocket()
-                )
-            ),
-            8080
-        );
-        $server->run();
+        $port = 8080;
+        $host = '0.0.0.0'; //localhost
+        $check = @stream_socket_server("tcp://$host:$port", $errno, $errstr);
+        if($check === false){
+            $this->info("tcp://$host:$port".' already in use');
+        } else {
+            fclose($check);
+            $this->info('Start');
+            $server = IoServer::factory(
+                new HttpServer(
+                    new WsServer(
+                        new JotSocket()
+                    )
+                ),
+                $port
+            );
+            $server->run();
+        }
     }
 }
