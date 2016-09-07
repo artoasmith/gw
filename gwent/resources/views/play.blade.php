@@ -1,83 +1,81 @@
 @extends('layouts.game')
 @section('content')
-    @if(!empty($errors->all()))
-        @foreach($errors->all() as $key => $value)
-            {{ $value }}
-        @endforeach
-        {{ die() }}
-    @endif
-
-    <?php
     
-    function cardView($card){
-        if(!is_array($card['card'])) $card['card'] = get_object_vars($card['card']);
-        return '<li data-cardid="'.$card['card']['id'].'" data-relative="'.$card['card']['type'].'"  title="'.$card['card']['title'].'">
-            <div class="card-wrap">
-                <img src="'.URL::asset('/img/card_images/'.$card['card']['img_url']).'" alt="">
-                <div class="label-power-card">'.$card['strength'].'</div>
-            </div>
-        </li>';
-    }    
-    $user = Auth::user();
+@if(!empty($errors->all()))
+    @foreach($errors->all() as $key => $value)
+        {{ $value }}
+    @endforeach
+    {{ die() }}
+@endif
 
-    $battle_members = \App\BattleMembersModel::where('battle_id','=',$battle_data->id)->get();
+<?php
+function cardView($card){
+    if(!is_array($card['card'])) $card['card'] = get_object_vars($card['card']);
+    return '<li data-cardid="'.$card['card']['id'].'" data-relative="'.$card['card']['type'].'"  title="'.$card['card']['title'].'">
+        <div class="card-wrap">
+            <img src="'.URL::asset('/img/card_images/'.$card['card']['img_url']).'" alt="">
+            <div class="label-power-card">'.$card['strength'].'</div>
+        </div>
+    </li>';
+}
+$user = Auth::user();
 
-    $players = ['enemy' => [], 'allied' => []];
-    $players_count = 0;   
+$battle_members = \App\BattleMembersModel::where('battle_id','=',$battle_data->id)->get();
 
-    $battle_field = unserialize($battle_data->battle_field);
-    
-    $magic_usage = unserialize($battle_data->magic_usage);
+$players = ['enemy' => [], 'allied' => []];
+$players_count = 0;   
 
-    if($user['id'] == $battle_data->creator_id){
-        $user_field_identificator = 'p1';
-        $opponent_field_identificator = 'p2';
+$battle_field = unserialize($battle_data->battle_field);
+
+$magic_usage = unserialize($battle_data->magic_usage);
+
+if($user['id'] == $battle_data->creator_id){
+    $user_field_identificator = 'p1';
+    $opponent_field_identificator = 'p2';
+}else{
+    $user_field_identificator = 'p2';
+    $opponent_field_identificator = 'p1';
+}
+
+foreach($battle_members as $key => $value){
+    //Создание сторон противников и союзников
+    $player_data = \DB::table('users')->select('id','login','img_url')->where('id', '=', $value -> user_id)->get();
+    $race_name = \DB::table('tbl_race')->select('slug', 'title')->where('slug', '=', $value -> user_deck_race)->get();
+
+    $temp_magic = unserialize($value->magic_effects);
+    $user_magic = [];
+    foreach($temp_magic as $id => $quantity){
+        $magic_data = \DB::table('tbl_magic_effects')->select('id', 'title', 'slug', 'img_url')->where('id','=',$id)->get();
+        $user_magic[] = $magic_data[0];
+    }
+
+    if($user['id'] == $value->user_id){
+
+        $players['allied'] = [
+            'user_deck'     => unserialize($value -> user_deck),
+            'user_discard'  => unserialize($value -> user_discard),
+            'user_deck_race'=> $race_name[0] -> title,
+            'user_energy'   => $value -> user_energy,
+            'user_hand'     => unserialize($value -> user_hand),
+            'user_img'      => $player_data[0] -> img_url,
+            'user_magic'    => $user_magic,
+            'user_nickname' => $player_data[0] -> login,
+            'user_ready'    => $value -> user_ready,
+        ];
     }else{
-        $user_field_identificator = 'p2';
-        $opponent_field_identificator = 'p1';
+        $players['enemy'] = [
+            'user_deck'     => unserialize($value -> user_deck),
+            'user_deck_race'=> $race_name[0] -> title,
+            'user_discard'  => unserialize($value -> user_discard),
+            'user_energy'   => $value -> user_energy,
+            'user_img'      => $player_data[0] -> img_url,
+            'user_magic'    => $user_magic,
+            'user_nickname' => $player_data[0] -> login,
+        ];
     }
-
-    foreach($battle_members as $key => $value){
-        //Создание сторон противников и союзников
-        $player_data = \DB::table('users')->select('id','login','img_url')->where('id', '=', $value -> user_id)->get();
-        $race_name = \DB::table('tbl_race')->select('slug', 'title')->where('slug', '=', $value -> user_deck_race)->get();
-        
-        $temp_magic = unserialize($value->magic_effects);
-        $user_magic = [];
-        foreach($temp_magic as $id => $quantity){
-            $magic_data = \DB::table('tbl_magic_effects')->select('id', 'title', 'slug', 'img_url')->where('id','=',$id)->get();
-            $user_magic[] = $magic_data[0];
-            
-        }
-        
-        if($user['id'] == $value->user_id){
-            
-            $players['allied'] = [
-                'user_deck'     => unserialize($value -> user_deck),
-                'user_discard'  => unserialize($value -> user_discard),
-                'user_deck_race'=> $race_name[0] -> title,
-                'user_energy'   => $value -> user_energy,
-                'user_hand'     => unserialize($value -> user_hand),
-                'user_img'      => $player_data[0] -> img_url,
-                'user_magic'    => $user_magic,
-                'user_nickname' => $player_data[0] -> login,
-                'user_ready'    => $value -> user_ready,
-            ];
-        }else{
-            $players['enemy'] = [
-                'user_deck'     => unserialize($value -> user_deck),
-                'user_deck_race'=> $race_name[0] -> title,
-                'user_discard'  => unserialize($value -> user_discard),
-                'user_energy'   => $value -> user_energy,
-                'user_img'      => $player_data[0] -> img_url,
-                'user_magic'    => $user_magic,
-                'user_nickname' => $player_data[0] -> login,
-            ];
-        }
-        $players_count++;
-    }
-    //dd($players['allied']);
-    ?>
+    $players_count++;
+}
+?>
 
 <header class="header">
     <div class="mbox">
@@ -641,7 +639,11 @@
                     <!-- Активная магия -->
                     @if(isset($players['allied']['user_magic']) && !empty($players['allied']['user_magic']))
                         @foreach($players['allied']['user_magic'] as $i => $value)
-                        <li data-cardid="{{ \Crypt::encrypt($value->id) }}" class="@if(in_array($value->id,$magic_usage[$user_field_identificator])){{disactive}}@endif">
+                            <?php $disactive = ''; ?>
+                            @foreach($magic_usage[$user_field_identificator] as $magic_iter => $magic_id)
+                                <?php if( $value->id == \Crypt::decrypt($magic_id) ) $disactive = 'disactive'; ?>
+                            @endforeach
+                        <li data-cardid="{{ \Crypt::encrypt($value->id) }}" class="{{$disactive}}">
                             <img src="/img/card_images/{{$value->img_url }}" alt="{{$value->slug}}" title="{{$value->title}}">
                         </li>
                         @endforeach

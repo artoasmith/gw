@@ -45,6 +45,7 @@ class JotSocket extends BaseSocket
         //Создание массивов пользовательских данных
         foreach($battle_members as $key => $value){
             $current_user = \DB::table('users')->select('id','login','user_current_deck')->where('id','=',$value->user_id)->get();
+            $current_user_data = \DB::table('tbl_user_data')->select('user_id','user_energy')->where('user_id','=',$value->user_id)->get();
             
             $user_identificator = ($value->user_id == $battle->creator_id) ? 'p1' : 'p2';
 
@@ -53,12 +54,14 @@ class JotSocket extends BaseSocket
                     'id'            => $value->user_id,
                     'login'         => $current_user[0]->login,
                     'player'        => $user_identificator,                     //Идентификатор поля пользователя
+                    'magic_effects' => unserialize($value->magic_effects),      //Список активных маг. эффектов
+                    'energy'        => $current_user_data[0]->user_energy,      //Колличество энергии пользователя
                     'user_deck'     => unserialize($value->user_deck),          //Колода пользователя
                     'user_hand'     => unserialize($value->user_hand),          //Рука пользователя
                     'user_discard'  => unserialize($value->user_discard),       //Отбой пользователя
                     'current_deck'  => $current_user[0]->user_current_deck,     //Название фракции текущей колоды пользоватля
                     'card_source'   => $value->card_source,                     //Источник карт (рука/колода/отбой) текущего хода
-                    'card_to_play'  => unserialize($value->card_to_play),
+                    'card_to_play'  => unserialize($value->card_to_play),       //Массив определенных условиями действия карт при отыгрыше из колоды или отбое
                     'round_passed'  => $value->round_passed,                    //Маркер паса
                     'battle_member_id' => $value->id                            //ID текущей битвы
                 ];
@@ -67,6 +70,8 @@ class JotSocket extends BaseSocket
                     'id'            => $value->user_id,
                     'login'         => $current_user[0]->login,
                     'player'        => $user_identificator,
+                    'magic_effects' => unserialize($value->magic_effects),
+                    'energy'        => $current_user_data[0]->user_energy,
                     'user_deck'     => unserialize($value->user_deck),
                     'user_hand'     => unserialize($value->user_hand),
                     'user_discard'  => unserialize($value->user_discard),
@@ -224,6 +229,9 @@ class JotSocket extends BaseSocket
 
                 $battle_field = unserialize($battle->battle_field);
                 
+                //Использованые Маг. Эффекты
+                $magic_usage = unserialize($battle->magic_usage);
+                
                 //Если только один пасанувший
                 if($users_passed_count == 1){
                     $user_turn = $opponent_array['login'];
@@ -232,7 +240,7 @@ class JotSocket extends BaseSocket
                     $battle->user_id_turn = $user_turn_id;
                     $battle->save();
 
-                    self::sendUserMadeActionData($msg, $user_array, $opponent_array, $battle_field, 'hand', [], $user_turn, $from, $SplBattleObj);
+                    self::sendUserMadeActionData($msg, $user_array, $opponent_array, $battle_field, $magic_usage, 'hand', [], $user_turn, $from, $SplBattleObj);
                 }
 
                 //Если оба спасовали
@@ -394,6 +402,8 @@ class JotSocket extends BaseSocket
                     $battle_field['mid'] = [];
                     $battle_field = self::recalculateStrengthByMid($battle_field, $user_array, $opponent_array);//Финальный пересчет поля битвы
                     
+                    
+                    $battle->round_count  = $battle->round_count +1;
                     $battle->round_status = serialize($round_status);
                     $battle->user_id_turn = $user_turn_id;
                     $battle->battle_field = serialize($battle_field);
@@ -457,7 +467,7 @@ class JotSocket extends BaseSocket
                             \DB::table('tbl_battle_members')->where('id', '=', $battle_data->id)->update(['round_passed' => 0]);
                         }
 
-                        self::sendUserMadeActionData($msg, $user_array, $opponent_array, $battle_field, 'hand', [], $user_turn, $from, $SplBattleObj);
+                        self::sendUserMadeActionData($msg, $user_array, $opponent_array, $battle_field, $magic_usage, 'hand', [], $user_turn, $from, $SplBattleObj);
                     }
                 }
                 break;
@@ -473,6 +483,8 @@ class JotSocket extends BaseSocket
                     $card_source = 'hand';
                     //Отыгрыш карт по умолчанию
                     $card_to_play = [];
+                    //Использованые Маг. Эффекты
+                    $magic_usage = unserialize($battle->magic_usage);
                     
                     //определение очереди хода
                     if($opponent_array['round_passed'] == 1){
@@ -487,50 +499,72 @@ class JotSocket extends BaseSocket
                         self::userPassed($opponent_array['id'], $msg->ident->battleId);
                     }
                     
-                    
                     //Обработка магических еффектов
                     if(isset($msg->magic)){
+                        $magic_id = Crypt::decrypt($msg->magic);
                         
-                        
-                        //!!!! ДОДЕЛАТЬ
-                        //Проверка использована ли магия
-                        //Делать магию неактивной
-                        //Отнимать кол-во энергии
-                        //В battles[magic_usage] дописывать использованый МЭ
-                        
-                        
-                        $magic = json_decode(SiteGameController::getMagicData($msg->magic));//Получаем данные о маг. эффекте (далее МЭ)
+                        $magic = json_decode(SiteGameController::getMagicData($magic_id));//Получаем данные о маг. эффекте (далее МЭ)
 
-                        foreach($magic->actions as $action_iter => $action_data){
-                            //Пиризыв карты
-                            if($action_data->action == '2'){
-                                if($action_data->MAplayCardsFromDeck_cardType == 0){//Выбрать определенную карту
-                                    //Поиск доступных карт для применения
-                                    for($i=0; $i<count($user_array['user_deck']); $i++){
-                                        if(in_array(Crypt::decrypt($user_array['user_deck'][$i]['id']), $action_data->currentCard)){
-                                            $card_to_play[] = $i;
-                                        }
-                                    }
-                                }else{//Выбрать карту определенного ряда
-                                    foreach($action_data->MAplayCardsFromDeck_ActionRow as $row_iter => $row){
-                                        for($i=0; $i<count($user_array['user_deck']); $i++){
-                                            if(in_array($row, $user_array['user_deck'][$i]['action_row'])){
-                                                if($user_array['user_deck'][$i]['type'] != 'special'){
-                                                    $card_to_play[] = $i;
+                        $energy = $user_array['energy'] - $magic->energy_cost;//Кол-во энергии пользователя после использования МЭ
+                        
+                        if( (!in_array($msg->magic, $magic_usage)) && ($energy > 0) ){
+                            //Сохранение значений энергии 
+                            \DB::table('tbl_user_data')->where('user_id','=',$user_array['id'])->update(['user_energy' => $energy]);
+                            $user_array['energy'] = $energy;
+
+                            //Если МЭ существует и кол-во его использований больше 0
+                            if( (isset($user_array['magic_effects'][$magic_id])) && ($user_array['magic_effects'][$magic_id] > 0) ){
+                                $user_array['magic_effects'][$magic_id]--;//Уменьшения показателя использования МЭ
+                                
+                                $magic_usage[$user_array['player']][] = $msg->magic;//Сохраняем МЭ в использованых
+                                $battle->magic_usage = serialize($magic_usage);
+                                $battle->save();
+
+                                foreach($magic->actions as $action_iter => $action_data){
+                                    switch($action_data->action){
+                                        //ПРИЗЫВ КАРТЫ
+                                        case '2':
+                                            if($action_data->MAplayCardsFromDeck_cardType == 0){//Выбрать определенную карту
+                                                //Поиск доступных карт для применения
+                                                for($i=0; $i<count($user_array['user_deck']); $i++){
+                                                    if(in_array(Crypt::decrypt($user_array['user_deck'][$i]['id']), $action_data->currentCard)){
+                                                        $card_to_play[] = $i;
+                                                    }
+                                                }
+                                            }else{//Выбрать карту определенного ряда
+                                                foreach($action_data->MAplayCardsFromDeck_ActionRow as $row_iter => $row){
+                                                    for($i=0; $i<count($user_array['user_deck']); $i++){
+                                                        if(in_array($row, $user_array['user_deck'][$i]['action_row'])){
+                                                            if($user_array['user_deck'][$i]['type'] != 'special'){
+                                                                $card_to_play[] = $i;
+                                                            }
+                                                        }
+                                                    }
                                                 }
                                             }
-                                        }
+
+                                            if(!empty($card_to_play)){
+                                                $user_turn = $user_array['login'];
+                                                $user_turn_id = $user_array['id'];
+                                                $card_source = 'deck';
+                                            }
+                                        break;
+                                        //END OF ПРИЗЫВ КАРТЫ
+                                        
+                                        //ОТМЕНА НЕГАТИВНЫХ ЭФФЕКТОВ
+                                        case '3':
+                                            $temp_heal_action = self::makeHealToMid($battle_field['mid'], [0,1,2], $user_array, $opponent_array);
+                                            $battle_field['mid'] = $temp_heal_action['battle_field_mid'];
+                                            $user_array['user_discard'] = $temp_heal_action['user_array_discard'];
+                                            $opponent_array['user_discard'] = $temp_heal_action['opponent_array_discard'];
+                                        break;
+                                        //END OF ОТМЕНА НЕГАТИВНЫХ ЭФФЕКТОВ
                                     }
-                                }
-                                
-                                if(!empty($card_to_play)){
-                                    $user_turn = $user_array['login'];
-                                    $user_turn_id = $user_array['id'];
-                                    $card_source = 'deck';
                                 }
                             }
                         }
                     }
+                        
                     //Обработка Карты и её действий
                     if(isset($msg->card)){
                         $card = json_decode(SiteGameController::getCardData($msg->card));//Получаем данные о карте
@@ -619,135 +653,137 @@ class JotSocket extends BaseSocket
                             }
                             //Перебор действий карты
                             foreach($card->actions as $action_iter => $action_data){
-                                //ШПИОН
-                                if($action_data->action == '12'){
-                                    $deck_card_count = count($user_array['user_deck']);
-
-                                    $n = ($deck_card_count >= $action_data->CAspy_get_cards_num) ? $action_data->CAspy_get_cards_num : $deck_card_count;
-                                    for($i=0; $i<$n; $i++){
-                                        $rand_item = rand(0, $deck_card_count-1);
-                                        $random_card = $user_array['user_deck'][$rand_item];
-                                        $user_array['user_hand'][] = $random_card;
-
-                                        unset($user_array['user_deck'][$rand_item]);
-
-                                        $user_array['user_deck'] = array_values($user_array['user_deck']);
+                                switch($action_data->action){
+                                    //ШПИОН
+                                    case '12':
                                         $deck_card_count = count($user_array['user_deck']);
-                                    }
-                                }
-                                //END OF ШПИОН
 
-                                //УБИЙЦА
-                                if($action_data->action == '13'){
-                                    //Может ли бить своих
-                                    $players = ( (isset($action_data->CAkiller_atackTeamate)) && ($action_data->CAkiller_atackTeamate == 1) ) ? $players = ['p1', 'p2'] : [$oponent_battle_field_identificator];
+                                        $n = ($deck_card_count >= $action_data->CAspy_get_cards_num) ? $action_data->CAspy_get_cards_num : $deck_card_count;
+                                        for($i=0; $i<$n; $i++){
+                                            $rand_item = rand(0, $deck_card_count-1);
+                                            $random_card = $user_array['user_deck'][$rand_item];
+                                            $user_array['user_hand'][] = $random_card;
 
-                                    //наносит удат по группе
-                                    if( (isset($action_data->CAkiller_groupOrSingle)) && ($action_data->CAkiller_groupOrSingle != 0)){
-                                        $groups = $action_data->CAkiller_groupOrSingle;
-                                    }else{
-                                        $groups = [];
-                                    }
+                                            unset($user_array['user_deck'][$rand_item]);
 
-                                    $cards_can_be_destroyed = [];
+                                            $user_array['user_deck'] = array_values($user_array['user_deck']);
+                                            $deck_card_count = count($user_array['user_deck']);
+                                        }
+                                    break;
+                                    //END OF ШПИОН
+                                    
+                                    //УБИЙЦА
+                                    case '13':
+                                        //Может ли бить своих
+                                        $players = ( (isset($action_data->CAkiller_atackTeamate)) && ($action_data->CAkiller_atackTeamate == 1) ) ? $players = ['p1', 'p2'] : [$oponent_battle_field_identificator];
 
-                                    //Для каждого поля битвы
-                                    foreach ($battle_field as $fields => $rows){
-                                        //Если поле в находится в разрешенных$ для убийства
-                                        if(in_array($fields, $players)){
+                                        //наносит удат по группе
+                                        if( (isset($action_data->CAkiller_groupOrSingle)) && ($action_data->CAkiller_groupOrSingle != 0)){
+                                            $groups = $action_data->CAkiller_groupOrSingle;
+                                        }else{
+                                            $groups = [];
+                                        }
 
-                                            $enemy_player = $opponent_array['player'];
+                                        $cards_can_be_destroyed = [];
 
-                                            //Для каждого ряда
-                                            $rows_strength = 0; //Сумарная сила выбраных рядов
-                                            $max_strenght = 0;  // максимальная сила карты
-                                            $min_strenght = 999;// минимальная сила карты
-                                            $card_strength_set = []; //набор силы карты для выбора случйного значения силы
-                                            //Узнаем необходимые значения в массиве поля битвы
-                                            foreach($rows as $row => $cards){
-                                                //Если ряд находится в области действия карты-убийцы
-                                                if(in_array($row, $action_data->CAkiller_ActionRow)){
-                                                    //Если данное поле является полем противника
-                                                    foreach($battle_field[$enemy_player][$row]['warrior'] as $i => $card_data){
-                                                        $card_data['card'] = self::transformObjToArr($card_data['card']);
+                                        //Для каждого поля битвы
+                                        foreach ($battle_field as $fields => $rows){
+                                            //Если поле в находится в разрешенных$ для убийства
+                                            if(in_array($fields, $players)){
 
-                                                        $rows_strength += $card_data['strength'];//Сумарная сила выбраных рядов
+                                                $enemy_player = $opponent_array['player'];
 
-                                                        $can_kill_this_card = 1; //Имунитет к убийству 1 - не имеет иммунитет; 0 - не имеет
-                                                        foreach($card_data['card']['actions'] as $j => $action_immune){
-                                                            if($action_immune->action == '18'){
-                                                                $can_kill_this_card = 0;
-                                                            }
-                                                        }
-                                                        //Атакуящая карта игнорирует иммунитет к убийству
-                                                        if( (isset($action_data->CAkiller_ignoreKillImmunity)) && ($action_data->CAkiller_ignoreKillImmunity != 0) ){
-                                                            $can_kill_this_card = 1;
-                                                        }
-                                                        if($can_kill_this_card == 1){
-                                                            $max_strenght = ($max_strenght < $card_data['strength']) ? $card_data['strength'] : $max_strenght;// максимальная сила карты
-                                                            $min_strenght = ($min_strenght > $card_data['strength']) ? $card_data['strength'] : $min_strenght;// минимальная сила карты
-                                                            $card_strength_set[] = $card_data['strength'];
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                            $card_strength_set = array_values(array_unique($card_strength_set));
+                                                //Для каждого ряда
+                                                $rows_strength = 0; //Сумарная сила выбраных рядов
+                                                $max_strenght = 0;  // максимальная сила карты
+                                                $min_strenght = 999;// минимальная сила карты
+                                                $card_strength_set = []; //набор силы карты для выбора случйного значения силы
+                                                //Узнаем необходимые значения в массиве поля битвы
+                                                foreach($rows as $row => $cards){
+                                                    //Если ряд находится в области действия карты-убийцы
+                                                    if(in_array($row, $action_data->CAkiller_ActionRow)){
+                                                        //Если данное поле является полем противника
+                                                        foreach($battle_field[$enemy_player][$row]['warrior'] as $i => $card_data){
+                                                            $card_data['card'] = self::transformObjToArr($card_data['card']);
 
-                                            //Качество убиваемой карты
-                                            switch($action_data->CAkiller_killedQuality_Selector){
-                                                case '0': $card_strength_to_kill = $min_strenght; break;//Самую слабую
-                                                case '1': $card_strength_to_kill = $max_strenght; break;//Самую сильную
-                                                case '2': $random = rand(0, count($card_strength_set)-1); $card_strength_to_kill = $card_strength_set[$random]; break;
-                                            }
+                                                            $rows_strength += $card_data['strength'];//Сумарная сила выбраных рядов
 
-                                            foreach($rows as $row => $cards){
-                                                //Если данный ряд доступен для убийства
-                                                if(in_array($row, $action_data->CAkiller_ActionRow)){
-                                                    //Порог силы воинов противника для совершения убийства
-                                                    $action_data->CAkiller_enemyStrenghtLimitToKill = ($action_data->CAkiller_enemyStrenghtLimitToKill == 0) ? 999 : $action_data->CAkiller_enemyStrenghtLimitToKill;
-
-                                                    //Нужное для совершения убийства количество силы в ряду
-                                                    $allow_to_kill_by_force_amount = 1;
-
-                                                    if($action_data->CAkiller_recomendedTeamateForceAmount_OnOff != 0){//Если не выкл
-                                                        switch($action_data->CAkiller_recomendedTeamateForceAmount_Selector){
-                                                            case '0':   //Больше указаного значения
-                                                                $allow_to_kill_by_force_amount = ($action_data->CAkiller_recomendedTeamateForceAmount_OnOff < $rows_strength) ? 1 : 0; break;
-                                                            case '1':   //Меньше указанного значения
-                                                                $allow_to_kill_by_force_amount = ($action_data->CAkiller_recomendedTeamateForceAmount_OnOff > $rows_strength) ? 1 : 0; break;
-                                                            case '2':   //Равно указанному значению
-                                                                $allow_to_kill_by_force_amount = ($action_data->CAkiller_recomendedTeamateForceAmount_OnOff ==$rows_strength) ? 1 : 0; break;
-                                                        }
-                                                    }
-
-                                                    foreach($cards['warrior'] as $card_iterator => $card_data){
-                                                        $card_data['card'] = self::transformObjToArr($card_data['card']);
-
-                                                        if($card_data['strength'] < $action_data->CAkiller_enemyStrenghtLimitToKill){
-                                                            //Игнор к иммунитету
-                                                            $allow_to_kill_by_immune = 1; //Разрешено убивать карту т.к. иммунитет присутствует
-
-                                                            foreach($card_data['card']['actions'] as $card_action_i => $card_current_action){
-                                                                if($card_current_action->action == '18'){
-                                                                    $allow_to_kill_by_immune = 0;
+                                                            $can_kill_this_card = 1; //Имунитет к убийству 1 - не имеет иммунитет; 0 - не имеет
+                                                            foreach($card_data['card']['actions'] as $j => $action_immune){
+                                                                if($action_immune->action == '18'){
+                                                                    $can_kill_this_card = 0;
                                                                 }
                                                             }
-
+                                                            //Атакуящая карта игнорирует иммунитет к убийству
                                                             if( (isset($action_data->CAkiller_ignoreKillImmunity)) && ($action_data->CAkiller_ignoreKillImmunity != 0) ){
-                                                                $allow_to_kill_by_immune = 1;
+                                                                $can_kill_this_card = 1;
                                                             }
+                                                            if($can_kill_this_card == 1){
+                                                                $max_strenght = ($max_strenght < $card_data['strength']) ? $card_data['strength'] : $max_strenght;// максимальная сила карты
+                                                                $min_strenght = ($min_strenght > $card_data['strength']) ? $card_data['strength'] : $min_strenght;// минимальная сила карты
+                                                                $card_strength_set[] = $card_data['strength'];
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                                $card_strength_set = array_values(array_unique($card_strength_set));
 
-                                                            //Совершаем убийство карты по указанным выше параметрам
-                                                            if( ($allow_to_kill_by_force_amount == 1) && ($card_data['strength'] == $card_strength_to_kill) && ($allow_to_kill_by_immune == 1) ){
-                                                                //Массив карт которые возможно уничтожить
-                                                                if(!empty($groups)){
-                                                                    foreach($card_data['card']['groups'] as $groups_ident => $group_id){
-                                                                        if(in_array($group_id, $groups)){
-                                                                            $cards_can_be_destroyed[] = ['player' => $fields, 'card_id' => $card_data['card']['id']];
-                                                                        }
+                                                //Качество убиваемой карты
+                                                switch($action_data->CAkiller_killedQuality_Selector){
+                                                    case '0': $card_strength_to_kill = $min_strenght; break;//Самую слабую
+                                                    case '1': $card_strength_to_kill = $max_strenght; break;//Самую сильную
+                                                    case '2': $random = rand(0, count($card_strength_set)-1); $card_strength_to_kill = $card_strength_set[$random]; break;
+                                                }
+
+                                                foreach($rows as $row => $cards){
+                                                    //Если данный ряд доступен для убийства
+                                                    if(in_array($row, $action_data->CAkiller_ActionRow)){
+                                                        //Порог силы воинов противника для совершения убийства
+                                                        $action_data->CAkiller_enemyStrenghtLimitToKill = ($action_data->CAkiller_enemyStrenghtLimitToKill == 0) ? 999 : $action_data->CAkiller_enemyStrenghtLimitToKill;
+
+                                                        //Нужное для совершения убийства количество силы в ряду
+                                                        $allow_to_kill_by_force_amount = 1;
+
+                                                        if($action_data->CAkiller_recomendedTeamateForceAmount_OnOff != 0){//Если не выкл
+                                                            switch($action_data->CAkiller_recomendedTeamateForceAmount_Selector){
+                                                                case '0':   //Больше указаного значения
+                                                                    $allow_to_kill_by_force_amount = ($action_data->CAkiller_recomendedTeamateForceAmount_OnOff < $rows_strength) ? 1 : 0; break;
+                                                                case '1':   //Меньше указанного значения
+                                                                    $allow_to_kill_by_force_amount = ($action_data->CAkiller_recomendedTeamateForceAmount_OnOff > $rows_strength) ? 1 : 0; break;
+                                                                case '2':   //Равно указанному значению
+                                                                    $allow_to_kill_by_force_amount = ($action_data->CAkiller_recomendedTeamateForceAmount_OnOff ==$rows_strength) ? 1 : 0; break;
+                                                            }
+                                                        }
+
+                                                        foreach($cards['warrior'] as $card_iterator => $card_data){
+                                                            $card_data['card'] = self::transformObjToArr($card_data['card']);
+
+                                                            if($card_data['strength'] < $action_data->CAkiller_enemyStrenghtLimitToKill){
+                                                                //Игнор к иммунитету
+                                                                $allow_to_kill_by_immune = 1; //Разрешено убивать карту т.к. иммунитет присутствует
+
+                                                                foreach($card_data['card']['actions'] as $card_action_i => $card_current_action){
+                                                                    if($card_current_action->action == '18'){
+                                                                        $allow_to_kill_by_immune = 0;
                                                                     }
-                                                                }else{
-                                                                    $cards_can_be_destroyed[] = ['player' => $fields, 'card_id' => $card_data['card']['id']];
+                                                                }
+
+                                                                if( (isset($action_data->CAkiller_ignoreKillImmunity)) && ($action_data->CAkiller_ignoreKillImmunity != 0) ){
+                                                                    $allow_to_kill_by_immune = 1;
+                                                                }
+
+                                                                //Совершаем убийство карты по указанным выше параметрам
+                                                                if( ($allow_to_kill_by_force_amount == 1) && ($card_data['strength'] == $card_strength_to_kill) && ($allow_to_kill_by_immune == 1) ){
+                                                                    //Массив карт которые возможно уничтожить
+                                                                    if(!empty($groups)){
+                                                                        foreach($card_data['card']['groups'] as $groups_ident => $group_id){
+                                                                            if(in_array($group_id, $groups)){
+                                                                                $cards_can_be_destroyed[] = ['player' => $fields, 'card_id' => $card_data['card']['id']];
+                                                                            }
+                                                                        }
+                                                                    }else{
+                                                                        $cards_can_be_destroyed[] = ['player' => $fields, 'card_id' => $card_data['card']['id']];
+                                                                    }
                                                                 }
                                                             }
                                                         }
@@ -755,154 +791,202 @@ class JotSocket extends BaseSocket
                                                 }
                                             }
                                         }
-                                    }
 
-                                    $cards_to_destroy = [];
-                                    if( (isset($action_data->CAkiller_killAllOrSingle)) && ($action_data->CAkiller_killAllOrSingle == 0) ){
-                                        if(!empty($cards_can_be_destroyed)){
-                                            $index = rand(0, count($cards_can_be_destroyed)-1);
-                                            $cards_to_destroy[] = $cards_can_be_destroyed[$index];
+                                        $cards_to_destroy = [];
+                                        if( (isset($action_data->CAkiller_killAllOrSingle)) && ($action_data->CAkiller_killAllOrSingle == 0) ){
+                                            if(!empty($cards_can_be_destroyed)){
+                                                $index = rand(0, count($cards_can_be_destroyed)-1);
+                                                $cards_to_destroy[] = $cards_can_be_destroyed[$index];
+                                            }
+                                        }else{
+                                            $cards_to_destroy = $cards_can_be_destroyed;
                                         }
-                                    }else{
-                                        $cards_to_destroy = $cards_can_be_destroyed;
-                                    }
 
-                                    $cards_to_destroy_count = count($cards_to_destroy);
+                                        $cards_to_destroy_count = count($cards_to_destroy);
 
-                                    for($i=0; $i<$cards_to_destroy_count; $i++){
-                                        foreach($battle_field[$cards_to_destroy[$i]['player']] as $rows => $cards){
-                                            foreach($cards['warrior'] as $card_iterator => $card_data){
-                                                $card_data['card'] = self::transformObjToArr($card_data['card']);
+                                        for($i=0; $i<$cards_to_destroy_count; $i++){
+                                            foreach($battle_field[$cards_to_destroy[$i]['player']] as $rows => $cards){
+                                                foreach($cards['warrior'] as $card_iterator => $card_data){
+                                                    $card_data['card'] = self::transformObjToArr($card_data['card']);
 
-                                                if($card_data['card']['id'] == $cards_to_destroy[$i]['card_id']){
+                                                    if($card_data['card']['id'] == $cards_to_destroy[$i]['card_id']){
 
-                                                    if($user_array['player'] == $cards_to_destroy[$i]['player']){
-                                                        $user_array['user_discard'][] = $card_data['card'];
-                                                    }else{
-                                                        $opponent_array['user_discard'][] = $card_data['card'];
+                                                        if($user_array['player'] == $cards_to_destroy[$i]['player']){
+                                                            $user_array['user_discard'][] = $card_data['card'];
+                                                        }else{
+                                                            $opponent_array['user_discard'][] = $card_data['card'];
+                                                        }
+                                                        unset($battle_field[$cards_to_destroy[$i]['player']][$rows]['warrior'][$card_iterator]);
+                                                        $battle_field[$cards_to_destroy[$i]['player']][$rows]['warrior'] = array_values($battle_field[$cards_to_destroy[$i]['player']][$rows]['warrior']);
                                                     }
-                                                    unset($battle_field[$cards_to_destroy[$i]['player']][$rows]['warrior'][$card_iterator]);
-                                                    $battle_field[$cards_to_destroy[$i]['player']][$rows]['warrior'] = array_values($battle_field[$cards_to_destroy[$i]['player']][$rows]['warrior']);
                                                 }
                                             }
                                         }
-                                    }
-                                }
-                                //END OF УБИЙЦА
+                                    break;
+                                    //END OF УБИЙЦА
+                                    
+                                    //РАЗВЕДЧИК
+                                    case '15':
+                                        $deck_card_count = count($user_array['user_deck']);
+                                        if($deck_card_count > 0){
+                                            $rand_item = rand(0, $deck_card_count-1);
+                                            $random_card = $user_array['user_deck'][$rand_item];
+                                            $user_array['user_hand'][] = $random_card;
+                                            unset($user_array['user_deck'][$rand_item]);
 
-                                //РАЗВЕДЧИК
-                                if($action_data->action == '15'){
-                                    $deck_card_count = count($user_array['user_deck']);
-                                    if($deck_card_count > 0){
-                                        $rand_item = rand(0, $deck_card_count-1);
-                                        $random_card = $user_array['user_deck'][$rand_item];
-                                        $user_array['user_hand'][] = $random_card;
-                                        unset($user_array['user_deck'][$rand_item]);
-
-                                        $user_array['user_deck'] = array_values($user_array['user_deck']);
-                                    }
-                                }
-                                //END OF РАЗВЕДЧИК
-
-                                //CТРАШНЫЙ
-                                if($action_data->action == '21'){
-                                    $players = ($action_data->CAfear_actionTeamate == 1) ? ['p1', 'p2'] : [$opponent_array['player']]; //Карта действует на всех или только на противника
-                                    foreach($players as $field){
-                                        foreach($battle_field[$field] as $row => $cards){//перебираем карты в рядах
-                                            if(in_array($row, $action_data->CAfear_ActionRow)){//Если данный ряд присутствует в области действия карты "Страшный"
-                                                if(!empty($cards['special'])){
-                                                    //Проверяем присутсвует ли карта "Исцеление" в текущем ряду
-                                                    foreach($cards['special']['card']->actions as $i => $action){
-                                                        if($action->action == '25'){
-                                                            if($user_array['player'] == $field){//Кидаем карту "Исцеление" в отбой
-                                                                $user_array['user_discard'][] = $cards['special']['card'];
-                                                            }else{
-                                                                $opponent_array['user_discard'][] = $cards['special']['card'];
+                                            $user_array['user_deck'] = array_values($user_array['user_deck']);
+                                        }
+                                    break;
+                                    //END OF РАЗВЕДЧИК
+                                    
+                                    //CТРАШНЫЙ
+                                    case '21':
+                                        $players = ($action_data->CAfear_actionTeamate == 1) ? ['p1', 'p2'] : [$opponent_array['player']]; //Карта действует на всех или только на противника
+                                        foreach($players as $field){
+                                            foreach($battle_field[$field] as $row => $cards){//перебираем карты в рядах
+                                                if(in_array($row, $action_data->CAfear_ActionRow)){//Если данный ряд присутствует в области действия карты "Страшный"
+                                                    if(!empty($cards['special'])){
+                                                        //Проверяем присутсвует ли карта "Исцеление" в текущем ряду
+                                                        foreach($cards['special']['card']->actions as $i => $action){
+                                                            if($action->action == '25'){
+                                                                if($user_array['player'] == $field){//Кидаем карту "Исцеление" в отбой
+                                                                    $user_array['user_discard'][] = $cards['special']['card'];
+                                                                }else{
+                                                                    $opponent_array['user_discard'][] = $cards['special']['card'];
+                                                                }
+                                                                $battle_field[$field][$row]['special'] = '';
                                                             }
-                                                            $battle_field[$field][$row]['special'] = '';
                                                         }
                                                     }
                                                 }
                                             }
                                         }
-                                    }
-                                }
-                                //END OF CТРАШНЫЙ
+                                    break;
+                                    //END OF CТРАШНЫЙ
+                                    
+                                    //ПОВЕЛИТЕЛЬ
+                                    case '22':
+                                        $source_decks = [];
+                                        foreach($action_data->CAmasder_cardSource as $i => $current_card_source){
+                                            switch($current_card_source){
+                                                case 'hand':    $source_decks[] = 'user_hand'; break;
+                                                case 'passed':  $source_decks[] = 'user_discard'; break;
+                                                default:        $source_decks[] = 'user_deck';
+                                            }
+                                        }
 
-                                //ИСЦЕЛЕНИЕ
-                                if($action_data->action == '25'){
-                                    foreach($battle_field['mid'] as $i => $card_data){
-                                        foreach($card_data['card']->actions as $action_iterrator => $action){
-                                            if(in_array($field_row, $action->CAfear_ActionRow)){
-                                                if($user_array['login'] == $card_data['login']){
-                                                    $user_array['user_discard'][] = self::transformObjToArr($card_data['card']);
+                                        $card_counter = 0;
+                                        $cards_to_add = [];
+                                        for($i=0; $i<count($source_decks); $i++){
+                                            foreach($user_array[$source_decks[$i]] as $card_iter => $card_data){
+                                                $allow_to_add = false;
+                                                if($card_data['strength'] <= $action_data->CAmaster_maxCardsStrenght){
+                                                    if(!empty($card_data['groups'])){
+                                                        foreach($card_data['groups'] as $group_iter => $group_id){
+                                                            if(in_array($group_id, $action_data->CAmaster_group)){
+                                                                $allow_to_add = true;
+                                                                $card_counter++;
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                                if( ($card_counter < $action_data->CAmaster_maxCardsSummon) && ($allow_to_add) ){
+                                                    $cards_to_add[$source_decks[$i]][] = [
+                                                        'card'      => $user_array[$source_decks[$i]][$card_iter],
+                                                        'strength'  => $user_array[$source_decks[$i]][$card_iter]['strength'],
+                                                        'login'     => $user_array['login']
+                                                    ];
+                                                }
+                                            }
+                                        }
+
+                                        foreach($cards_to_add as $deck => $cards){
+                                            foreach($cards as $card_iter =>  $card_data){
+                                                $action_rows_count = count($card_data['card']['action_row']);
+                                                if($action_rows_count > 1){
+                                                    $action_row = $card_data['card']['action_row'][$action_rows_count-1];
                                                 }else{
-                                                    $opponent_array['user_discard'][] = self::transformObjToArr($card_data['card']);
+                                                    $action_row = $card_data['card']['action_row'][0];
                                                 }
-                                                unset($battle_field['mid'][$i]);
+
+                                                $battle_field[$user_array['player']][$action_row]['warrior'][] = $card_data;
+
+                                                foreach($user_array[$deck] as $deck_iter => $card_in_deck){
+                                                    if(Crypt::decrypt($card_data['card']['id']) == Crypt::decrypt($card_in_deck['id'])){
+                                                        unset($user_array[$deck][$deck_iter]);
+                                                    }
+                                                }
+                                                $user_array[$deck] = array_values($user_array[$deck]);
                                             }
                                         }
-                                    }
-                                    $battle_field['mid'] = array_values($battle_field['mid']);
-                                }
-                                //END OF ИСЦЕЛЕНИЕ
+                                    break;
+                                    //END OF ПОВЕЛИТЕЛЬ
+                                    
+                                    //ИСЦЕЛЕНИЕ
+                                    case '25':
+                                        $temp_heal_action = self::makeHealToMid($battle_field['mid'], [$field_row], $user_array, $opponent_array);
+                                        $battle_field['mid'] = $temp_heal_action['battle_field_mid'];
+                                        $user_array['user_discard'] = $temp_heal_action['user_array_discard'];
+                                        $opponent_array['user_discard'] = $temp_heal_action['opponent_array_discard'];
+                                    break;
+                                    //END OF ИСЦЕЛЕНИЕ
+                                    
+                                    //ОДУРМАНИВАНИЕ
+                                    case '23':
+                                        $cards_can_be_obscured = [];
+                                        $min_strength = 999;
+                                        $max_strength = 0;
 
-                                //ОДУРМАНИВАНИЕ
-                                if($action_data->action == '23'){
-                                    $cards_can_be_obscured = [];
-                                    $min_strength = 999;
-                                    $max_strength = 0;
-
-                                    foreach($battle_field[$opponent_array['player']] as $row => $cards){
-                                        if(in_array($row, $action_data->CAobscure_ActionRow)){
-                                            foreach($cards['warrior'] as $i => $card_data){
-                                                if($card_data['strength'] <= $action_data->CAobscure_maxCardStrong){
-                                                    $max_strength = ($card_data['strength'] > $max_strength) ? $card_data['strength'] : $max_strength;
-                                                    $min_strength = ($card_data['strength'] < $min_strength) ? $card_data['strength'] : $max_strength;
-                                                    $cards_can_be_obscured[] = ['card'=>$card_data['card'], 'strength' => $card_data['strength'], 'row'=>$row];
+                                        foreach($battle_field[$opponent_array['player']] as $row => $cards){
+                                            if(in_array($row, $action_data->CAobscure_ActionRow)){
+                                                foreach($cards['warrior'] as $i => $card_data){
+                                                    if($card_data['strength'] <= $action_data->CAobscure_maxCardStrong){
+                                                        $max_strength = ($card_data['strength'] > $max_strength) ? $card_data['strength'] : $max_strength;
+                                                        $min_strength = ($card_data['strength'] < $min_strength) ? $card_data['strength'] : $max_strength;
+                                                        $cards_can_be_obscured[] = ['card'=>$card_data['card'], 'strength' => $card_data['strength'], 'row'=>$row];
+                                                    }
                                                 }
                                             }
                                         }
-                                    }
-                                    if($min_strength < 1) $min_strength = 1;
+                                        if($min_strength < 1) $min_strength = 1;
 
-                                    if(!empty($cards_can_be_obscured)){
-                                        switch($action_data->CAobscure_strenghtOfCardToObscure){
-                                            case '0': $card_strength_to_obscure = $min_strength; break;//Самую слабую
-                                            case '1': $card_strength_to_obscure = $max_strength; break;//Самую сильную
-                                            case '2':
-                                                $random = rand(0, count($cards_can_be_obscured)-1);
-                                                $card_strength_to_obscure = $cards_can_be_obscured[$random]['strength'];
-                                                break;
+                                        if(!empty($cards_can_be_obscured)){
+                                            switch($action_data->CAobscure_strenghtOfCardToObscure){
+                                                case '0': $card_strength_to_obscure = $min_strength; break;//Самую слабую
+                                                case '1': $card_strength_to_obscure = $max_strength; break;//Самую сильную
+                                                case '2':
+                                                    $random = rand(0, count($cards_can_be_obscured)-1);
+                                                    $card_strength_to_obscure = $cards_can_be_obscured[$random]['strength'];
+                                                    break;
+                                            }
                                         }
-                                    }
 
-                                    $cards_to_obscure = [];
-                                    if(!empty($cards_can_be_obscured)){
-                                        for($i=0; $i<$action_data->CAobscure_quantityOfCardToObscure; $i++){
-                                            for($j=0; $j<count($cards_can_be_obscured); $j++){
-                                                if($card_strength_to_obscure == $cards_can_be_obscured[$j]['strength']){
-                                                    $cards_to_obscure[] = $cards_can_be_obscured[$j];
+                                        $cards_to_obscure = [];
+                                        if(!empty($cards_can_be_obscured)){
+                                            for($i=0; $i<$action_data->CAobscure_quantityOfCardToObscure; $i++){
+                                                for($j=0; $j<count($cards_can_be_obscured); $j++){
+                                                    if($card_strength_to_obscure == $cards_can_be_obscured[$j]['strength']){
+                                                        $cards_to_obscure[] = $cards_can_be_obscured[$j];
+                                                        break;
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        for($i=0; $i<count($cards_to_obscure); $i++){
+                                            foreach($battle_field[$opponent_array['player']][$cards_to_obscure[$i]['row']]['warrior'] as $j => $card_data){
+                                                if(Crypt::decrypt($cards_to_obscure[$i]['card']->id) == Crypt::decrypt($card_data['card']->id)){
+                                                    $battle_field[$user_array['player']][$cards_to_obscure[$i]['row']]['warrior'][] = $card_data;
+                                                    unset($battle_field[$opponent_array['player']][$cards_to_obscure[$i]['row']]['warrior'][$j]);
+                                                    $battle_field[$opponent_array['player']][$cards_to_obscure[$i]['row']]['warrior'] = array_values($battle_field[$opponent_array['player']][$cards_to_obscure[$i]['row']]['warrior']);
                                                     break;
                                                 }
                                             }
                                         }
-                                    }
-                                    for($i=0; $i<count($cards_to_obscure); $i++){
-                                        foreach($battle_field[$opponent_array['player']][$cards_to_obscure[$i]['row']]['warrior'] as $j => $card_data){
-                                            if(Crypt::decrypt($cards_to_obscure[$i]['card']->id) == Crypt::decrypt($card_data['card']->id)){
-                                                $battle_field[$user_array['player']][$cards_to_obscure[$i]['row']]['warrior'][] = $card_data;
-                                                unset($battle_field[$opponent_array['player']][$cards_to_obscure[$i]['row']]['warrior'][$j]);
-                                                $battle_field[$opponent_array['player']][$cards_to_obscure[$i]['row']]['warrior'] = array_values($battle_field[$opponent_array['player']][$cards_to_obscure[$i]['row']]['warrior']);
-                                                break;
-                                            }
-                                        }
-                                    }
-                                }
-                                //END OF ОДУРМАНИВАНИЕ
+                                    break;
+                                    //END OF ОДУРМАНИВАНИЕ
 
-                                //ПЕРЕГРУППИРОВКА
-                                if($action_data->action == '24'){
+                                    //ПЕРЕГРУППИРОВКА
+                                    case '24':
                                     foreach($battle_field[$msg->player][$field_row]['warrior'] as $i => $card_data){
                                         if($card_data['card']->id == $msg->retrieve){
                                             unset($battle_field[$msg->player][$field_row]['warrior'][$i]);
@@ -910,139 +994,82 @@ class JotSocket extends BaseSocket
                                             $user_array['user_hand'][] = self::transformObjToArr($card_data['card']);
                                         }
                                     }
-                                }
-                                //END OF ПЕРЕГРУППИРОВКА
-
-                                //ПРИЗЫВ
-                                if($action_data->action == '27'){
-                                    $allow_change_turn = 0;
-                                    if(!empty($user_array['user_deck'])){
-                                        foreach($user_array['user_deck'] as $i => $card_data){
-                                            $card_data = self::transformObjToArr($card_data);
-                                            if($card_data['type'] != 'special'){
-                                                $allow_change_turn = 1;
-                                            }
+                                    break;
+                                    //END OF ПЕРЕГРУППИРОВКА
+                                    
+                                    //ПЕЧАЛЬ
+                                    case '26':
+                                        if($action_data->CAsorrow_actionTeamate == 0){
+                                            $action_fields = [$opponent_array['player']];
+                                        }else{
+                                            $action_fields = ['p1', 'p2'];
                                         }
-                                    }
 
-                                    if($allow_change_turn == 1){
-                                        $user_turn = $user_array['login'];
-                                        $user_turn_id = $user_array['id'];
-                                        $card_source = 'deck';
-                                    }
-                                }
-                                //END OF ПРИЗЫВ
-
-                                //ЛЕКАРЬ
-                                if($action_data->action == '29'){
-                                    $allow_change_turn = 0;
-                                    if(!empty($user_array['user_discard'])){
-                                        foreach($user_array['user_discard'] as $i => $card_data){
-                                            $card_data = self::transformObjToArr($card_data);
-                                            if($card_data['type'] != 'special'){
-                                                $allow_change_turn = 1;
-                                            }
+                                        if($action_data->CAsorrow_actionToAll == 0){
+                                            $action_rows = [$field_row];
+                                        }else{
+                                            $action_rows = $action_data->CAsorrow_ActionRow;
                                         }
-                                    }
 
-                                    if($allow_change_turn == 1){
-                                        $user_turn = $user_array['login'];
-                                        $user_turn_id = $user_array['id'];
-                                        $card_source = 'discard';
-                                    }
-                                }
-                                //END OF ЛЕКАРЬ
-
-                                //ПЕЧАЛЬ
-                                if($action_data->action == '26'){
-                                    if($action_data->CAsorrow_actionTeamate == 0){
-                                        $action_fields = [$opponent_array['player']];
-                                    }else{
-                                        $action_fields = ['p1', 'p2'];
-                                    }
-
-                                    if($action_data->CAsorrow_actionToAll == 0){
-                                        $action_rows = [$field_row];
-                                    }else{
-                                        $action_rows = $action_data->CAsorrow_ActionRow;
-                                    }
-
-                                    foreach($action_fields as $i => $player){
-                                        foreach($action_rows as $j => $rows){
-                                            if(!empty($battle_field[$player][$rows]['special'])){
-                                                foreach($battle_field[$player][$rows]['special']['card']->actions as $k => $action){
-                                                    if($action->action == '28'){
-                                                        if($player == $user_array['player']){
-                                                            $user_array['user_discard'][] = $battle_field[$player][$rows]['special']['card'];
-                                                        }else{
-                                                            $opponent_array['user_discard'][] = $battle_field[$player][$rows]['special']['card'];
-                                                        }
-                                                        $battle_field[$player][$rows]['special'] = '';
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                                //END OF ПЕЧАЛЬ
-
-                                //ПОВЕЛИТЕЛЬ
-                                if($action_data->action == '22'){
-                                    $source_decks = [];
-                                    foreach($action_data->CAmasder_cardSource as $i => $current_card_source){
-                                        switch($current_card_source){
-                                            case 'hand':    $source_decks[] = 'user_hand'; break;
-                                            case 'passed':  $source_decks[] = 'user_discard'; break;
-                                            default:        $source_decks[] = 'user_deck';
-                                        }
-                                    }
-
-                                    $card_counter = 0;
-                                    $cards_to_add = [];
-                                    for($i=0; $i<count($source_decks); $i++){
-                                        foreach($user_array[$source_decks[$i]] as $card_iter => $card_data){
-                                            $allow_to_add = false;
-                                            if($card_data['strength'] <= $action_data->CAmaster_maxCardsStrenght){
-                                                if(!empty($card_data['groups'])){
-                                                    foreach($card_data['groups'] as $group_iter => $group_id){
-                                                        if(in_array($group_id, $action_data->CAmaster_group)){
-                                                            $allow_to_add = true;
-                                                            $card_counter++;
+                                        foreach($action_fields as $i => $player){
+                                            foreach($action_rows as $j => $rows){
+                                                if(!empty($battle_field[$player][$rows]['special'])){
+                                                    foreach($battle_field[$player][$rows]['special']['card']->actions as $k => $action){
+                                                        if($action->action == '28'){
+                                                            if($player == $user_array['player']){
+                                                                $user_array['user_discard'][] = $battle_field[$player][$rows]['special']['card'];
+                                                            }else{
+                                                                $opponent_array['user_discard'][] = $battle_field[$player][$rows]['special']['card'];
+                                                            }
+                                                            $battle_field[$player][$rows]['special'] = '';
                                                         }
                                                     }
                                                 }
                                             }
-                                            if( ($card_counter < $action_data->CAmaster_maxCardsSummon) && ($allow_to_add) ){
-                                                $cards_to_add[$source_decks[$i]][] = [
-                                                    'card'      => $user_array[$source_decks[$i]][$card_iter],
-                                                    'strength'  => $user_array[$source_decks[$i]][$card_iter]['strength'],
-                                                    'login'     => $user_array['login']
-                                                ];
-                                            }
                                         }
-                                    }
-
-                                    foreach($cards_to_add as $deck => $cards){
-                                        foreach($cards as $card_iter =>  $card_data){
-                                            $action_rows_count = count($card_data['card']['action_row']);
-                                            if($action_rows_count > 1){
-                                                $action_row = $card_data['card']['action_row'][$action_rows_count-1];
-                                            }else{
-                                                $action_row = $card_data['card']['action_row'][0];
-                                            }
-
-                                            $battle_field[$user_array['player']][$action_row]['warrior'][] = $card_data;
-
-                                            foreach($user_array[$deck] as $deck_iter => $card_in_deck){
-                                                if(Crypt::decrypt($card_data['card']['id']) == Crypt::decrypt($card_in_deck['id'])){
-                                                    unset($user_array[$deck][$deck_iter]);
+                                    break;
+                                    //END OF ПЕЧАЛЬ
+                                    
+                                    //ПРИЗЫВ
+                                    case '27':
+                                        $allow_change_turn = 0;
+                                        if(!empty($user_array['user_deck'])){
+                                            foreach($user_array['user_deck'] as $i => $card_data){
+                                                $card_data = self::transformObjToArr($card_data);
+                                                if($card_data['type'] != 'special'){
+                                                    $allow_change_turn = 1;
                                                 }
                                             }
-                                            $user_array[$deck] = array_values($user_array[$deck]);
                                         }
-                                    }
+
+                                        if($allow_change_turn == 1){
+                                            $user_turn = $user_array['login'];
+                                            $user_turn_id = $user_array['id'];
+                                            $card_source = 'deck';
+                                        }
+                                    break;
+                                    //END OF ПРИЗЫВ
+                                    
+                                    //ЛЕКАРЬ
+                                    case '29':
+                                        $allow_change_turn = 0;
+                                        if(!empty($user_array['user_discard'])){
+                                            foreach($user_array['user_discard'] as $i => $card_data){
+                                                $card_data = self::transformObjToArr($card_data);
+                                                if($card_data['type'] != 'special'){
+                                                    $allow_change_turn = 1;
+                                                }
+                                            }
+                                        }
+
+                                        if($allow_change_turn == 1){
+                                            $user_turn = $user_array['login'];
+                                            $user_turn_id = $user_array['id'];
+                                            $card_source = 'discard';
+                                        }
+                                    break;
+                                    //END OF ЛЕКАРЬ
                                 }
-                                //END OF ПОВЕЛИТЕЛЬ
                             }
                             //END OF Перебор действий карты
                         }
@@ -1080,7 +1107,7 @@ class JotSocket extends BaseSocket
                     $battle->user_id_turn = $user_turn_id;
                     $battle->save();
                     
-                    self::sendUserMadeActionData($msg, $user_array, $opponent_array, $battle_field, $card_source, $card_to_play, $user_turn, $from, $SplBattleObj);
+                    self::sendUserMadeActionData($msg, $user_array, $opponent_array, $battle_field, $magic_usage, $card_source, $card_to_play, $user_turn, $from, $SplBattleObj);
                 }
                 break;
         }
@@ -1591,7 +1618,7 @@ class JotSocket extends BaseSocket
 
 
     
-    public static function sendUserMadeActionData($msg, $user_array, $opponent_array, $battle_field, $card_source, $card_to_play, $user_turn, $from, $SplBattleObj){
+    public static function sendUserMadeActionData($msg, $user_array, $opponent_array, $battle_field, $magic_usage, $card_source, $card_to_play, $user_turn, $from, $SplBattleObj){
         $user_discard_count = count($user_array['user_discard']);
         $user_deck_count = count($user_array['user_deck']);
 
@@ -1613,7 +1640,8 @@ class JotSocket extends BaseSocket
             'battleInfo'    => $msg->ident->battleId,
             'login'         => $user_turn,
             'cardSource'    => $card_source,
-            'cardToPlay'    => $card_to_play
+            'cardToPlay'    => $card_to_play,
+            'magicUsage'    => $magic_usage[$user_array['player']]
         ];
         self::sendMessageToSelf($from, $result); //Отправляем результат отправителю
 
@@ -1648,5 +1676,35 @@ class JotSocket extends BaseSocket
             }
         }
         return $array;
+    }
+    
+    protected static function makeHealToMid($battle_field_mid, $field_row, $user_array, $opponent_array){
+        foreach($battle_field_mid as $i => $card_data){
+            foreach($card_data['card']->actions as $action_iterrator => $action){
+                $allow_to_drop_from_mid = false;
+                if($action->action == '21'){
+                    for($j=0; $j<count($field_row); $j++){
+                        if(in_array($field_row[$j], $action->CAfear_ActionRow)){
+                            $allow_to_drop_from_mid = true;
+                        }
+                    }
+
+                    if($allow_to_drop_from_mid){
+                        if($user_array['login'] == $card_data['login']){
+                            $user_array['user_discard'][] = self::transformObjToArr($card_data['card']);
+                        }else{
+                            $opponent_array['user_discard'][] = self::transformObjToArr($card_data['card']);
+                        }
+                        unset($battle_field_mid[$i]);
+                    }
+                }
+            }
+        }
+        $battle_field_mid = array_values($battle_field_mid);
+        return [
+            'battle_field_mid'  => $battle_field_mid,
+            'user_array_discard'=> $user_array['user_discard'],
+            'opponent_array_discard' => $opponent_array['user_discard']
+        ];
     }
 }

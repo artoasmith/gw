@@ -142,7 +142,12 @@ $(window).load(function(){
                         }
                         createDeckLayers();//Переформирование отображения отбоя и колоды
                         createCardLayers($('#sortableUserCards li'));//Переформирование отображения руки
-                        
+                        //Обработка Маг. Эффектов
+                        if(result.magicUsage !== undefined){
+                            for(var i=0; i<result.magicUsage.length; i++){
+                                $('.user-describer .magic-effects-wrap li[data-cardid="'+result.magicUsage[i]+'"]').removeClass('active').addClass('disactive');
+                            }
+                        }
                     break;
                 }
                 //Просчет перехода хода и дальнейших действий
@@ -219,10 +224,15 @@ $(window).load(function(){
                         data:   {cards:cardsToChange},
                         success:function(data){
                             data = JSON.parse(data);
+                            console.log(data[$('.user-describer').attr('id')]['deck']);
+                            
+                            $('#card-give-more-user li[data-field=deck]').empty().append(createDeckCardPreview(data[$('.user-describer').attr('id')]['deck'].length, true, data[$('.user-describer').attr('id')]['deck']));
+                            
                             $('.user-card-stash #sortableUserCards').empty();
                             for(var i=0; i< data[$('.user-describer').attr('id')]['hand'].length; i++){
                                 $('.user-card-stash #sortableUserCards').append(createFieldCardView(data[$('.user-describer').attr('id')]['hand'][i], data[$('.user-describer').attr('id')]['hand'][i]['strength'], true));
                             }
+                            createDeckLayers();
                             createCardLayers($('#sortableUserCards li'));
                             $('#selecthandCardsPopup').hide(300);
                             $('#selecthandCardsPopup #handCards').empty();
@@ -338,8 +348,8 @@ $(window).load(function(){
                     });
                     
                     $('.user-describer ul.magic-effects-wrap li').click(function(){
-                        $('.user-describer ul.magic-effects-wrap li').removeClass('active');
                         if(!$(this).hasClass('disactive')){
+                            $('.user-describer ul.magic-effects-wrap li').removeClass('active');
                             $(this).addClass('active');
                             $('#sortableUserCards li').removeClass('active');
                             showMagic($(this).attr('data-cardid'));

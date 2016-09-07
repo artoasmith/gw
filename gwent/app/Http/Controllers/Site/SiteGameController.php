@@ -124,7 +124,6 @@ class SiteGameController extends BaseController
                 'user_energy'   => $user_energy,
                 'user_ready'    => 0,
                 'round_passed'  => 0,
-                'rounds_won'    => 0,
                 'card_source'   => 'hand',
                 'card_to_play'  => 'a:0:{}'
             ]);
@@ -139,7 +138,6 @@ class SiteGameController extends BaseController
             $user_battle -> user_energy     = $user_energy;
             $user_battle -> user_ready      = 0;
             $user_battle -> round_passed    = 0;
-            $user_battle -> rounds_won      = 0;
             $user_battle -> card_source     = 'hand';
             $user_battle -> card_to_play    = 'a:0:{}';
             $result =  $user_battle -> save();
@@ -173,7 +171,8 @@ class SiteGameController extends BaseController
                 'deck_weight'       => $deck_weight,
                 'league'            => $league,
                 'fight_status'      => 0,
-                'player_num_turn'   => 0,
+                'user_id_turn'      => 0,
+                'round_count'       => 1,
                 'round_status'      => serialize(['p1'=>[], 'p2'=>[]]),
                 'battle_field'      => serialize([
                     'p1'=>[
@@ -363,7 +362,7 @@ class SiteGameController extends BaseController
             foreach($magic_effects as $id => $actions){
                 $magic_effect_data = \DB::table('tbl_magic_effects')->select('id', 'title', 'slug', 'img_url', 'description', 'energy_cost')->where('id', '=', $id)->get();
                 $user_magic_effect_data[] = [
-                    'id'            => $id,
+                    'id'            => Crypt::encrypt($id),
                     'title'         => $magic_effect_data[0]->title,
                     'slug'          => $magic_effect_data[0]->slug,
                     'img_url'       => $magic_effect_data[0]->img_url,
