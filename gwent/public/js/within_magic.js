@@ -169,11 +169,6 @@ $(document).ready(function(){
                 var temp = setCheckboxesToJson($('.container-wrap input[name=MAinspiration_ActionRow]:checked'));
                 realActionRow += ', "MAinspiration_ActionRow": ' + temp[0];
                 displayActionRow += ' - Дальность: ' + temp[1];
-
-                //Выбор модификатора силы: 0-умножение/1- добавление силы
-                realActionRow += ', "MAinspiration_modificator": "' + $('input[name=MAinspiration_modificator]:checked').val() + '"';
-                displayActionRow += ' - Модификатор силы: ' + $('input[name=MAinspiration_modificator]:checked').next('label').text() + ';<br>';
-
                 //Значение силы
                 realActionRow += ', "MAinspiration_multValue": "' + $('input[name=MAinspiration_multValue]').val() + '"}';
                 displayActionRow += ' - Значение: ' + $('input[name=MAinspiration_multValue]').val() + ';<br>';

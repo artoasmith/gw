@@ -137,7 +137,13 @@ class SitePagesController extends BaseController
         $races = RaceModel::where('race_type', '=', 'race')->orderBy('position','asc')->get();
         return view('deck', ['races' => $races, 'deck' => $deck]);
     }
-
+    
+    //Старница Информация Тестерам
+    public function forTesters(){
+        $races = RaceModel::where('race_type', '=', 'race')->orderBy('position','asc')->get();
+        return view('for_testers', ['races' => $races]);
+    }
+    
     //Страница "Магазин"
     public function market(){
         SiteFunctionsController::updateConnention();

@@ -63,6 +63,10 @@ Route::group(['middleware' => 'notAuth'], function() {
             'as'    => 'user-deck',
             'uses'  => 'Site\SitePagesController@deck'
         ]);
+        //Информация Тестерам
+        Route::get('/for_tester',[
+            'uses'  => 'Site\SitePagesController@forTesters'
+        ]);
         //Магазин
         Route::get('/market', [
             'as'    => 'user-market',

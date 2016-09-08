@@ -98,7 +98,7 @@ class JotSocket extends BaseSocket
                         }
                     }
 
-                    if($ready_players_count == 2){ //Если готовых к игре
+                    if($ready_players_count == 2){//Если готовых к игре
                         if($battle -> user_id_turn == 0){ //Если игрок для хода не определен
                             //Игроки фракции "Проклятые"
                             $cursed_players = [];
@@ -169,10 +169,9 @@ class JotSocket extends BaseSocket
                 }else{
                     $user_turn = '';
                 }
-                
                 if($battle -> fight_status <= 1){
                     if(count($battle_members) == $battle->players_quantity){
-                        if($battle -> fight_status === 0){
+                        if($battle -> fight_status == 0){
                            $battle -> fight_status = 1; // Подключилось нужное количество пользователей
                            $battle -> save();
                         }
@@ -245,7 +244,7 @@ class JotSocket extends BaseSocket
 
                 //Если оба спасовали
                 if($users_passed_count == 2){
-                    $battle_field = self::recalculateStrengthByMid($battle_field, $user_array, $opponent_array);//Финальный пересчет поля битвы
+                    $battle_field = self::recalculateStrengthByMid($battle, $battle_field, $user_array, $opponent_array);//Финальный пересчет поля битвы
                     //Подсчет результатп раунда по очкам
                     $total_str = ['p1'=> 0, 'p2'=> 0];
                     foreach($battle_field as $player => $rows){
@@ -400,7 +399,7 @@ class JotSocket extends BaseSocket
                         }
                     }
                     $battle_field['mid'] = [];
-                    $battle_field = self::recalculateStrengthByMid($battle_field, $user_array, $opponent_array);//Финальный пересчет поля битвы
+                    $battle_field = self::recalculateStrengthByMid($battle, $battle_field, $user_array, $opponent_array);//Финальный пересчет поля битвы
                     
                     
                     $battle->round_count  = $battle->round_count +1;
@@ -511,12 +510,12 @@ class JotSocket extends BaseSocket
                             //Сохранение значений энергии 
                             \DB::table('tbl_user_data')->where('user_id','=',$user_array['id'])->update(['user_energy' => $energy]);
                             $user_array['energy'] = $energy;
-
+                            
                             //Если МЭ существует и кол-во его использований больше 0
                             if( (isset($user_array['magic_effects'][$magic_id])) && ($user_array['magic_effects'][$magic_id] > 0) ){
                                 $user_array['magic_effects'][$magic_id]--;//Уменьшения показателя использования МЭ
                                 
-                                $magic_usage[$user_array['player']][] = $msg->magic;//Сохраняем МЭ в использованых
+                                $magic_usage[$user_array['player']][$battle->round_count] = $msg->magic;//Сохраняем МЭ в использованых
                                 $battle->magic_usage = serialize($magic_usage);
                                 $battle->save();
 
@@ -846,8 +845,9 @@ class JotSocket extends BaseSocket
                                             foreach($battle_field[$field] as $row => $cards){//перебираем карты в рядах
                                                 if(in_array($row, $action_data->CAfear_ActionRow)){//Если данный ряд присутствует в области действия карты "Страшный"
                                                     if(!empty($cards['special'])){
+                                                        $cards['special']['card'] = self::transformObjToArr($cards['special']['card']);
                                                         //Проверяем присутсвует ли карта "Исцеление" в текущем ряду
-                                                        foreach($cards['special']['card']->actions as $i => $action){
+                                                        foreach($cards['special']['card']['actions'] as $i => $action){
                                                             if($action->action == '25'){
                                                                 if($user_array['player'] == $field){//Кидаем карту "Исцеление" в отбой
                                                                     $user_array['user_discard'][] = $cards['special']['card'];
@@ -863,7 +863,7 @@ class JotSocket extends BaseSocket
                                         }
                                     break;
                                     //END OF CТРАШНЫЙ
-                                    
+
                                     //ПОВЕЛИТЕЛЬ
                                     case '22':
                                         $source_decks = [];
@@ -1014,7 +1014,8 @@ class JotSocket extends BaseSocket
                                         foreach($action_fields as $i => $player){
                                             foreach($action_rows as $j => $rows){
                                                 if(!empty($battle_field[$player][$rows]['special'])){
-                                                    foreach($battle_field[$player][$rows]['special']['card']->actions as $k => $action){
+                                                    $battle_field[$player][$rows]['special']['card'] = self::transformObjToArr($battle_field[$player][$rows]['special']['card']);
+                                                    foreach($battle_field[$player][$rows]['special']['card']['actions'] as $k => $action){
                                                         if($action->action == '28'){
                                                             if($player == $user_array['player']){
                                                                 $user_array['user_discard'][] = $battle_field[$player][$rows]['special']['card'];
@@ -1069,13 +1070,14 @@ class JotSocket extends BaseSocket
                                         }
                                     break;
                                     //END OF ЛЕКАРЬ
+                                    
                                 }
                             }
                             //END OF Перебор действий карты
                         }
                     }
 
-                    $battle_field = self::recalculateStrengthByMid($battle_field, $user_array, $opponent_array);
+                    $battle_field = self::recalculateStrengthByMid($battle, $battle_field, $user_array, $opponent_array);
 
                     if(count($user_array['user_hand']) == 0){//Если у пользлвателя закончились карты на руках - делаем ему автопас
                         \DB::table('tbl_battle_members')->where('id', '=', $msg->ident->battleId)->update(['round_passed' => '1']);
@@ -1183,13 +1185,15 @@ class JotSocket extends BaseSocket
     }
 
 
-    protected static function recalculateStrengthByMid($battle_field, $user_array, $opponent_array){
+    protected static function recalculateStrengthByMid($battle, $battle_field, $user_array, $opponent_array){
         //Сброс значений силы
         $battle_field = self::resetBattleFieldCardsStrength($battle_field);
         $actions_array_fear = [];//Массив действий "Страшный"
         $actions_array_support = [];//Массив действий "Поддержка"
         $actions_array_fury = [];//Массив действий "Неистовство"
         $actions_array_brotherhood = [];//Массив действий "Боевое братство"
+        
+        $magic_usage = unserialize($battle->magic_usage);//Список активных МЭ
 
         foreach($battle_field as $field => $rows){
             if($field != 'mid'){
@@ -1271,9 +1275,21 @@ class JotSocket extends BaseSocket
                                         $allow_fear = true;
                                         //Если в ряду оказаалась карта "Исцеление"
                                         if(!empty($cards_to_fear['special'])){
-                                            foreach($cards_to_fear['special']['card']->actions as $card_to_fear_action_iterator => $card_to_fear_action){
+                                            $cards_to_fear['special']['card'] = self::transformObjToArr($cards_to_fear['special']['card']);
+                                            foreach($cards_to_fear['special']['card']['actions'] as $card_to_fear_action_iterator => $card_to_fear_action){
                                                 if($card_to_fear_action -> action == '25'){
                                                     $allow_fear = false;
+                                                }
+                                            }
+                                        }
+                                        //Если сыгран МЭ отмены негативных эффектов
+                                        foreach($magic_usage[$players[$i]] as $activated_in_round => $magic_id){
+                                            if($activated_in_round == $battle->round_count){
+                                                $magic = json_decode(SiteGameController::getMagicData($magic_id));
+                                                foreach($magic->actions as $action_iter => $action_data){
+                                                    if($action_data->action == '3'){
+                                                        $allow_fear = false;
+                                                    }
                                                 }
                                             }
                                         }
@@ -1310,6 +1326,47 @@ class JotSocket extends BaseSocket
                                                 }
                                             }
                                         }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        //Применение МЭ "Понижение силы" к картам
+        foreach($magic_usage as $player => $magic_data){
+            if($user_array['player'] == $player){
+                $opponent_player = $opponent_array['player'];
+            }else{
+                $opponent_player = $user_array['player'];
+            }
+            foreach($magic_data as $activated_in_round => $magic_id){
+                if($activated_in_round == $battle->round_count){
+                    $magic = json_decode(SiteGameController::getMagicData($magic_id));//Данные о МЭ
+                    foreach($magic->actions as $action_iter => $action_data){
+                        if($action_data->action == '10'){
+                            foreach($action_data->MAdecrStrength_ActionRow as $row_iter => $row){//Ряды действия МЭ
+                                //Применение МЭ к картам
+                                foreach($battle_field[$opponent_player][$row]['warrior'] as $card_iter => $card){
+                                    $card['card'] = self::transformObjToArr($card['card']);
+                                    //Если у карты есть полный иммунитет
+                                    $allow_magic = true;
+                                    foreach($card['card']['actions'] as $j => $action){
+                                        if($action->action == '18'){
+                                            if($action->CAimmumity_type == 1){
+                                                $allow_magic = false;
+                                            }
+                                        }
+                                    }
+
+                                    if($allow_magic){
+                                        $strength = $card['strength'] - $action_data->MAdecrStrengthValue;
+                                        if($strength < 1){
+                                            $strength = 1;
+                                        }
+                                        $battle_field[$opponent_player][$row]['warrior'][$card_iter]['strength'] = $strength;
                                     }
                                 }
                             }
@@ -1396,7 +1453,39 @@ class JotSocket extends BaseSocket
                 }
             }
         }
+        
+        //Применение МЭ "Добавление силы" к картам
+        foreach($magic_usage as $player => $magic_data){
+            foreach($magic_data as $activated_in_round => $magic_id){
+                if($activated_in_round == $battle->round_count){
+                    $magic = json_decode(SiteGameController::getMagicData($magic_id));//Данные о МЭ
+                    foreach($magic->actions as $action_iter => $action_data){
+                        if($action_data->action == '5'){
+                            foreach($action_data->MAaddStrength_ActionRow as $row_iter => $row){//Ряды действия МЭ
+                                //Применение МЭ к картам
+                                foreach($battle_field[$player][$row]['warrior'] as $card_iter => $card){
+                                    $card['card'] = self::transformObjToArr($card['card']);
+                                    //Если у карты есть полный иммунитет
+                                    $allow_magic = true;
+                                    foreach($card['card']['actions'] as $j => $action){
+                                        if($action->action == '18'){
+                                            if($action->CAimmumity_type == 1){
+                                                $allow_magic = false;
+                                            }
+                                        }
+                                    }
 
+                                    if($allow_magic){
+                                        $battle_field[$player][$row]['warrior'][$card_iter]['strength'] = $card['strength'] + $action_data->MAaddStrengthValue;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
         //Применение "Неистовость" к картам
         foreach($actions_array_fury as $card_id => $card_data){
             if($card_data['login'] == $user_array['login']){
@@ -1540,7 +1629,8 @@ class JotSocket extends BaseSocket
         foreach($battle_field as $player => $rows){
             foreach($rows as $row => $cards){
                 if(!empty($cards['special'])){
-                    foreach($cards['special']['card']->actions as $action_iter => $action_data){
+                    $cards['special']['card'] = self::transformObjToArr($cards['special']['card']);
+                    foreach($cards['special']['card']['actions'] as $action_iter => $action_data){
                         if($action_data->action == '28'){
 
                             foreach($battle_field[$player][$row]['warrior'] as $i => $card_data){
@@ -1548,6 +1638,50 @@ class JotSocket extends BaseSocket
                                     $battle_field[$player][$row]['warrior'][$i]['strength'] *= $action_data->CAinspiration_multValue;
                                 }else{
                                     $battle_field[$player][$row]['warrior'][$i]['strength'] += $action_data->CAinspiration_multValue;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        //Применение МЭ "Воодушевление" к картам
+        foreach($magic_usage as $player => $magic_data){
+            foreach($magic_data as $activated_in_round => $magic_id){
+                if($activated_in_round == $battle->round_count){
+                    $magic = json_decode(SiteGameController::getMagicData($magic_id));//Данные о МЭ
+                    foreach($magic->actions as $action_iter => $action_data){
+                        if($action_data->action == '6'){
+                            foreach($action_data->MAinspiration_ActionRow as $row_iter => $row){//Ряды действия МЭ
+                                //Применение МЭ к картам
+                                
+                                //Если есть в ряду спец карта "Печаль"
+                                $disallow_by_sorrow = false;
+                                if($battle_field[$player][$row]['special'] != ''){
+                                    $battle_field[$player][$row]['special']['card'] = self::transformObjToArr($battle_field[$player][$row]['special']['card']);
+                                    foreach($battle_field[$player][$row]['special']['card']['actions'] as $j => $action){
+                                        if($action->action == '26'){
+                                            $disallow_by_sorrow = true;
+                                        }
+                                    }
+                                }
+                                
+                                foreach($battle_field[$player][$row]['warrior'] as $card_iter => $card){
+                                    $card['card'] = self::transformObjToArr($card['card']);
+                                    //Если у карты есть полный иммунитет
+                                    $allow_magic = true;
+                                    foreach($card['card']['actions'] as $j => $action){
+                                        if($action->action == '18'){
+                                            if($action->CAimmumity_type == 1){
+                                                $allow_magic = false;
+                                            }
+                                        }
+                                    }
+
+                                    if( ($allow_magic) && (!$disallow_by_sorrow) ){
+                                        $battle_field[$player][$row]['warrior'][$card_iter]['strength'] *= $action_data->MAinspiration_multValue;
+                                    }
                                 }
                             }
                         }

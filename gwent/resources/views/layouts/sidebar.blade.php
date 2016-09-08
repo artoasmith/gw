@@ -85,6 +85,13 @@
                         </a>
                     </div>
                     <div class="nav-item">
+                        <a href="/for_tester">
+                            <span class="nav-item-wrap">
+                                <span>Информация Тестерам</span>
+                            </span>
+                        </a>
+                    </div>
+                    <div class="nav-item">
                         <a href="/training">
                             <span class="nav-item-wrap">
                                 <span>Обучение</span>

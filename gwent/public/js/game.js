@@ -144,8 +144,8 @@ $(window).load(function(){
                         createCardLayers($('#sortableUserCards li'));//Переформирование отображения руки
                         //Обработка Маг. Эффектов
                         if(result.magicUsage !== undefined){
-                            for(var i=0; i<result.magicUsage.length; i++){
-                                $('.user-describer .magic-effects-wrap li[data-cardid="'+result.magicUsage[i]+'"]').removeClass('active').addClass('disactive');
+                            for(var activated_in_round in result.magicUsage){
+                                $('.user-describer .magic-effects-wrap li[data-cardid="'+result.magicUsage[activated_in_round]+'"]').removeClass('active').addClass('disactive');
                             }
                         }
                     break;

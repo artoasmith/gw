@@ -101,7 +101,7 @@ class UserAuthController extends BaseController
                 'ban_time'      => '0000-00-00 00:00:00',
                 'user_role'     => '0',
                 'user_online'   => '1',
-                'is_activated'  => 0,
+                'is_activated'  => 1,
                 'activation_code' => $activation_code
             ]);
 

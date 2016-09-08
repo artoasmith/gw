@@ -578,13 +578,6 @@ class AdminViews extends BaseController
             if(isset($action -> MAinspiration_ActionRow)){
                 $result .= ' - Дальность: '. self::createActionsRowRange($action -> MAinspiration_ActionRow);
 
-                $result .= ' - Модификатор силы: ';
-                if(0 == $action -> MAinspiration_modificator){
-                    $result .= 'Умножение<br>';
-                }else{
-                    $result .= 'Добавление<br>';
-                }
-
                 $result .= ' - Значение: '.$action -> MAinspiration_multValue;
             }
 

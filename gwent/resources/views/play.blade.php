@@ -18,6 +18,14 @@ function cardView($card){
         </div>
     </li>';
 }
+function specialCardView($card){
+    if(!is_array($card['card'])) $card['card'] = get_object_vars($card['card']);
+    return '<div class="card-wrap" data-cardid="'.$card['card']['id'].'" data-relative="'.$card['card']['type'].'" title="'.$card['card']['title'].'">
+        <img src="'.URL::asset('/img/card_images/'.$card['card']['img_url']).'" alt="">
+        <div class="label-power-card">'.$card['card']['strength'].'</div>
+    </div>';
+}
+
 $user = Auth::user();
 
 $battle_members = \App\BattleMembersModel::where('battle_id','=',$battle_data->id)->get();
@@ -246,10 +254,7 @@ foreach($battle_members as $key => $value){
 
                             <div class="image-inside-line">
                                 @if(!empty($battle_field[$opponent_field_identificator][2]['special']))
-                                <div class="card-wrap" data-cardid="{{ $battle_field[$opponent_field_identificator][2]['special']['card']->id}}" data-relative="{{ $battle_field[$opponent_field_identificator][2]['special']['card']->type }}" title="{{ $battle_field[$opponent_field_identificator][2]['special']['card']->title}}">
-                                    <img src="{{ URL::asset('/img/card_images/'.$battle_field[$opponent_field_identificator][2]['special']['card']->img_url) }}" alt="">
-                                    <div class="label-power-card">{{ $battle_field[$opponent_field_identificator][2]['special']['card']->strength }}</div>
-                                </div>
+                                    {!! specialCardView($battle_field[$opponent_field_identificator][2]['special']) !!}
                                 @endif
                             </div>
 
@@ -280,10 +285,7 @@ foreach($battle_members as $key => $value){
 
                             <div class="image-inside-line">
                                 @if(!empty($battle_field[$opponent_field_identificator][1]['special']))
-                                <div class="card-wrap" data-cardid="{{ $battle_field[$opponent_field_identificator][1]['special']['card']->id}}" data-relative="{{ $battle_field[$opponent_field_identificator][1]['special']['card']->type }}"  title="{{ $battle_field[$opponent_field_identificator][1]['special']['card']->title}}">
-                                    <img src="{{ URL::asset('/img/card_images/'.$battle_field[$opponent_field_identificator][1]['special']['card']->img_url) }}" alt="">
-                                    <div class="label-power-card">{{ $battle_field[$opponent_field_identificator][1]['special']['card']->strength }}</div>
-                                </div>
+                                    {!! specialCardView($battle_field[$opponent_field_identificator][1]['special']) !!}
                                 @endif
                             </div>
                             <!-- Поле размещения дальних карт -->
@@ -312,10 +314,7 @@ foreach($battle_members as $key => $value){
 
                             <div class="image-inside-line">
                                 @if(!empty($battle_field[$opponent_field_identificator][0]['special']))
-                                <div class="card-wrap" data-cardid="{{ $battle_field[$opponent_field_identificator][0]['special']['card']->id}}" data-relative="{{ $battle_field[$opponent_field_identificator][0]['special']['card']->type }}" title="{{ $battle_field[$opponent_field_identificator][0]['special']['card']->title}}">
-                                    <img src="{{ URL::asset('/img/card_images/'.$battle_field[$opponent_field_identificator][0]['special']['card']->img_url) }}" alt="">
-                                    <div class="label-power-card">{{ $battle_field[$opponent_field_identificator][0]['special']['card']->strength }}</div>
-                                </div>
+                                    {!! specialCardView($battle_field[$opponent_field_identificator][0]['special']) !!}
                                 @endif
                             </div>
                             <div class="inputer-field-meele fields-for-cards-wrap">
@@ -350,10 +349,7 @@ foreach($battle_members as $key => $value){
 
                             <div class="image-inside-line">
                                 @if(!empty($battle_field[$user_field_identificator][0]['special']))
-                                <div class="card-wrap" data-cardid="{{ $battle_field[$user_field_identificator][0]['special']['card']->id}}" data-relative="{{ $battle_field[$user_field_identificator][0]['special']['card']->type }}" title="{{ $battle_field[$user_field_identificator][0]['special']['card']->title}}">
-                                    <img src="{{ URL::asset('/img/card_images/'.$battle_field[$user_field_identificator][0]['special']['card']->img_url) }}" alt="">
-                                    <div class="label-power-card">{{ $battle_field[$user_field_identificator][0]['special']['card']->strength }}</div>
-                                </div>
+                                    {!! specialCardView($battle_field[$user_field_identificator][0]['special']) !!}
                                 @endif
                             </div><!-- Место для спецкарты -->
 
@@ -382,10 +378,7 @@ foreach($battle_members as $key => $value){
 
                             <div class="image-inside-line">
                                 @if(!empty($battle_field[$user_field_identificator][1]['special']))
-                                <div class="card-wrap" data-cardid="{{ $battle_field[$user_field_identificator][1]['special']['card']->id}}" data-relative="{{ $battle_field[$user_field_identificator][1]['special']['card']->type }}" title="{{ $battle_field[$user_field_identificator][1]['special']['card']->title}}">
-                                    <img src="{{ URL::asset('/img/card_images/'.$battle_field[$user_field_identificator][1]['special']['card']->img_url) }}" alt="">
-                                    <div class="label-power-card">{{ $battle_field[$user_field_identificator][1]['special']['card']->strength }}</div>
-                                </div>
+                                    {!! specialCardView($battle_field[$user_field_identificator][1]['special']) !!}
                                 @endif
                             </div><!-- Место для спецкарты -->
 
@@ -415,10 +408,7 @@ foreach($battle_members as $key => $value){
 
                             <div class="image-inside-line">
                                 @if(!empty($battle_field[$user_field_identificator][2]['special']))
-                                <div class="card-wrap" data-cardid="{{ $battle_field[$user_field_identificator][2]['special']['card']->id}}" data-relative="{{ $battle_field[$user_field_identificator][2]['special']['card']->type }}" title="{{ $battle_field[$user_field_identificator][2]['special']['card']->title}}">
-                                    <img src="{{ URL::asset('/img/card_images/'.$battle_field[$user_field_identificator][2]['special']['card']->img_url) }}" alt="">
-                                    <div class="label-power-card">{{ $battle_field[$user_field_identificator][2]['special']['card']->strength }}</div>
-                                </div>
+                                    {!! specialCardView($battle_field[$user_field_identificator][2]['special']) !!}
                                 @endif
                             </div><!-- Место для спецкарты -->
 
@@ -640,7 +630,7 @@ foreach($battle_members as $key => $value){
                     @if(isset($players['allied']['user_magic']) && !empty($players['allied']['user_magic']))
                         @foreach($players['allied']['user_magic'] as $i => $value)
                             <?php $disactive = ''; ?>
-                            @foreach($magic_usage[$user_field_identificator] as $magic_iter => $magic_id)
+                            @foreach($magic_usage[$user_field_identificator] as $activated_in_round => $magic_id)
                                 <?php if( $value->id == \Crypt::decrypt($magic_id) ) $disactive = 'disactive'; ?>
                             @endforeach
                         <li data-cardid="{{ \Crypt::encrypt($value->id) }}" class="{{$disactive}}">
