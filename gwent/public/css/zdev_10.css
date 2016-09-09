@@ -1580,7 +1580,7 @@
   left: 30%;
   top: 25%;
   min-height: 40px;
-  z-index: 1000;
+  z-index: 9999;
 }
 .hand-select-popup{
   background-color: #fff;
@@ -1590,7 +1590,7 @@
   left: 10%;
   top: 15%;
   min-height: 40px;
-  z-index: 1000;
+  z-index: 9999;
 }
 .market-buy-popup .close-popup{
     position: absolute;
@@ -1601,7 +1601,7 @@
     width: 20px;
     height: 20px;
     text-align: center;
-    z-index: 100;
+    z-index: 9990;
 }
 .market-buy-popup .popup-content-wrap, .hand-select-popup .popup-content-wrap{
     font-size: 24px;
