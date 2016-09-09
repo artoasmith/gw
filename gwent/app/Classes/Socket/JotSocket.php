@@ -558,6 +558,35 @@ class JotSocket extends BaseSocket
                                             $opponent_array['user_discard'] = $temp_heal_action['opponent_array_discard'];
                                         break;
                                         //END OF ОТМЕНА НЕГАТИВНЫХ ЭФФЕКТОВ
+                                    
+                                        //УБИЙСТВО
+                                        case '8':
+                                            $kill_data = [
+                                                'oponent_battle_field_identificator'=> $opponent_array['player'],
+                                                'atackTeamate'                      => $action_data->MAkiller_atackTeamate,
+                                                'enemyStrenghtLimitToKill'          => $action_data->MAkiller_enemyStrenghtLimitToKill,
+                                                'groupOrSingle'                     => [],
+                                                'actionRow'                         => $action_data->MAkiller_ActionRow,
+                                                'ignoreKillImmunity'                => $action_data->MAkiller_ignoreKillImmunity,
+                                                'killedQuality_Selector'            => $action_data->MAkiller_killedQuality_Selector,
+                                                'killAllOrSingle'                   => $action_data->MAkiller_killAllOrSingle
+                                            ];
+
+                                            if(isset($action_data->MAkiller_recomendedTeamateForceAmount_Selector)){
+                                                $kill_data['recomendedTeamateForceAmount_Selector'] = $action_data->MAkiller_recomendedTeamateForceAmount_Selector;
+                                            }
+                                            if(isset($action_data->MAkiller_recomendedTeamateForceAmount_OnOff)){
+                                                $kill_data['recomendedTeamateForceAmount_OnOff'] = $action_data->MAkiller_recomendedTeamateForceAmount_OnOff;
+                                            }
+                                            if(isset($action_data->MAkiller_recomendedTeamateForceAmount_ActionRow)){
+                                            $kill_data['recomendedTeamateForceAmount_ActionRow'] = $action_data->MAkiller_recomendedTeamateForceAmount_ActionRow;
+                                        }
+                                            $kill_result = self::makeKill($battle_field, $kill_data, $user_array, $opponent_array);
+                                            $battle_field = $kill_result['battle_field'];
+                                            $user_array['user_discard'] = $kill_result['user_discard'];
+                                            $opponent_array['user_discard'] = $kill_result['opponent_discard'];
+                                        break;
+                                        //END OF УБИЙСТВО
                                     }
                                 }
                             }
@@ -673,154 +702,30 @@ class JotSocket extends BaseSocket
                                     
                                     //УБИЙЦА
                                     case '13':
-                                        //Может ли бить своих
-                                        $players = ( (isset($action_data->CAkiller_atackTeamate)) && ($action_data->CAkiller_atackTeamate == 1) ) ? $players = ['p1', 'p2'] : [$oponent_battle_field_identificator];
-
-                                        //наносит удат по группе
-                                        if( (isset($action_data->CAkiller_groupOrSingle)) && ($action_data->CAkiller_groupOrSingle != 0)){
-                                            $groups = $action_data->CAkiller_groupOrSingle;
-                                        }else{
-                                            $groups = [];
+                                        $kill_data = [
+                                            'oponent_battle_field_identificator'=> $oponent_battle_field_identificator,
+                                            'atackTeamate'                      => $action_data->CAkiller_atackTeamate,
+                                            'enemyStrenghtLimitToKill'          => $action_data->CAkiller_enemyStrenghtLimitToKill,
+                                            'groupOrSingle'                     => $action_data->CAkiller_groupOrSingle,
+                                            'actionRow'                         => $action_data->CAkiller_ActionRow,
+                                            'ignoreKillImmunity'                => $action_data->CAkiller_ignoreKillImmunity,
+                                            'killedQuality_Selector'            => $action_data->CAkiller_killedQuality_Selector,
+                                            'killAllOrSingle'                   => $action_data->CAkiller_killAllOrSingle,
+                                        ];
+                                        
+                                        if(isset($action_data->CAkiller_recomendedTeamateForceAmount_Selector)){
+                                            $kill_data['recomendedTeamateForceAmount_Selector'] = $action_data->CAkiller_recomendedTeamateForceAmount_Selector;
                                         }
-
-                                        $cards_can_be_destroyed = [];
-
-                                        //Для каждого поля битвы
-                                        foreach ($battle_field as $fields => $rows){
-                                            //Если поле в находится в разрешенных$ для убийства
-                                            if(in_array($fields, $players)){
-
-                                                $enemy_player = $opponent_array['player'];
-
-                                                //Для каждого ряда
-                                                $rows_strength = 0; //Сумарная сила выбраных рядов
-                                                $max_strenght = 0;  // максимальная сила карты
-                                                $min_strenght = 999;// минимальная сила карты
-                                                $card_strength_set = []; //набор силы карты для выбора случйного значения силы
-                                                //Узнаем необходимые значения в массиве поля битвы
-                                                foreach($rows as $row => $cards){
-                                                    //Если ряд находится в области действия карты-убийцы
-                                                    if(in_array($row, $action_data->CAkiller_ActionRow)){
-                                                        //Если данное поле является полем противника
-                                                        foreach($battle_field[$enemy_player][$row]['warrior'] as $i => $card_data){
-                                                            $card_data['card'] = self::transformObjToArr($card_data['card']);
-
-                                                            $rows_strength += $card_data['strength'];//Сумарная сила выбраных рядов
-
-                                                            $can_kill_this_card = 1; //Имунитет к убийству 1 - не имеет иммунитет; 0 - не имеет
-                                                            foreach($card_data['card']['actions'] as $j => $action_immune){
-                                                                if($action_immune->action == '18'){
-                                                                    $can_kill_this_card = 0;
-                                                                }
-                                                            }
-                                                            //Атакуящая карта игнорирует иммунитет к убийству
-                                                            if( (isset($action_data->CAkiller_ignoreKillImmunity)) && ($action_data->CAkiller_ignoreKillImmunity != 0) ){
-                                                                $can_kill_this_card = 1;
-                                                            }
-                                                            if($can_kill_this_card == 1){
-                                                                $max_strenght = ($max_strenght < $card_data['strength']) ? $card_data['strength'] : $max_strenght;// максимальная сила карты
-                                                                $min_strenght = ($min_strenght > $card_data['strength']) ? $card_data['strength'] : $min_strenght;// минимальная сила карты
-                                                                $card_strength_set[] = $card_data['strength'];
-                                                            }
-                                                        }
-                                                    }
-                                                }
-                                                $card_strength_set = array_values(array_unique($card_strength_set));
-
-                                                //Качество убиваемой карты
-                                                switch($action_data->CAkiller_killedQuality_Selector){
-                                                    case '0': $card_strength_to_kill = $min_strenght; break;//Самую слабую
-                                                    case '1': $card_strength_to_kill = $max_strenght; break;//Самую сильную
-                                                    case '2': $random = rand(0, count($card_strength_set)-1); $card_strength_to_kill = $card_strength_set[$random]; break;
-                                                }
-
-                                                foreach($rows as $row => $cards){
-                                                    //Если данный ряд доступен для убийства
-                                                    if(in_array($row, $action_data->CAkiller_ActionRow)){
-                                                        //Порог силы воинов противника для совершения убийства
-                                                        $action_data->CAkiller_enemyStrenghtLimitToKill = ($action_data->CAkiller_enemyStrenghtLimitToKill == 0) ? 999 : $action_data->CAkiller_enemyStrenghtLimitToKill;
-
-                                                        //Нужное для совершения убийства количество силы в ряду
-                                                        $allow_to_kill_by_force_amount = 1;
-
-                                                        if($action_data->CAkiller_recomendedTeamateForceAmount_OnOff != 0){//Если не выкл
-                                                            switch($action_data->CAkiller_recomendedTeamateForceAmount_Selector){
-                                                                case '0':   //Больше указаного значения
-                                                                    $allow_to_kill_by_force_amount = ($action_data->CAkiller_recomendedTeamateForceAmount_OnOff < $rows_strength) ? 1 : 0; break;
-                                                                case '1':   //Меньше указанного значения
-                                                                    $allow_to_kill_by_force_amount = ($action_data->CAkiller_recomendedTeamateForceAmount_OnOff > $rows_strength) ? 1 : 0; break;
-                                                                case '2':   //Равно указанному значению
-                                                                    $allow_to_kill_by_force_amount = ($action_data->CAkiller_recomendedTeamateForceAmount_OnOff ==$rows_strength) ? 1 : 0; break;
-                                                            }
-                                                        }
-
-                                                        foreach($cards['warrior'] as $card_iterator => $card_data){
-                                                            $card_data['card'] = self::transformObjToArr($card_data['card']);
-
-                                                            if($card_data['strength'] < $action_data->CAkiller_enemyStrenghtLimitToKill){
-                                                                //Игнор к иммунитету
-                                                                $allow_to_kill_by_immune = 1; //Разрешено убивать карту т.к. иммунитет присутствует
-
-                                                                foreach($card_data['card']['actions'] as $card_action_i => $card_current_action){
-                                                                    if($card_current_action->action == '18'){
-                                                                        $allow_to_kill_by_immune = 0;
-                                                                    }
-                                                                }
-
-                                                                if( (isset($action_data->CAkiller_ignoreKillImmunity)) && ($action_data->CAkiller_ignoreKillImmunity != 0) ){
-                                                                    $allow_to_kill_by_immune = 1;
-                                                                }
-
-                                                                //Совершаем убийство карты по указанным выше параметрам
-                                                                if( ($allow_to_kill_by_force_amount == 1) && ($card_data['strength'] == $card_strength_to_kill) && ($allow_to_kill_by_immune == 1) ){
-                                                                    //Массив карт которые возможно уничтожить
-                                                                    if(!empty($groups)){
-                                                                        foreach($card_data['card']['groups'] as $groups_ident => $group_id){
-                                                                            if(in_array($group_id, $groups)){
-                                                                                $cards_can_be_destroyed[] = ['player' => $fields, 'card_id' => $card_data['card']['id']];
-                                                                            }
-                                                                        }
-                                                                    }else{
-                                                                        $cards_can_be_destroyed[] = ['player' => $fields, 'card_id' => $card_data['card']['id']];
-                                                                    }
-                                                                }
-                                                            }
-                                                        }
-                                                    }
-                                                }
-                                            }
+                                        if(isset($action_data->CAkiller_recomendedTeamateForceAmount_OnOff)){
+                                            $kill_data['recomendedTeamateForceAmount_OnOff'] = $action_data->CAkiller_recomendedTeamateForceAmount_OnOff;
                                         }
-
-                                        $cards_to_destroy = [];
-                                        if( (isset($action_data->CAkiller_killAllOrSingle)) && ($action_data->CAkiller_killAllOrSingle == 0) ){
-                                            if(!empty($cards_can_be_destroyed)){
-                                                $index = rand(0, count($cards_can_be_destroyed)-1);
-                                                $cards_to_destroy[] = $cards_can_be_destroyed[$index];
-                                            }
-                                        }else{
-                                            $cards_to_destroy = $cards_can_be_destroyed;
+                                        if(isset($action_data->CAkiller_recomendedTeamateForceAmount_ActionRow)){
+                                            $kill_data['recomendedTeamateForceAmount_ActionRow'] = $action_data->CAkiller_recomendedTeamateForceAmount_ActionRow;
                                         }
-
-                                        $cards_to_destroy_count = count($cards_to_destroy);
-
-                                        for($i=0; $i<$cards_to_destroy_count; $i++){
-                                            foreach($battle_field[$cards_to_destroy[$i]['player']] as $rows => $cards){
-                                                foreach($cards['warrior'] as $card_iterator => $card_data){
-                                                    $card_data['card'] = self::transformObjToArr($card_data['card']);
-
-                                                    if($card_data['card']['id'] == $cards_to_destroy[$i]['card_id']){
-
-                                                        if($user_array['player'] == $cards_to_destroy[$i]['player']){
-                                                            $user_array['user_discard'][] = $card_data['card'];
-                                                        }else{
-                                                            $opponent_array['user_discard'][] = $card_data['card'];
-                                                        }
-                                                        unset($battle_field[$cards_to_destroy[$i]['player']][$rows]['warrior'][$card_iterator]);
-                                                        $battle_field[$cards_to_destroy[$i]['player']][$rows]['warrior'] = array_values($battle_field[$cards_to_destroy[$i]['player']][$rows]['warrior']);
-                                                    }
-                                                }
-                                            }
-                                        }
+                                        $kill_result = self::makeKill($battle_field, $kill_data, $user_array, $opponent_array);
+                                        $battle_field = $kill_result['battle_field'];
+                                        $user_array['user_discard'] = $kill_result['user_discard'];
+                                        $opponent_array['user_discard'] = $kill_result['opponent_discard'];
                                     break;
                                     //END OF УБИЙЦА
                                     
@@ -1750,7 +1655,6 @@ class JotSocket extends BaseSocket
         return $card;
     }
 
-
     
     public static function sendUserMadeActionData($msg, $user_array, $opponent_array, $battle_field, $magic_usage, $card_source, $card_to_play, $user_turn, $from, $SplBattleObj){
         $user_discard_count = count($user_array['user_discard']);
@@ -1812,6 +1716,7 @@ class JotSocket extends BaseSocket
         return $array;
     }
     
+    
     protected static function makeHealToMid($battle_field_mid, $field_row, $user_array, $opponent_array){
         foreach($battle_field_mid as $i => $card_data){
             foreach($card_data['card']->actions as $action_iterrator => $action){
@@ -1839,6 +1744,158 @@ class JotSocket extends BaseSocket
             'battle_field_mid'  => $battle_field_mid,
             'user_array_discard'=> $user_array['user_discard'],
             'opponent_array_discard' => $opponent_array['user_discard']
+        ];
+    }
+
+
+    protected static function makeKill($battle_field, $action_data, $user_array, $opponent_array){
+        $players = ($action_data['atackTeamate'] == 1) ? $players = ['p1', 'p2'] : [$action_data['oponent_battle_field_identificator']];
+
+        $action_data['enemyStrenghtLimitToKill'] = ($action_data['enemyStrenghtLimitToKill'] == 0) ? 999 : $action_data['enemyStrenghtLimitToKill'];
+        //наносит удат по группе
+        if($action_data['groupOrSingle'] != 0){
+            $groups = $action_data['groupOrSingle'];
+        }else{
+            $groups = [];
+        }
+        $rows_strength = []; //Сумарная сила выбраных рядов
+        $max_strenght = 0;  // максимальная сила карты
+        $min_strenght = 999;// минимальная сила карты
+        $card_strength_set = []; //набор силы карты для выбора случйного значения силы
+        
+        $cards_to_destroy = [];
+        foreach($players as $player_iter => $player){
+            foreach($action_data['actionRow'] as $row_iter => $row){
+                //Для каждого ряда
+                foreach($battle_field[$player][$row]['warrior'] as $card_iter => $card_data){
+                    $card_data['card'] = self::transformObjToArr($card_data['card']);
+                    //Сила выбраных рядов
+                    if(isset($rows_strength[$player][$row])){
+                        $rows_strength[$player][$row] += $card_data['strength'];
+                    }else{
+                        $rows_strength[$player][$row] = $card_data['strength'];
+                    }
+
+                    if(!empty($groups)){
+                        foreach($card_data['card']['groups'] as $groups_ident => $group_id){
+                            if(in_array($group_id, $groups)){
+                                $cards_to_destroy[$player][$row][] = $card_data;
+                                
+                                if($card_data['strength'] < $action_data['enemyStrenghtLimitToKill']){
+                                    $can_kill_this_card = true; //Маркер возможности убийства карты
+                                    //Если карта имеет иммунитет
+                                    foreach($card_data['card']['actions'] as $i => $action_immune){
+                                        if($action_immune->action == '18'){
+                                            $can_kill_this_card = false;
+                                        }
+                                    }
+                                    //Если атакующая карта игнорирует иммуниет к убийству
+                                    if(0 != $action_data['ignoreKillImmunity']){
+                                        $can_kill_this_card = true;
+                                    }
+                                    if( ($can_kill_this_card) && ($player == $opponent_array['player']) ){
+                                        $max_strenght = ($max_strenght < $card_data['strength']) ? $card_data['strength'] : $max_strenght;// максимальная сила карты
+                                        $min_strenght = ($min_strenght > $card_data['strength']) ? $card_data['strength'] : $min_strenght;// минимальная сила карты
+                                        $card_strength_set[] = $card_data['strength'];
+                                    }
+                                }
+                            }
+                        }
+                    }else{
+                        $cards_to_destroy[$player][$row][] = $card_data;
+
+                        if($card_data['strength'] < $action_data['enemyStrenghtLimitToKill']){
+                            $can_kill_this_card = true; //Маркер возможности убийства карты
+                            //Если карта имеет иммунитет
+                            foreach($card_data['card']['actions'] as $i => $action_immune){
+                                if($action_immune->action == '18'){
+                                    $can_kill_this_card = false;
+                                }
+                            }
+                            //Если атакующая карта игнорирует иммуниет к убийству
+                            if(0 != $action_data['ignoreKillImmunity']){
+                                $can_kill_this_card = true;
+                            }
+                            if( ($can_kill_this_card) && ($player == $opponent_array['player']) ){
+                                $max_strenght = ($max_strenght < $card_data['strength']) ? $card_data['strength'] : $max_strenght;// максимальная сила карты
+                                $min_strenght = ($min_strenght > $card_data['strength']) ? $card_data['strength'] : $min_strenght;// минимальная сила карты
+                                $card_strength_set[] = $card_data['strength'];
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        switch($action_data['killedQuality_Selector']){
+            case '0': $card_strength_to_kill = $min_strenght; break;//Самую слабую
+            case '1': $card_strength_to_kill = $max_strenght; break;//Самую сильную
+            case '2': $random = rand(0, count($card_strength_set)-1);
+                      $card_strength_to_kill = $card_strength_set[$random];
+                      break; //Самую Случайную
+        }
+        
+        $card_to_kill = [];
+        foreach($cards_to_destroy as $player => $rows){
+            foreach($rows as $row => $cards){
+                foreach($cards as $card_iter => $card_data){
+
+                    $allow_to_kill_by_force_amount = true;
+                    //Нужное для совершения убийства количество силы в ряду
+                    if($action_data['recomendedTeamateForceAmount_OnOff'] != 0){//Если не выкл
+                        $row_summ = 0;
+                        foreach($action_data['recomendedTeamateForceAmount_ActionRow'] as $i => $row_to_calculate){
+                            if(isset($rows_strength[$player][$row_to_calculate])){
+                                $row_summ += $rows_strength[$player][$row_to_calculate];
+                            }
+                        }
+                        switch($action_data['recomendedTeamateForceAmount_Selector']){
+                            case '0':   //Больше указаного значения
+                                $allow_to_kill_by_force_amount = ($action_data['recomendedTeamateForceAmount_OnOff'] < $row_summ) ? true : false; break;
+                            case '1':   //Меньше указанного значения
+                                $allow_to_kill_by_force_amount = ($action_data['recomendedTeamateForceAmount_OnOff'] > $row_summ) ? true : false; break;
+                            case '2':   //Равно указанному значению
+                                $allow_to_kill_by_force_amount = ($action_data['recomendedTeamateForceAmount_OnOff'] ==$row_summ) ? true : false; break;
+                        }
+                    }
+                    
+                    if( ($card_data['strength'] == $card_strength_to_kill) && ($allow_to_kill_by_force_amount) ){
+                        $card_to_kill[$player][$row][] = $card_data;
+                    }
+                }
+            }
+        }
+        
+        foreach($card_to_kill as $player => $rows){
+            foreach($rows as $row => $cards){
+                foreach($cards as $card_to_kill_iter => $card_to_kill_data){
+                    
+                    foreach($battle_field[$player][$row]['warrior'] as $card_iter => $card_data){
+                        $card_data['card'] = self::transformObjToArr($card_data['card']);
+                        if($card_to_kill_data['card']['id'] == $card_data['card']['id']){
+
+                            if($user_array['player'] == $player){
+                                $user_array['user_discard'][] = $card_data['card'];
+                            }else{
+                                $opponent_array['user_discard'][] = $card_data['card'];
+                            }
+                            unset($battle_field[$player][$row]['warrior'][$card_iter]);
+                            $battle_field[$player][$row]['warrior'] = array_values($battle_field[$player][$row]['warrior']);
+
+                            if($action_data['killAllOrSingle'] == 0){
+                                break 4;
+                            }
+                        }
+                    }
+
+                }
+            }
+        }
+        
+        return [
+            'battle_field'      => $battle_field,
+            'user_discard'      => $user_array['user_discard'],
+            'opponent_discard'  => $opponent_array['user_discard']
         ];
     }
 }

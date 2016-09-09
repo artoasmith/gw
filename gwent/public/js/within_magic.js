@@ -137,6 +137,7 @@ $(document).ready(function(){
         console.log($(this).parent().next().hasClass('disactive'));
         $(this).parent().next('.container-wrap').toggleClass('disactive');
         $(this).parent().next().next('.container-wrap').toggleClass('disactive');
+        $(this).parent().next().next().next('.container-wrap').toggleClass('disactive');
     });
 
     //Добавление действия в Волшебство
@@ -287,7 +288,12 @@ $(document).ready(function(){
                     realActionRow += ', "MAkiller_recomendedTeamateForceAmount_OnOff": "0"';
                 } else {
                     realActionRow += ', "MAkiller_recomendedTeamateForceAmount_OnOff": "' + $('input[name=MAkiller_recomendedTeamateForceAmount]').val() + '"';
-                    displayActionRow += ' - Количество силы необходимое для совершения убийства воинов: ' + $('input[name=MAkiller_recomendedTeamateForceAmount]').val() + ' ';
+                    displayActionRow += ' - Количество силы необходимое для совершения убийства воинов: ' + $('input[name=MAkiller_recomendedTeamateForceAmount]').val();
+                    
+                    var temp = setCheckboxesToJson($('.container-wrap input[name=MAkiller_recomendedTeamateForceAmount_ActionRow]:checked'));
+                    realActionRow += ', "MAkiller_recomendedTeamateForceAmount_ActionRow": ' + temp[0];
+                    displayActionRow += ' -> Ряд подсчета: ' + temp[1];
+                
                     realActionRow += ', "MAkiller_recomendedTeamateForceAmount_Selector": "' + $('select[name=MAkiller_recomendedTeamateForceAmount_Selector]').val() + '"';
                     displayActionRow += '(' + $('select[name=MAkiller_recomendedTeamateForceAmount_Selector] option:selected').text() + ')<br>';
                 }

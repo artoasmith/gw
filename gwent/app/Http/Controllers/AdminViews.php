@@ -410,7 +410,7 @@ class AdminViews extends BaseController
 
             //Убийца
             if(isset($action -> CAkiller_ActionRow)){
-                $result .= ' - Ряд действия: '. self::createActionsRowRange($action -> CAkiller_ActionRow);
+                $result .= ' - Ряд действия: '.self::createActionsRowRange($action -> CAkiller_ActionRow);
 
                 if(0 == $action->CAkiller_groupOrSingle){
                     $result .= ' - Действует на любую<br>';
@@ -420,6 +420,7 @@ class AdminViews extends BaseController
 
                 if(0 != $action ->CAkiller_recomendedTeamateForceAmount_OnOff){
                     $result .= ' - Количество силы необходимое для совершения убийства воинов: '. $action -> CAkiller_recomendedTeamateForceAmount_OnOff;
+                    $result .= ' -> Ряд подсчета: '.self::createActionsRowRange($action -> CAkiller_recomendedTeamateForceAmount_ActionRow);
                     switch($action -> CAkiller_recomendedTeamateForceAmount_Selector){
                         case '0': $result .= ' (Больше указанного значения)<br>'; break;
                         case '1': $result .= ' (Меньше указанного значения)<br>'; break;
@@ -673,6 +674,7 @@ class AdminViews extends BaseController
 
                 if(0 != $action ->MAkiller_recomendedTeamateForceAmount_OnOff){
                     $result .= ' - Количество силы необходимое для совершения убийства воинов: '. $action -> MAkiller_recomendedTeamateForceAmount_OnOff;
+                    $result .= ' -> Ряд подсчета: '. self::createActionsRowRange($action -> MAkiller_recomendedTeamateForceAmount_ActionRow);
                     switch($action -> MAkiller_recomendedTeamateForceAmount_Selector){
                         case '0': $result .= ' (Больше указанного значения)<br>'; break;
                         case '1': $result .= ' (Меньше указанного значения)<br>'; break;

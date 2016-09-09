@@ -147,6 +147,7 @@ $(document).ready(function(){
     $(document).on('change', 'input[name=CAkiller_recomendedTeamateForceAmount_OnOff]', function(){
         $(this).parent().next('.container-wrap').toggleClass('disactive');
         $(this).parent().next().next('.container-wrap').toggleClass('disactive');
+        $(this).parent().next().next().next('.container-wrap').toggleClass('disactive');
     });
 
     //если на странице есть селектор Действий, - вывод содержимого действия
@@ -499,7 +500,12 @@ $(document).ready(function(){
                     realActionRow += ', "CAkiller_recomendedTeamateForceAmount_OnOff": "0"';
                 } else {
                     realActionRow += ', "CAkiller_recomendedTeamateForceAmount_OnOff": "' + $('input[name=CAkiller_recomendedTeamateForceAmount]').val() + '"';
-                    displayActionRow += ' - Количество силы необходимое для совершения убийства воинов: ' + $('input[name=CAkiller_recomendedTeamateForceAmount]').val() + ' ';
+                    displayActionRow += ' - Количество силы необходимое для совершения убийства воинов: ' + $('input[name=CAkiller_recomendedTeamateForceAmount]').val();
+                    
+                    var temp = setCheckboxesToJson($('.container-wrap input[name=CAkiller_recomendedTeamateForceAmount_ActionRow]:checked'));
+                    realActionRow += ', "CAkiller_recomendedTeamateForceAmount_ActionRow": ' + temp[0];
+                    displayActionRow += ' -> Ряд подсчета: ' + temp[1];
+                    
                     realActionRow += ', "CAkiller_recomendedTeamateForceAmount_Selector": "' + $('select[name=CAkiller_recomendedTeamateForceAmount_Selector]').val() + '"';
                     displayActionRow += '(' + $('select[name=CAkiller_recomendedTeamateForceAmount_Selector] option:selected').text() + ')<br>';
                 }
