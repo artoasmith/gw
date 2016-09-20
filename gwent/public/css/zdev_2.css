@@ -439,10 +439,7 @@ body {
     .content-card-item-main .hovered-items {
       bottom: -80px; } }
 
-.hidden-block {
-  position: absolute;
-  left: -9999999em;
-  top: -99999999em; }
+
 
 #call_success {
   position: relative; }

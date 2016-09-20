@@ -68,7 +68,7 @@ $user = Auth::user();
 
 </head>
 <body>
-
+<div class="global-wrapper">
 <div class="hidden-block">
     <!-- Окно покупки карт/волшебства -->
     <div class="market-buy-popup" id="buyingCardOrmagic">

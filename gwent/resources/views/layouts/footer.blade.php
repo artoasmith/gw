@@ -42,6 +42,7 @@
 
 
 <div class="footer_placeholder"></div>
+        </div>
 <footer class="footer">
     <div class="mbox">
 
