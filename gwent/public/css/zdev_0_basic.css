@@ -46,7 +46,7 @@ html {
   height: 100%; }
 
 body {
-  min-height: 100%;
+  min-height:100%;
   min-width: 1280px;
   font-family: 'indisplay',sans-serif;
   font-size: 12px;
@@ -198,9 +198,7 @@ p {
   display: block; }
 
 .main {
-  -webkit-transform: translateZ(0px);
-  -moz-transform: translateZ(0px);
-  transform: translateZ(0px);
+
   position: relative;
   z-index: 1; }
 
@@ -226,9 +224,6 @@ p {
   padding-top: 10px;
   position: relative;
   z-index: 1; }
-
-.footer_placeholder {
-  height: 200px; }
 
 .footer {
   position: absolute;

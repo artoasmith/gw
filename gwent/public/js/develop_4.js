@@ -137,13 +137,16 @@ function ratingPage(){
 }
 /*/rating page*/
 
+/*index page*/
 
+/*END index page*/
 
 
 
 
 
 $(document).ready(function(){
+   
     ratingPage();
     settingsInputFile();
     marketSelection();

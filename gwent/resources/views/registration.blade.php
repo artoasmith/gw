@@ -3,37 +3,13 @@
 <?php
 $errors = $errors->all();
 ?>
-    <div class="not-main registration-main-page">
+    <div class="not-main registration-main-page one-screen-login">
         <div class="main form-block">
 
-            <div class="mbox">
 
-                <div class="forms-header"></div>
 
-                <!--
-                <div class="forms-language">
-                    <div class="form-language-wrap">
-                        <a href="#">
-                            <img src="images/ua-flag.png" alt="" />
-                        </a>
-                    </div>
-                    <div class="form-language-wrap active">
-                        <a href="#">
-                            <img src="images/rus-flag.png" alt="" />
-                        </a>
-                    </div>
-                    <div class="form-language-wrap">
-                        <a href="#">
-                            <img src="images/uk-flag.png" alt="" />
-                        </a>
-                    </div>
-                </div>
-                -->
 
-                <div class="forms-main vfix">
-                    <div class="forms-img">
-                        <img src="{{ URL::asset('images/gwent-forms-img-fon.png') }}" alt="" />
-                    </div>
+
                     <div class="form-wrap">
                         <div class="form-wrap-main">
                             @if(isset($user) && ($user))
@@ -146,8 +122,8 @@ $errors = $errors->all();
 
                         </div>
                     </div>
-                </div>
-            </div>
+
+
 
             <div class="hidden-block">
                 <div id="popup-agree">

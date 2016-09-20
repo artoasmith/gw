@@ -39,7 +39,7 @@ $errors = $errors->all();
 @else
 
 
-    <div class="main form-block">
+    <div class="main form-block one-screen-login">
         <div class="mbox login-page">
 
             <div class="forms-header"></div>
@@ -165,6 +165,7 @@ $errors = $errors->all();
                                     <span>{{ $race->title }}</span>
                                 </a>
                                 <div class="hovered-block">
+                                    <div class="close-this"></div>
                                     <div class="contein">
                                         <div class="top-img">
                                             <img src="{{ URL::asset('img/card_images/'.$race->img_url) }}" alt="">
@@ -175,9 +176,8 @@ $errors = $errors->all();
                                                 {!! $race->description !!}
                                             </div>
                                         </div>
-                                        <a href="{{ route('user-registration', ['fraction' => $race->slug]) }}" class="button-easy">
-                                            <span class="form-button-text"> ИГРАТЬ</span>
-                                            <span class="form-button-hover"></span>
+                                        <a href="{{ route('user-registration', ['fraction' => $race->slug]) }}" class="button-troll">
+                                            <b class="form-button-text"> ИГРАТЬ за {{ $race->description_title }}</b>
                                         </a>
                                     </div>
                                 </div>
@@ -189,5 +189,31 @@ $errors = $errors->all();
             </div>
         </div>
     </div>
+    <script>
+        function clickOnRace() {
+            $('.rase-ric').click(function (e) {
+                e.preventDefault();
+                if(!$(this).closest('.item-rise').hasClass('active')){$('.item-rise').removeClass('active');}
+                $(this).closest('.item-rise').toggleClass('active');
+            });
+        }
+        function clickCloseCross() {
+            $('.close-this').click(function (e) {
+                e.preventDefault();
+                $('.item-rise').removeClass('active');
+
+            });
+        }
+        $(document).ready(function(){
+            clickOnRace();
+            clickCloseCross();
+            $(document).click(function (event) {
+                var div = $('.active .hovered-block, .active .rase-ric');
+                if (!div.is(event.target) && div.has(event.target).length === 0){
+                    $('.item-rise').removeClass('active');
+                }
+            });
+        });
+    </script>
 @endif
 @stop
