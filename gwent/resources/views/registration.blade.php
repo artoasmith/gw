@@ -90,7 +90,7 @@ $errors = $errors->all();
                                             <input type="checkbox" name="check-agree" id="linka-check" value="false">
                                             <label for="linka-check" class="swicher-maker">
                                                 <span class="kvadratic kv-true "></span>
-                                                <span>я принимаю условия <br/> <a href="#popup-agree" class="fancybox-form">лицензионного соглашения</a> </span>
+                                                <span>я принимаю условия <a href="#">лицензионного соглашения</a> </span>
                                             </label>
 
                                         </div>
@@ -125,8 +125,9 @@ $errors = $errors->all();
 
 
 
-            <div class="hidden-block">
-                <div id="popup-agree">
+
+                <div id="popup-agree" class="license-agreement">
+                    <div class="close-this"></div>
                     <div class="conteiner-pop">
                         <div class="title">Соглашение</div>
                         <div class="texter">
@@ -138,21 +139,46 @@ $errors = $errors->all();
                                 <li>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</li>
                                 <li>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</li>
                             </ul>
-
-                        </div>
-                        <div class="confirm">
-                            <input type="checkbox" id="confirm-popup">
-                            <label for="confirm-popup" class="swicher-maker">
-                                <span class="kvadratic"> O </span>
-                                <span class="text-confirm">я соглашаюсь с условиями</span>
-                            </label>
-                        </div>
-                        <div class="button-close">
-                            <div class="close-form">Закрыть</div>
+                            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean euismod bibendum laoreet. Proin gravida dolor sit amet lacus accumsan et viverra justo commodo. Proin sodales pulvinar tempor. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Nam fermentum, nulla luctus pharetra vulputate, felis tellus mollis orci, sed rhoncus sapien nunc eget odio.</p>
+                            <ul>
+                                <li>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</li>
+                                <li>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</li>
+                                <li>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</li>
+                                <li>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</li>
+                                <li>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</li>
+                            </ul>
+                            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean euismod bibendum laoreet. Proin gravida dolor sit amet lacus accumsan et viverra justo commodo. Proin sodales pulvinar tempor. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Nam fermentum, nulla luctus pharetra vulputate, felis tellus mollis orci, sed rhoncus sapien nunc eget odio.</p>
+                            <ul>
+                                <li>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</li>
+                                <li>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</li>
+                                <li>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</li>
+                                <li>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</li>
+                                <li>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</li>
+                            </ul>
+                            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean euismod bibendum laoreet. Proin gravida dolor sit amet lacus accumsan et viverra justo commodo. Proin sodales pulvinar tempor. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Nam fermentum, nulla luctus pharetra vulputate, felis tellus mollis orci, sed rhoncus sapien nunc eget odio.</p>
+                            <ul>
+                                <li>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</li>
+                                <li>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</li>
+                                <li>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</li>
+                                <li>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</li>
+                                <li>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</li>
+                            </ul>
+                            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean euismod bibendum laoreet. Proin gravida dolor sit amet lacus accumsan et viverra justo commodo. Proin sodales pulvinar tempor. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Nam fermentum, nulla luctus pharetra vulputate, felis tellus mollis orci, sed rhoncus sapien nunc eget odio.</p>
+                            <ul>
+                                <li>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</li>
+                                <li>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</li>
+                                <li>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</li>
+                                <li>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</li>
+                                <li>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</li>
+                            </ul>
                         </div>
                     </div>
+                    <div class="button-troll">
+                        <b>ЗАКРЫТЬ</b>
+                    </div>
+
                 </div>
-            </div>
+
         </div>
     </div>
 @stop

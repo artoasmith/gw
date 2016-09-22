@@ -25,30 +25,57 @@ function showFormOnMain(){
     });
     //Не скрывать форму входа при возврате ошибки
     if(!$('.forget-pass-form button').hasClass('show-form-please') ){
-        $('.form-wrap-for-rows').slideDown(500);
+        $('.form-wrap-for-rows').slideDown(10);
     }
 }
 
-function showWindowAboutOnMain() {
+function showWindowAboutOnMain() { // скрыть / показать  инфо о игре
     $('.drop-menu-open').click(function(e){
+        $('.convert-about').slideToggle(500);
+        $(this).toggleClass('back-text');
         e.preventDefault();
-        $(this).css('pointer-events', 'none');
-        var that = $(this);
-        if( !$(this).hasClass('drop-menu-hide') ) {
-            $('.convert-about').slideDown(500, function(){
-                $('.button-dropdown').css('top', $('.convert-about').height() + 20 );
-                that.css('pointer-events', 'auto');
-            });
-            that.addClass('drop-menu-hide');
-        } else {
-            $('.convert-about').slideUp(300, function(){
-                that.css('pointer-events', 'auto');
-            });
-            $('.button-dropdown').css('top', 93 );
-            $(this).removeClass('drop-menu-hide');
-        }
     });
 }
+
+function clickOnRace() { //показать инфо расы
+    $('.rase-ric').click(function (e) {
+        e.preventDefault();
+        if(!$(this).closest('.item-rise').hasClass('active')){$('.item-rise').removeClass('active');}
+        $(this).closest('.item-rise').toggleClass('active');
+    });
+}function clickOnLicenseAgree() { //показать инфо расы
+    $('.agree-field a').click(function (e) {
+        e.preventDefault();
+        $('.license-agreement').addClass('show');
+    });
+    $('.license-agreement .button-troll').click(function (e) {
+        e.preventDefault();
+        $('.license-agreement').removeClass('show');
+    });
+}
+function clickCloseCross() { //закрыть попап
+    $('.close-this').click(function (e) {
+        e.preventDefault();
+        $('.item-rise').removeClass('active');
+        $('.license-agreement').removeClass('show');
+    });
+}
+
+$(document).ready(function(){
+    clickOnRace();
+    clickCloseCross();
+    clickOnLicenseAgree();
+   if($('.conteiner-pop').length>0){
+       $('.conteiner-pop').jScrollPane();
+   }
+    $(document).click(function (event) {//миссклики для закрытия попапов
+        var div = $('.active .hovered-block, .active .rase-ric');
+        if (!div.is(event.target) && div.has(event.target).length === 0){
+            $('.item-rise').removeClass('active');
+        }
+    });
+});
+
 // end of /main
 
 
