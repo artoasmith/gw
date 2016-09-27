@@ -13,24 +13,21 @@ $errors = $errors->all();
             <div class="main_page cfix rase">
                 <div class="content-top-wrap">
                     <div class="dragon-image cfix">
-                        <div class="dragon-middle-wrap">
+
                             <div class="dragon-middle">
                                 <img src="{{ URL::asset('images/dragon_glaz.png') }}" alt=""  class="glaz" />
                                 <img src="{{ URL::asset('images/header_dragon_gold.png') }}" alt="" />
                             </div>
-                        </div>
+
                     </div>
                     <div class="tabulate-image"></div>
                 </div>
+                <div class="pager-wrapper">
+                    @include('layouts.sidebar')
 
-                @include('layouts.sidebar')
-
-                <div class="content-wrap">
-                    <!-- add many img must do programist -->
-                    <div class="rase">
-                        <img src="{{ URL::asset('images/main_bg_1.jpg') }}" alt="">
-                    </div>
+                    <div class="content-wrap main-bg" style="background-image: url(../images/main_bg_1.jpg);"></div>
                 </div>
+
             </div>
         </div>
     </div>
@@ -83,17 +80,7 @@ $errors = $errors->all();
                                 {{ Form::open(['route' => 'user-login', 'class' => 'forget-pass-form', 'method' => 'POST', 'autocomplete' => 'off']) }}
 
                                 <input type="hidden" name="action" value="user_login" class="typesubmit" />
-                                <div class="form-wrap-row submit">
-                                    <div class="form-wrap-value">
-                                        <div class="form-wrap-input">
-                                            <button class="button-buy-next @if(empty($errors)) show-form-please @endif" type="submit">
-                                                <span class="form-button-hover"></span>
-                                                <span class="form-button-text">Вход</span>
-                                            </button>
-                                        </div>
 
-                                    </div>
-                                </div>
 
                                 <div class="form-wrap-for-rows" @if(!empty($errors)) style="display: block;" @endif>
                                     <div class="form-wrap-row form_row">
@@ -125,6 +112,17 @@ $errors = $errors->all();
                                         @endif
                                     </div>
 
+                                </div>
+                                <div class="form-wrap-row submit">
+                                    <div class="form-wrap-value">
+                                        <div class="form-wrap-input">
+                                            <button class="button-buy-next  @if(empty($errors)) show-form-please @endif" type="submit">
+                                                <span class="form-button-hover"></span>
+                                                <span class="form-button-text">Вход</span>
+                                            </button>
+                                        </div>
+
+                                    </div>
                                 </div>
                                 {{ Form::close() }}
                             </div>
@@ -177,7 +175,9 @@ $errors = $errors->all();
                                             <div class="title-rase">{{ $race->description_title }}</div>
                                             <div class="des-text">
                                                 {!! $race->description !!}
+
                                             </div>
+
                                         </div>
                                         <a href="{{ route('user-registration', ['fraction' => $race->slug]) }}" class="button-troll">
                                             <b class="form-button-text"> ИГРАТЬ за {{ $race->description_title }}</b>

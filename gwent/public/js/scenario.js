@@ -58,23 +58,11 @@ function clickCloseCross() { //закрыть попап
         e.preventDefault();
         $('.item-rise').removeClass('active');
         $('.license-agreement').removeClass('show');
+        $(this).closest('.troll-popup').removeClass('show');
     });
 }
 
-$(document).ready(function(){
-    clickOnRace();
-    clickCloseCross();
-    clickOnLicenseAgree();
-   if($('.conteiner-pop').length>0){
-       $('.conteiner-pop').jScrollPane();
-   }
-    $(document).click(function (event) {//миссклики для закрытия попапов
-        var div = $('.active .hovered-block, .active .rase-ric');
-        if (!div.is(event.target) && div.has(event.target).length === 0){
-            $('.item-rise').removeClass('active');
-        }
-    });
-});
+
 
 // end of /main
 
@@ -633,9 +621,7 @@ function userByingMagic(){
 //Пользователь меняет статус активности волшебства
 function userChangesMagicEffectStatus(){
     $('.main-table .market-status-wrap .market-status').click(function(){
-
         if( !$(this).hasClass('disabled') ) {
-
             var status_id = $(this).parents('tr').children('.no-border').children('.button-plus').attr('data-type');
             var token = $('#buyingCardOrmagic input[name=_token]').val();
             var is_active = $(this).hasClass('active');
@@ -722,17 +708,33 @@ function getCardsByRace(race){
 }
 
 //Функция обновления значений цены usd в золото
+function eventsToRefreshGoldPrices(input){
+    input.change(function(){refreshGoldPrices();});
+    input.keyup(function(){refreshGoldPrices();});
+    input.keydown(function(){refreshGoldPrices();});
+
+}
 function refreshGoldPrices(){
-    $('.market-buy-popup input[name=goldToBuy]').change(function(){
-        var goldValue = parseInt($(this).val());
+
+        var goldValue = parseInt($('#buySomeGold input[name=goldToBuy]').val());
+            console.log('%c'+$('#buySomeGold input[name=goldToBuy]').val(),'background-color:#f00; font-size:14px;');
+            console.log('%c'+goldValue,'background-color:#ff0; font-size:14px;');
         if( Number.isInteger(goldValue) ){
             var usd = goldValue * window.exgange_gold;
             $('#buySomeGold #goldToUsd').text(usd);
+            $('#buySomeGold .error').removeClass('show');
             $('#buySomeGold input[name=LMI_PAYMENT_AMOUNT]').val(usd);
+            if(goldValue != 0){
+                $('#buySomeGold .button-troll').removeClass('unactive');
+            }else{
+                $('#buySomeGold .button-troll').addClass('unactive');
+            }
         }else{
-            alert('Ошибка. Введите числовое значение.');
+            $('#buySomeGold input[name=LMI_PAYMENT_AMOUNT]').val('0');
+            $('#buySomeGold .error').addClass('show');
+            $('#buySomeGold .button-troll').addClass('unactive');
         }
-    });
+
 }
 
 
@@ -745,24 +747,83 @@ function refreshRosources(resources){
 
 
 //Функция обновления значений цены золото в серебро
-function refreshSilverPrices(){
-    $('.market-buy-popup input[name=goldToSell]').change(function(){
-        var goldValue = parseInt($(this).val());
 
+function eventsToRefreshSilverPrices(input){
+    input.change(function(){refreshSilverPrices();});
+    input.keyup(function(){refreshSilverPrices();});
+    input.keydown(function(){refreshSilverPrices();});
+}
+function refreshSilverPrices(){
+        var goldValue = parseInt($('.market-buy-popup input[name=goldToSell]').val());
         if( Number.isInteger(goldValue) ){
             var silverToBuy = parseInt(goldValue * window.gold_to_silver);
             $('#buySomeSilver #silverToBuy').text(silverToBuy);
+            $('#buySomeSilver .error').removeClass('show');
+            if(goldValue != 0){
+                $('#buySomeSilver .button-troll').removeClass('unactive');
+            }else{
+                $('#buySomeSilver .button-troll').addClass('unactive');
+            }
+
         }else{
-            alert('Ошибка. Введите числовое значение.');
+            $('#buySomeSilver #silverToBuy').text('0');
+            $('#buySomeSilver .error').addClass('show');
+            $('#buySomeSilver .button-troll').addClass('unactive');
         }
+}
+function closeAllTrollPopup(){
+    $('div.troll-popup').removeClass('show');
+}
+//Покупка Серебра
+function showSilverBuyingPopup(){
+    $(document).on('click', '.buy-more-silver', function(e){
+        e.preventDefault();
+        closeAllTrollPopup();
+        $.ajax({
+            url: '/check_user_is_plying_status',
+            type: 'GET',
+            success: function (data) {
+                if (data != 0) {
+                    var res = JSON.parse(data);
+                    showErrorMessage(res['message']);
+
+                } else {
+                    $('#buySomeSilver').addClass('show');
+                    $('#buySomeSilver .button-troll').addClass('unactive');
+                    $('#buySomeSilver .button-troll').click(function(e){
+                        e.preventDefault();
+                        var goldToSell = parseInt($('#buySomeSilver input[name=goldToSell]').val());
+                        $.ajax({
+                            url:    '/user_buying_silver',
+                            type:   'PUT',
+                            headers:{'X-CSRF-TOKEN': $('.market-buy-popup input[name=_token]').val()},
+                            data:	{gold:goldToSell},
+                            success:function(data){
+                                var res = JSON.parse(data);
+                                if(res['message'] == 'success'){
+                                    $('#buySomeSilver input[name=goldToSell]').val(0);
+                                    $('#buySomeSilver #silverToBuy').text('0');
+                                    resultPopupShow('Успешный обмен');
+                                }else{
+                                    resultPopupShow(res['message']);
+                                }
+                            }
+                        });
+                    });
+                    $('#buySomeSilver .clckAnim').click(function () {
+                        refreshSilverPrices();
+                    });
+                    refreshSilverPrices();
+                }
+            }
+        });
     });
 }
-
-
 //Покупка энергии
 function showEnergyBuyingPopup(){
     $(document).on('click', '.buy-more-energy', function(e) {
         e.preventDefault();
+        closeAllTrollPopup();
         $.ajax({
             url:    '/check_user_is_plying_status',
             type:   'GET',
@@ -771,10 +832,9 @@ function showEnergyBuyingPopup(){
                     var res = JSON.parse(data);
                     showErrorMessage(res['message']);
                 } else {
-                    $('#buySomeEnergy').show(300);
-
-                    $('#buySomeEnergy input[type=button]').click(function(){
-                        var payType = $(this).attr('name');
+                    $('#buySomeEnergy').addClass('show');
+                    $('#buySomeEnergy .button-troll').click(function(){
+                        var payType = $(this).data('name');
                         $.ajax({
                             url:    '/user_buying_energy',
                             type:   'PUT',
@@ -784,8 +844,9 @@ function showEnergyBuyingPopup(){
                                 var res = JSON.parse(data);
                                 if(res['message'] == 'success'){
                                     refreshRosources(res);
+                                    resultPopupShow('Успешный обмен');
                                 }else{
-                                    alert(res['message']);
+                                    resultPopupShow(res['message']);
                                 }
                             }
                         })
@@ -799,8 +860,9 @@ function showEnergyBuyingPopup(){
 
 //Покупка золота
 function showGoldBuyingPopup(){
-    $(document).on('click', '.buy-more-gold', function(e){
-        e.preventDefault();
+    $(document).on('click', '.buy-more-gold', function(event){
+        event.preventDefault();
+        closeAllTrollPopup();
         $.ajax({
             url:    '/check_user_is_plying_status',
             type:   'GET',
@@ -809,12 +871,18 @@ function showGoldBuyingPopup(){
                     var res = JSON.parse(data);
                     showErrorMessage(res['message']);
                 } else {
-                    $('#buySomeGold').show(300);
+                    $('#buySomeGold').addClass('show');
 
-                    $('#buySomeGold #pay input[type=submit]').click(function(e){
+                    $('#buySomeGold .button-troll').click(function(e){
+                        e.preventDefault();
                         if($('#buySomeGold input[name=LMI_PAYMENT_AMOUNT]').val() < 1){
                             return false;
+                        }else{
+                            $('#pay').submit();
                         }
+                    });
+                    $('#buySomeGold .clckAnim').click(function () {
+                        refreshGoldPrices();
                     });
                     refreshGoldPrices();
                 }
@@ -822,60 +890,76 @@ function showGoldBuyingPopup(){
         });
     });
 }
+// клик по кнопке анимация
 
+function animationButtonClick() {
+    var protect = false;
+    if(protect == false) {
+        $('.clckAnim').mousedown(function () {
+            protect = true;
+            $(this).addClass('clicked');
+            $(this).mouseup(function () {
+                $(this).removeClass('clicked');
+                protect = false;
+            });
+        });
+    }
+}
 
-//Покупка Серебра
-function showSilverBuyingPopup(){
-    $(document).on('click', '.buy-more-silver', function(e){
-        e.preventDefault();
-        $.ajax({
-            url: '/check_user_is_plying_status',
-            type: 'GET',
-            success: function (data) {
-                if (data != 0) {
-                    var res = JSON.parse(data);
-                    showErrorMessage(res['message']);
-                } else {
-                    $('#buySomeSilver').show(300);
+function incrementDecrementInputNumber() {
+    $('.input-type-number').each(function () {
+        var input = $(this).find('input');
+        $(this).find('.increment').click(function () {
+            var x = input.val();
+            x++;
+            input.val(x);
+        });
+        $(this).find('.decrement').click(function () {
+            var x = parseInt(input.val());
 
-                    $('#buySomeSilver input[name=buyingSilver]').click(function(){
-                        var goldToSell = parseInt($('#buySomeSilver input[name=goldToSell]').val());
-                        $.ajax({
-                            url:    '/user_buying_silver',
-                            type:   'PUT',
-                            headers:{'X-CSRF-TOKEN': $('.market-buy-popup input[name=_token]').val()},
-                            data:	{gold:goldToSell},
-                            success:function(data){
-                                var res = JSON.parse(data);
-                                if(res['message'] == 'success'){
-                                    refreshRosources(res);
-                                }else{
-                                    alert(res['message']);
-                                }
-                            }
-                        })
-                    });
-                    refreshSilverPrices();
-                }
+            if(x > 0 ){
+                x--;
+                input.val(x);
+            }else {
+               input.val(0);
+            }
+
+        });
+        input.keydown(function(event) { // Разрешаем: backspace, delete, tab и escape Разрешаем: Ctrl+A Разрешаем: home, end, влево, вправо
+            console.log(event.keyCode);
+            if ( event.keyCode == 46 || event.keyCode == 8 || event.keyCode == 9 || event.keyCode == 27 || (event.keyCode == 65 && event.ctrlKey === true) || (event.keyCode >= 35 && event.keyCode <= 39)) {
+                return;
+            } else {
+                if ((event.keyCode < 48 || event.keyCode > 57) && (event.keyCode < 96 || event.keyCode > 105 )) { event.preventDefault(); }
             }
         });
     });
 }
+//попап результатов
+function resultPopupShow(message){
+    $('#successEvent').find('.result').text(message);
+    $('#successEvent').addClass('show');
+}
+
 
 
 function showErrorMessage(message){
     $('#buyingCardOrmagic .popup-content-wrap').html('<p>' + message + '</p>');
-    $('#buyingCardOrmagic').show(300).delay(3000).hide(400);
+    $('#buyingCardOrmagic').addClass('show');
+    setTimeout(function () {
+        $('#buyingCardOrmagic').removeClass('show');
+    }, 3000);
 }
 
 
 //Вывод Колод для игры
 function showUserDecks(){
-    $('.conteiner-rase .afterloader').css({'opacity':'0', 'z-index':'-1'});
+    var preload = $('#choose-rase-block .afterloader');
+    preload.css({'opacity':'0', 'z-index':'-1'});
 
     $('.conteiner-rase ul li .button-buy-next').click(function(e){
         e.preventDefault();
-        var race = $(this).attr('name');
+        var race = $(this).data('name');
         $('.conteiner-rase #gameForm input[name=currentRace]').val(race);
 
         $.ajax({
@@ -931,7 +1015,13 @@ function array_unique( inputArr ) {
 
     return result;
 }
-
+function sidebarPlay() {
+    $('#start-game').click(function (event) {
+        event.preventDefault();
+        closeAllTrollPopup();
+        $('#choose-rase-block').addClass('show');
+    });
+}
 
 
 $(document).ready(function(){
@@ -943,11 +1033,17 @@ $(document).ready(function(){
     initScrollpane();                       //Инициализация скролла на страницах "Мои карты", "Магазин", ("Волшебство не проверялось")
     draggableCards();                       //Инициализация перетягивания карт
     underDragCardFix();                     //Фикс перетягивания
-
+    incrementDecrementInputNumber();
     showGoldBuyingPopup();
+    sidebarPlay();
     showSilverBuyingPopup();
     showEnergyBuyingPopup();
-
+    clickOnRace();
+    clickCloseCross();
+    clickOnLicenseAgree();
+    animationButtonClick();
+    eventsToRefreshSilverPrices($('.market-buy-popup input[name=goldToSell]'));
+    eventsToRefreshGoldPrices($('.market-buy-popup input[name=goldToBuy]'));
     showUserDecks();
     userConnectToGame();
 
@@ -997,4 +1093,19 @@ $(document).ready(function(){
     $(document).on('click', 'input[name=createTable]', function(){
         $('#createTable').show(300);
     });
+
+
+    if($('.conteiner-pop').length>0){
+        $('.conteiner-pop').jScrollPane();
+    }
+    if($('.login-page  .description').length>0){
+        $('.login-page  .description').jScrollPane();
+    }
+    $(document).click(function (event) {//миссклики для закрытия попапов
+        var div = $('.active .hovered-block, .active .rase-ric');
+        if (!div.is(event.target) && div.has(event.target).length === 0){
+            $('.item-rise').removeClass('active');
+        }
+    });
+
 });

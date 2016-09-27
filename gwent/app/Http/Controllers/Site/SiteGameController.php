@@ -220,9 +220,9 @@ class SiteGameController extends BaseController
             ]);
 
             //Отмечаем что пользователь уже играет
-            $user_is_playing = User::find($user['id']);
+            /*$user_is_playing = User::find($user['id']);
             $user_is_playing -> user_is_playing = 1;
-            $user_is_playing -> save();
+            $user_is_playing -> save();*/
 
             if($battle_log_result !== false){
                 return redirect(route('user-in-game', ['game' => $result->id]));
@@ -280,10 +280,10 @@ class SiteGameController extends BaseController
         $fight_log_to_update -> save();
 
         //Отмечаем что пользователь уже играет
-        $user_is_playing = User::find($user['id']);
+        /*$user_is_playing = User::find($user['id']);
         $user_is_playing -> user_is_playing = 1;
         $user_is_playing -> save();
-
+*/
         return json_encode(['message' => 'success']);
     }
 

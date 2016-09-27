@@ -11,7 +11,10 @@
 }
 
 .jspPane {
-  position: absolute; }
+  position: absolute;
+  margin-right: 13px;
+  margin-left: 0!important;
+}
 
 .jspVerticalBar:after,
 .jspVerticalBar:before{

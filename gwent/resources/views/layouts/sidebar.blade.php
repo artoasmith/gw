@@ -5,12 +5,12 @@
                 <div class="left-menu-naviagation-wrap">
 
                     <div class="nav-item">
-                        <a href="#choose-rase-block" class="start-search-game fancybox-form">
+                        <a href="#" id="start-game" class="start-search-game">
                             <span class="nav-item-wrap">
                                 <span>Играть</span>
                             </span>
                         </a>
-                        <!--
+                        <!--http://gw2.loc/img/card_images/577d0a1ab8741_ricari.png
                         <div class="nav-item-two">
                             <div class="nav-item-two_wrap">
                                 <div class="nav-item">

@@ -69,60 +69,81 @@ $user = Auth::user();
 </head>
 <body>
 <div class="global-wrapper">
-<div class="hidden-block">
+
+<div class="new-popups-block">
+    <!-- Окно успешного действия -->
+    <div class="troll-popup" id="successEvent">
+        <div class="close-this"></div>
+        <div class="popup-content-wrap">
+            <h5>Результат:</h5>
+            <div class="pop-row">
+                <span class="result">
+                    sdfgasdfgsadfsd
+                </span>
+            </div>
+        </div>
+    </div>
+
     <!-- Окно покупки карт/волшебства -->
-    <div class="market-buy-popup" id="buyingCardOrmagic">
-        <div class="close-popup">X</div>
+    <div class="market-buy-popup troll-popup" id="buyingCardOrmagic">
+        <div class="close-this"></div>
         <input name="_token" type="hidden" value="{{ csrf_token() }}">
 
         <div class="popup-content-wrap">
 
         </div>
     </div>
+    <!-- Покупка серебра -->
+    <div class="market-buy-popup troll-popup" id="buySomeSilver">
+        <div class="close-this"></div>
+        <div class="popup-content-wrap">
+            <h5>Обмен</h5>
+            <div class="pop-row">
 
-   <!-- Меню->Играть всплывающее окно -->
-    <div id="choose-rase-block">
-        <div class="conteiner-rase look-wrap cfix">
-            <div class="afterloader">
-                <img src="{{ URL::asset('images/379.gif') }}" alt="">
+                <img class="resource" src="{{ URL::asset('images/header_logo_gold.png') }}" alt="">
+
+                <div class="input-type-number">
+                    <input name="goldToSell" type="text"  required="required" autocomplete="off" value="0" min="0">
+                    <div class="increment clckAnim"></div>
+                    <div class="decrement clckAnim"></div>
+                </div>
+                <span> = </span>
+                <img class="resource" src="{{ URL::asset('images/header_logo_silver.png') }}" alt="">
+                <b id="silverToBuy">0</b>
             </div>
-            <div class="title-rase head-text"> Выберете расу</div>
-            {{ Form::open(['route' => 'user-active-games', 'method' => 'POST', 'id' => 'gameForm']) }}
-            <input type="hidden" name="currentRace">
-            <ul>
-            @foreach($races as $key => $value)
-                @if($value->race_type == 'race')
+            <div class="pop-row">
+                <div class="error">
+                    <span>Ошибка.Ведите числовое значение</span>
+                </div>
+            </div>
+            <div class="pop-row">
+                <a class="button-troll" href="#"><b>Обменять</b></a>
+            </div>
 
-                <li>
-                    <div class="image-conteiner">
-                        <img src="{{ URL::asset('img/card_images/'.$value->img_url) }}" alt="">
-                    </div>
-                    <button class="form-button button-buy-next" type="submit" name="{{ $value -> slug }}">
-                        <span class="form-button-hover"></span>
-                        <span class="form-button-text">{{ $value -> title }}</span>
-                    </button>
-                </li>
-
-                @endif
-            @endforeach
-            </ul>
-            {{ Form::close() }}
         </div>
     </div>
-
     <!-- Покупка золота -->
-    <div class="market-buy-popup" id="buySomeGold">
-        <div class="close-popup">X</div>
-
+    <div class="market-buy-popup troll-popup" id="buySomeGold">
+        <div class="close-this"></div>
         <div class="popup-content-wrap">
-            <p>Пополнение</p>
-            <p>Пополнение баланса золота, золото зачисляеться автоматически после оплаты.</p>
-
-            <input name="goldToBuy" type="number" required="required" autocomplete="off" value="0" min="0">
-            <img class="resource" src="{{ URL::asset('images/header_logo_gold.png') }}" alt="">
-
-            <span> = </span><b id="goldToUsd">0</b><span> $ </span>
-
+            <h5>Пополнение</h5>
+            <div class="pop-row">
+                <p>Пополнение баланса золота, золото зачисляеться автоматически после оплаты.</p>
+            </div>
+            <div class="pop-row">
+                <div class="input-type-number">
+                    <input name="goldToBuy" type="text" required="required" autocomplete="off" value="0" min="0">
+                    <div class="increment clckAnim"></div>
+                    <div class="decrement clckAnim"></div>
+                </div>
+                <img class="resource" src="{{ URL::asset('images/header_logo_gold.png') }}" alt="">
+                <span> = </span><b id="goldToUsd">0</b><span>&nbsp;$</span>
+            </div>
+            <div class="pop-row">
+                <div class="error">
+                    <span>Ошибка.Ведите числовое значение</span>
+                </div>
+            </div>
             <form id="pay" name="pay" method="POST" action="https://merchant.webmoney.ru/lmi/payment.asp" accept-charset="UTF-8">
                 <input type="hidden" name="LMI_PAYMENT_AMOUNT" value="">
                 <input type="hidden" name="LMI_PAYMENT_DESC" value="Тестовая покупка золота">
@@ -130,28 +151,14 @@ $user = Auth::user();
                 <input type="hidden" name="LMI_PAYEE_PURSE" value="Z145179295679">
                 <input type="hidden" name="LMI_SIM_MODE" value="0">
                 <input type="hidden" name="id" value="@if($user){{ $user['id'] }}@endif">
-                <input type="submit" value="Пополнить">
+                <div class="pop-row">
+                    <a class="button-troll" href="#"><b>Пополнить</b></a>
+                </div>
             </form>
         </div>
     </div>
-
-    <!-- Покупка серебра -->
-    <div class="market-buy-popup" id="buySomeSilver">
-        <div class="close-popup">X</div>
-
-        <div class="popup-content-wrap">
-            <p>Обмен</p>
-            <img class="resource" src="{{ URL::asset('images/header_logo_gold.png') }}" alt="">
-            <input name="goldToSell" type="number" required="required" autocomplete="off" value="0" min="0">
-            <span> = </span>
-            <img class="resource" src="{{ URL::asset('images/header_logo_silver.png') }}" alt="">
-            <b id="silverToBuy">0</b>
-            <input type="button" name="buyingSilver" value="Обменять">
-        </div>
-    </div>
-
     <!-- Покупка Энергии-->
-    <div class="market-buy-popup" id="buySomeEnergy">
+    <div class="market-buy-popup troll-popup" id="buySomeEnergy">
         <?php
         $exchange_options = \DB::table('tbl_etc_data')->select('label_data','meta_key','meta_value')->where('label_data', '=', 'exchange_options')->get();
         $prices = [];
@@ -159,44 +166,79 @@ $user = Auth::user();
             $prices[$value->meta_key] = $value->meta_value;
         }
         ?>
-        <div class="close-popup">X</div>
-
+        <div class="close-this"></div>
         <div class="popup-content-wrap">
-            <p>Обмен</p>
-
-            <div class="popup-energy-wrap cfix">
+            <h5>Обмен</h5>
+            <div class="pop-row">
+                <img class="resource" src="{{ URL::asset('images/header_logo_gold.png') }}" alt="">
+                <span>{{ $prices['gold_to_100_energy'] }}</span><span> = </span>
+                <img class="resource" src="{{ URL::asset('images/header_logo_lighting.png') }}" alt="">
                 <span>100</span>
-                <div class="popup-energy-exchanges-wrap">
-                    <div>
-                        <img class="resource" src="{{ URL::asset('images/header_logo_gold.png') }}" alt="">
-                        <span>{{ $prices['gold_to_100_energy'] }}</span>
-                        <input name="gold_to_100_energy" type="button" value="Обменять">
-                    </div>
-                    <div>
-                        <img class="resource" src="{{ URL::asset('images/header_logo_silver.png') }}" alt="">
-                        <span>{{ $prices['silver_to_100_energy'] }}</span>
-                        <input name="silver_to_100_energy" type="button" value="Обменять">
-                    </div>
-                </div>
             </div>
-
-            <div class="popup-energy-wrap cfix">
+            <div class="pop-row hr-bot">
+                <a class="button-troll" data-name="gold_to_100_energy" href="#"><b>Обменять</b></a>
+            </div>
+            <div class="pop-row">
+                <img class="resource" src="{{ URL::asset('images/header_logo_silver.png') }}" alt="">
+                <span>{{ $prices['silver_to_100_energy'] }}</span><span> = </span>
+                <img class="resource" src="{{ URL::asset('images/header_logo_lighting.png') }}" alt="">
+                <span>100</span>
+            </div>
+            <div class="pop-row hr-bot">
+                <a class="button-troll" data-name="silver_to_100_energy" href="#"><b>Обменять</b></a>
+            </div>
+            <div class="pop-row">
+                <img class="resource" src="{{ URL::asset('images/header_logo_gold.png') }}" alt="">
+                <span>{{ $prices['gold_to_200_energy'] }}</span><span> = </span>
+                <img class="resource" src="{{ URL::asset('images/header_logo_lighting.png') }}" alt="">
                 <span>200</span>
-                <div class="popup-energy-exchanges-wrap">
-                    <div>
-                        <img class="resource" src="{{ URL::asset('images/header_logo_gold.png') }}" alt="">
-                        <span>{{ $prices['gold_to_200_energy'] }}</span>
-                        <input name="gold_to_200_energy" type="button" value="Обменять">
-                    </div>
-                    <div>
-                        <img class="resource" src="{{ URL::asset('images/header_logo_silver.png') }}" alt="">
-                        <span>{{ $prices['silver_to_200_energy'] }}</span>
-                        <input name="silver_to_200_energy" type="button" value="Обменять">
-                    </div>
-                </div>
             </div>
-
+            <div class="pop-row hr-bot">
+                <a class="button-troll" data-name="gold_to_200_energy" href="#"><b>Обменять</b></a>
+            </div>
+            <div class="pop-row">
+                <img class="resource" src="{{ URL::asset('images/header_logo_silver.png') }}" alt="">
+                <span>{{ $prices['silver_to_200_energy'] }}</span><span> = </span>
+                <img class="resource" src="{{ URL::asset('images/header_logo_lighting.png') }}" alt="">
+                <span>200</span>
+            </div>
+            <div class="pop-row hr-bot">
+                <a class="button-troll" data-name="silver_to_200_energy" href="#"><b>Обменять</b></a>
+            </div>
         </div>
     </div>
+    <!-- Меню->Играть всплывающее окно -->
+    <div id="choose-rase-block" class="troll-popup">
+        <div class="afterloader">
+            <img src="{{ URL::asset('images/379.gif') }}" alt="">
+        </div>
+        <div class="close-this"></div>
+        <div class="popup-content-wrap">
+            <h5>Выберете расу</h5>
+            <div class="pop-row">
+                {{ Form::open(['route' => 'user-active-games', 'method' => 'POST', 'id' => 'gameForm']) }}
+                <input type="hidden" name="currentRace">
+                <ul>
+                    @foreach($races as $key => $value)
+                        @if($value->race_type == 'race')
 
+                            <li>
+                                <div class="description">
+                                    <div class="txt"> {{ $value->description }}</div>
+
+                                </div>
+
+                                <div class="image-conteiner">
+                                    <img src="{{ URL::asset('img/card_images/'.$value->img_url) }}" alt="">
+                                </div>
+                                <a class="button-troll" data-name="{{ $value -> slug }}" href="#"><b>{{ $value -> title }}</b></a>
+                            </li>
+
+                        @endif
+                    @endforeach
+                </ul>
+                {{ Form::close() }}
+            </div>
+        </div>
+    </div>
 </div>
