@@ -2931,7 +2931,9 @@ input.book-style{
 .button-troll.unactive b{color: rgba(0,0,0,0.3);}
 .button-troll.unactive:before,
 .button-troll.unactive:after{ background-color: rgba(0,0,0,0.3);}
-
+#confirm-popup .button-troll{ margin: 0 5px;}
+#confirm-popup .button-troll:first-child:after,
+#confirm-popup .button-troll:last-child:before{ display: none;}
 
 .input-type-number{ position: relative; border:1px solid #714026; width: 130px; display: inline-block; text-align: left;}
 .input-type-number input{ border:none;  background-color: transparent; width: 100px; color: #714026; font-size: 14px; line-height: 27px; height: 27px; padding-left: 8px; }
@@ -2982,3 +2984,10 @@ input.book-style{
 #buySomeEnergy .pop-row{ padding-top:50px;}
 #buySomeEnergy .pop-row.hr-bot{ padding-top:5px;}
 #buySomeEnergy .popup-content-wrap{ padding:20px 20px;}
+
+.disable-select {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}

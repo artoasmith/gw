@@ -70,7 +70,23 @@ $user = Auth::user();
 <body>
 <div class="global-wrapper">
 
-<div class="new-popups-block">
+<div class="new-popups-block disable-select">
+
+    <!-- Окно custom Confirm -->
+    <div class="troll-popup" id="confirm-popup">
+        <div class="close-this"></div>
+        <div class="popup-content-wrap">
+            <h5>Подтвердите действие:</h5>
+            <div class="pop-row">
+               <div class="confirm-txt"></div>
+            </div>
+            <div class="pop-row">
+                <a class="button-troll" data-value="false" href="#"><b>Отменить</b></a>
+                <a class="button-troll" data-value="true" href="#"><b>Подтвердить</b></a>
+            </div>
+        </div>
+    </div>
+
     <!-- Окно успешного действия -->
     <div class="troll-popup" id="successEvent">
         <div class="close-this"></div>
@@ -78,13 +94,13 @@ $user = Auth::user();
             <h5>Результат:</h5>
             <div class="pop-row">
                 <span class="result">
-                    sdfgasdfgsadfsd
+
                 </span>
             </div>
         </div>
     </div>
 
-    <!-- Окно покупки карт/волшебства -->
+    <!-- Окно ошибки -->
     <div class="market-buy-popup troll-popup" id="buyingCardOrmagic">
         <div class="close-this"></div>
         <input name="_token" type="hidden" value="{{ csrf_token() }}">

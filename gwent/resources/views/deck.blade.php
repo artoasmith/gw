@@ -12,7 +12,7 @@ $errors = $errors->all();
 
     <div class="main">
         <div class="mbox">
-            <div class="content-top-wrap">
+            <div class="content-top-wrap disable-select">
                 <div class="dragon-image cfix">
 
                         <div class="dragon-middle">

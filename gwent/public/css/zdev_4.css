@@ -70,6 +70,7 @@
         text-decoration: none;
         color: #fff6d7;
         font-size: 14px;
+        cursor: pointer;
         font-family: 'indisplay',sans-serif; }
       .left-menu-wrapping .left-menu .nav-item .nav-item-wrap {
         padding: 17px 0px;

@@ -1,4 +1,4 @@
-<div class="left-menu-wrap">
+<div class="left-menu-wrap disable-select">
     <div class="left-menu-wrapping">
         <div class="left-menu">
             <div class="left-menu-naviagation">
@@ -99,7 +99,7 @@
                         </a>
                     </div>
                     <div class="nav-item">
-                        <a href="{{ route('user-logout') }}" class="log_out_menu">
+                        <a data-href="{{ route('user-logout') }}" class="log_out_menu">
                             <span class="nav-item-wrap">
                                 <span>Выход</span>
                             </span>

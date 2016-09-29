@@ -1,6 +1,4 @@
-/*
-* /main page
-*/
+/** /main page*/
 function fancyboxForm(){
     $('.fancybox-form').fancybox({
         openEffect  : 'fade',
@@ -12,7 +10,6 @@ function fancyboxForm(){
         padding:'0'
     })
 }
-
 //Форма логинизации на главной
 function showFormOnMain(){
     //При нажатии на кнопку "вход"
@@ -28,7 +25,6 @@ function showFormOnMain(){
         $('.form-wrap-for-rows').slideDown(10);
     }
 }
-
 function showWindowAboutOnMain() { // скрыть / показать  инфо о игре
     $('.drop-menu-open').click(function(e){
         $('.convert-about').slideToggle(500);
@@ -36,7 +32,6 @@ function showWindowAboutOnMain() { // скрыть / показать  инфо 
         e.preventDefault();
     });
 }
-
 function clickOnRace() { //показать инфо расы
     $('.rase-ric').click(function (e) {
         e.preventDefault();
@@ -61,15 +56,28 @@ function clickCloseCross() { //закрыть попап
         $(this).closest('.troll-popup').removeClass('show');
     });
 }
-
-
-
 // end of /main
+function logoutUser() {
+    $('a.log_out_menu').click(function (e) {
+        e.preventDefault();
+        var href = $(this).data('href');
+        var conf = $('#confirm-popup');
+        var butts = conf.find('.button-troll');
+        conf.find('.confirm-txt').text('Вы уверены что хотите выйти?');
+        conf.addClass('show');
+        butts.unbind();
+        butts.click(function (e) {
+            e.preventDefault();
+            result = $(this).data('value');
+            conf.removeClass('show');
+            if(result === true){
+                location = href;
+            }
+        });
 
-
-/*
-* /settings
-*/
+    });
+}
+/** /settings*/
 //Получить данные пользователя
 //Если user_login не указан, возвращает данные текущей сессии
 function getUserData(user_login){
@@ -104,22 +112,18 @@ function getUserData(user_login){
         }
     });
 }
-
 function settingsInputFile(){
     $('.form-description-settings-inp-wrap input').styler({
         fileBrowse:" ",
         filePlaceholder:"Сменить аватар"
     });
 }
-
 //Изменение пользовательских настроек
 function applySettings(){
     $('.form-wrap-input button[name=settingsChange]').click(function(e){
         e.preventDefault();
         var token = $('input[name=_token]').val();
-
         var formData = new FormData();
-
         formData.append( 'token', token );
         formData.append( '_method', 'PUT');
         formData.append( 'settings_email', $('.form-wrap-value input[name=settings_email]').val().trim());
@@ -131,7 +135,6 @@ function applySettings(){
         formData.append( 'birth_date', $('.form-wrap-item input[name=settings_birth_date]').val().trim() );
         formData.append( 'gender', $('.form-wrap-item select[name=settings_gender]').val().trim() );
         formData.append( 'action', 'user_settings' );
-
         $.ajax({
             url:        '/settings',
             headers:    {'X-CSRF-TOKEN': token},
@@ -149,13 +152,10 @@ function applySettings(){
         });
     });
 }
-
 //обновление изображения пользователя
 function settingUpdateImg(){
     $('.form-description-settings-inp input[name=image_user]').change(function(e){
-        
         var reader = new FileReader();
-
         reader.onload = function (e) {
             if( $('.form-description-settings-img .form-description-settings-img-wrap #avatarImg').length > 0 ){
                 $('.form-description-settings-img .form-description-settings-img-wrap #avatarImg').attr('src', e.target.result);
@@ -163,18 +163,12 @@ function settingUpdateImg(){
                 $('.form-description-settings-img .form-description-settings-img-wrap').append('<img id="avatarImg" src="" alt="">');
                 $('.form-description-settings-img .form-description-settings-img-wrap #avatarImg').attr('src', e.target.result);
             }
-
         }
         reader.readAsDataURL( $(this).prop('files')[0] );
     });
 }
-
 //end of /settings
-
-
-/*
-* /deck
-*/
+/** /deck*/
 //Построение Отображения карты в колоде
 //data - данные карты
 //wraper - обертка для карты
@@ -210,17 +204,14 @@ function buildCardDeckView(cardData, wraper){
                 '</div>' +
             '</div>' +
         '</div>';
-
     if(wraper == 'ul'){
         result = '<li class="content-card-item" data-cardId="'+cardData['id']+'">'+result+'</li>';
     }
-
     if(wraper == 'div'){
         result = '' +
             '<div class="market-cards-item" data-card="'+cardData['id']+'">'+result+
                 '<div class="market-card-item-price">ЦЕНА '+
                     '<div class="cfix">';
-
         if(cardData['gold'] != 0){
             result += '<div class="marker-price-gold">'+cardData['gold']+'</div>';
         }
@@ -231,7 +222,6 @@ function buildCardDeckView(cardData, wraper){
             result += '</div></div>' +
                 '<div class="market-card-item-buy"><a href="#" class="button-buy" id="simpleBuy">КУПИТЬ</a></div>';
         }
-
         if(cardData['only_gold'] != 0){
             result += '<div class="market-card-item-price">ТОЛЬКО СЕРЕБРО' +
                 '<div class="cfix">' +
@@ -243,10 +233,8 @@ function buildCardDeckView(cardData, wraper){
         result += '' +
                 '</div>';
     }
-
     return result;
 }
-
 //Формирование колод пользователя и свободных карт
 function getUserDeck(deck, user_login){
     $.ajax({
@@ -255,9 +243,7 @@ function getUserDeck(deck, user_login){
         data:   {deck:deck, login: user_login},
         success:function(data){
             var res = JSON.parse(data);
-
             $('.content-card-field ul#sortableTwo, .content-card-field ul#sortableOne').empty();
-
             //Формирование доступных карт
             for(var i=0; i<res['available'].length; i++){
                 var available = res['available'][i];
@@ -265,7 +251,6 @@ function getUserDeck(deck, user_login){
                     $('.content-card-field ul#sortableTwo').append(buildCardDeckView(available, 'ul'));
                 }
             }
-
             //Формирование Карт Колоды
             for(var i=0; i<res['in_deck'].length; i++){
                 var in_deck = res['in_deck'][i];
@@ -273,13 +258,11 @@ function getUserDeck(deck, user_login){
                     $('.content-card-field ul#sortableOne').append(buildCardDeckView(in_deck, 'ul'));
                 }
             }
-
             //Пересчет данных колоды
             recalculateDeck();
         }
     });
 }
-
 //скролл
 function initScrollpane() {
     $('.scroll-pane, .market-cards, .market-cards-wrap').jScrollPane({
@@ -287,7 +270,6 @@ function initScrollpane() {
         autoReinitialise: true
     });
 }
-
 //Фикс перетягивания колоды
 function underDragCardFix() {
     if ($('.content-card-field')) {
@@ -296,7 +278,6 @@ function underDragCardFix() {
         });
     }
 }
-
 //пересчет коллоды
 function recalculateDeck(){
     var cardsCount = 0;
@@ -307,13 +288,11 @@ function recalculateDeck(){
     var leaderQuantity = 0;     //Количество карт лидеров
     var cardsDeck = {};
     $('#sortableOne .content-card-item').each(function(){
-
         if(cardsDeck[$(this).attr('data-cardid')] === undefined){
             cardsDeck[$(this).attr('data-cardid')] = 1;
         }else{
             cardsDeck[$(this).attr('data-cardid')]++;
         }
-
         cardsCount++;
         //Перечет карт воинов и спец карт
         if($(this).children('.content-card-item-main').attr('data-type') != 'special'){
@@ -328,7 +307,6 @@ function recalculateDeck(){
         //Вес колоды
         deckWeight += parseInt($(this).children('.content-card-item-main').attr('data-weight'));
     });
-
     for(var key in cardsDeck){
         var currentCardCount = $('#sortableOne .content-card-item[data-cardid='+key+'] .card-load-info .maxCountInDeck-wrap .current-card-type-count');
         var maxCardCount = parseInt($('#sortableOne .content-card-item[data-cardid='+key+'] .card-load-info .maxCountInDeck-wrap .current-max-card-count').text());
@@ -339,23 +317,19 @@ function recalculateDeck(){
             currentCardCount.parent().css({'color':'#ef0'});
         }
     }
-
 //Подсчет лиги
     for(var i=0; i<window.leagues.length; i++){
         if(deckWeight > window.leagues[i]['min_lvl']){
             league = window.leagues[i]['title'];
         }
     }
-
     $('.content-card-center-block .content-card-center-description-block .deck-card-sum').text(cardsCount);
     $('.content-card-center-block .deck-warriors .current-value').text(warriorsQuantity);
     $('.content-card-center-block .deck-special .current-value').text(specialQuantity);
     $('.content-card-center-block .deck-cards-power').text(deckWeight);
     $('.content-card-center-block .deck-league').text(league);
     $('.content-card-center-block .deck-liders .current-value').text(leaderQuantity);
-
 }
-
 //отправка данных о колодах
 //deck   - название колоды
 //cardId - id карты
@@ -369,7 +343,6 @@ function sendUserDeck(deck, cardId, source){
     formData.append( 'deck', deck);
     formData.append( 'card_id', cardId);
     formData.append( 'source', source);
-
     $.ajax({
         url:        '/change_user_deck',
         headers:    {'X-CSRF-TOKEN': token},
@@ -383,7 +356,6 @@ function sendUserDeck(deck, cardId, source){
         }
     });
 }
-
 //перетягивание
 function draggableCards() {
     $.ajax({
@@ -392,7 +364,6 @@ function draggableCards() {
         success:function(data) {
             if (data != 0) {
                 var res = JSON.parse(data);
-
                 $("#sortableOne, #sortableTwo").sortable({
                     cancel: '.ui-sortable-handle',
                     stop: function () {
@@ -400,28 +371,23 @@ function draggableCards() {
                         $('#buyingCardOrmagic').show(300).delay(3000).hide(400);
                     }
                 }).disableSelection();
-
             } else {
-
                 $("#sortableOne, #sortableTwo").sortable({
                     connectWith:	".connected-sortable",
                     stop:
                         function(e, ui){
                             if($(this).attr('id') != ui.item.parent().attr('id')) {
                                 var error = 1;
-
                                 //перетягивание из колоды пользователя
                                 if ($(this).attr('id') == 'sortableOne') {
                                     var source = 'user_deck';
                                     error = 0;
                                 }
-
                                 //перетяггивание из доступных карт
                                 if ($(this).attr('id') == 'sortableTwo') {
                                     var source = 'available';
                                     error = 0;
                                 }
-
                                 //перетягивание происходит не в одной и той же панель
                                 if (0 == error) {
                                     var deck = $('.content-card-field-center-wrap .content-card-select select').val();
@@ -432,19 +398,12 @@ function draggableCards() {
                             }
                         }
                 }).disableSelection();
-
             }
         }
     });
 }
-
 //end of /deck
-
-
-/*
-* /market
-*/
-
+/** /market*/
 function showInsuficientMoney(){
     $('#buyingCardOrmagic .popup-content-wrap').html('' +
         '<p>У вас недостаточно денег</p>' +
@@ -452,16 +411,12 @@ function showInsuficientMoney(){
         '<a class="buy-more-silver" href="#">Наменять серебра</a></p>');
     $('#buyingCardOrmagic').show(300);
 }
-
 //Пользователь хочет купить карту
 function userByingCard(){
-
     $('.content-card-wrap-main .market-card-item-buy').on('click', '.button-buy', function(e){
-
         e.preventDefault();
         var id = $(this).parents('.market-cards-item').attr('data-card');
         var buyType = $(this).attr('id');
-
         $.ajax({
             url:    '/check_user_is_plying_status',
             type:   'GET',
@@ -476,53 +431,54 @@ function userByingCard(){
                         data:   {card_id: id, buy_type:buyType},
                         success:function(data){
                             var res = JSON.parse(data);
-
                             if(res['message'] == 'success'){
-
-                                var result = confirm('Вы действительно хотите купить карту '+res['title']+'?');
-                                if(result === true){
-                                    var token = $('#buyingCardOrmagic input[name=_token]').val();
-
-                                    res['user_gold'] = parseInt(res['user_gold']);
-                                    res['user_silver'] = parseInt(res['user_silver']);
-                                    res['price_gold'] = parseInt(res['price_gold']);
-                                    res['price_silver'] = parseInt(res['price_silver']);
-
-                                    if( (res['user_gold'] < res['price_gold']) || (res['user_silver'] < res['price_silver']) ){
+                                var conf = $('#confirm-popup');
+                                var butts = conf.find('.button-troll');
+                                conf.find('.confirm-txt').text('Вы действительно хотите купить карту '+res['title']+'?');
+                                conf.addClass('show');
+                                butts.unbind();
+                                butts.click(function (e) {
+                                    e.preventDefault();
+                                    var result = $(this).data('value');
+                                    conf.removeClass('show');
+                                    if(result == 'true'){
+                                        var token = $('#buyingCardOrmagic input[name=_token]').val();
+                                        res['user_gold'] = parseInt(res['user_gold']);
+                                        res['user_silver'] = parseInt(res['user_silver']);
+                                        res['price_gold'] = parseInt(res['price_gold']);
+                                        res['price_silver'] = parseInt(res['price_silver']);
+                                        if( (res['user_gold'] < res['price_gold']) || (res['user_silver'] < res['price_silver']) ){
                                             showInsuficientMoney();
-                                    }else{
-                                        $.ajax({
-                                            url:    '/card_is_buyed',
-                                            type:   'POST',
-                                            headers:{'X-CSRF-TOKEN': token},
-                                            data:   {card_id: id, buy_type:buyType},
-                                            success:function(data){
-                                                var res = JSON.parse(data);
-                                                if(res['message'] == 'success'){
-                                                    refreshRosources(res);
-                                                    showErrorMessage('<p>Карта "'+res['title']+'" стала доступной.</p>');
+                                        }else{
+                                            $.ajax({
+                                                url:    '/card_is_buyed',
+                                                type:   'POST',
+                                                headers:{'X-CSRF-TOKEN': token},
+                                                data:   {card_id: id, buy_type:buyType},
+                                                success:function(data){
+                                                    var res = JSON.parse(data);
+                                                    if(res['message'] == 'success'){
+                                                        refreshRosources(res);
+                                                        resultPopupShow('Карта "'+res['title']+'" стала доступной.');
+                                                    }
                                                 }
-                                            }
-                                        });
-                                        //end ajax card_is_buyed
+                                            });
+                                            //end ajax card_is_buyed
+                                        }
                                     }
-                                }
-
+                                });
                             }else{
-                                    alert(res['message']);
+                                resultPopupShow(res['message']);
                             }
                         }
                     });
                     //end ajax get_card_data
-
                 }
             }
         });
         //end ajax check_user_is_plying_status
     });
-
 }
-
 //Украшение селекта рас
 function marketSelection(){
     if($('.selection-rase select').length > 0){
@@ -538,10 +494,7 @@ function marketSelection(){
     }
 }
 //end of /market
-
-/*
-*	Magic
-*/
+/**	Magic*/
 //Создание отображения таблицы "Волшебства" :3
 function buildMagicEffectsView(data){
     return '<tr>' +
@@ -556,13 +509,11 @@ function buildMagicEffectsView(data){
     '<td class="effect-date">' + data['used_times'] + '</td>' +
     '</tr>';
 }
-
 //пользователь покупает волшебство
 function userByingMagic(){
     $('.main-table tr td .button-plus').click(function(e){
         e.preventDefault();
         var id = $(this).attr('data-type');
-
         $.ajax({
             url:    '/check_user_is_plying_status',
             type:   'GET',
@@ -577,36 +528,44 @@ function userByingMagic(){
                         data:	{magic_id:id},
                         success:function(data){
                             var res = JSON.parse(data);
-
-                            var result = confirm('Вы действительно хотите купить карту '+res['title']+'?');
-                            if(result === true){
-
-                                var token = $('#buyingCardOrmagic input[name=_token]').val();
-                                res['user_gold'] = parseInt(res['user_gold']);
-                                res['user_silver'] = parseInt(res['user_silver']);
-                                res['price_gold'] = parseInt(res['price_gold']);
-                                res['price_silver'] = parseInt(res['price_silver']);
-                                if( (res['user_gold'] < res['price_gold']) || (res['user_silver'] < res['price_silver']) ){
-                                    showInsuficientMoney();
-                                }else{
-                                    $.ajax({
-                                        url:	'/magic_is_buyed',
-                                        type:   'POST',
-                                        headers:{'X-CSRF-TOKEN': token},
-                                        data:   {magic_id: id},
-                                        success:function(data){
-                                            var res = JSON.parse(data);
-                                            if(res['message'] == 'success'){
-                                                $('.main-table tr a[data-type="'+id+'"]').parent().parent().children('.market-status-wrap').children('.market-status').removeClass('disabled');
-                                                $('.main-table tr a[data-type="'+id+'"]').parent().parent().children('.effect-date').html(res['date']);
-                                                refreshRosources(res);
-                                                showErrorMessage('<p>Волшебство '+res['title']+' стала доступным.</p>');
+                            var conf = $('#confirm-popup');
+                            var butts = conf.find('.button-troll');
+                            var result;
+                            conf.find('.confirm-txt').text('Вы действительно хотите купить карту '+res['title']+'?');
+                            conf.addClass('show');
+                            butts.unbind();
+                            butts.click(function (e) {
+                                e.preventDefault();
+                                result = $(this).data('value');
+                                conf.removeClass('show');
+                                if(result == true){
+                                    var token = $('#buyingCardOrmagic input[name=_token]').val();
+                                    res['user_gold'] = parseInt(res['user_gold']);
+                                    res['user_silver'] = parseInt(res['user_silver']);
+                                    res['price_gold'] = parseInt(res['price_gold']);
+                                    res['price_silver'] = parseInt(res['price_silver']);
+                                    if( (res['user_gold'] < res['price_gold']) || (res['user_silver'] < res['price_silver']) ){
+                                        showInsuficientMoney();
+                                    }else{
+                                        $.ajax({
+                                            url:	'/magic_is_buyed',
+                                            type:   'POST',
+                                            headers:{'X-CSRF-TOKEN': token},
+                                            data:   {magic_id: id},
+                                            success:function(data){
+                                                var res = JSON.parse(data);
+                                                if(res['message'] == 'success'){
+                                                    $('.main-table tr a[data-type="'+id+'"]').parent().parent().children('.market-status-wrap').children('.market-status').removeClass('disabled');
+                                                    $('.main-table tr a[data-type="'+id+'"]').parent().parent().children('.effect-date').html(res['date']);
+                                                    refreshRosources(res);
+                                                    resultPopupShow('Волшебство '+res['title']+' стала доступным.');
+                                                }
                                             }
-                                        }
-                                    });
-                                    //end ajax magic_is_buyed
+                                        });
+                                        //end ajax magic_is_buyed
+                                    }
                                 }
-                            }
+                            });
                         }
                     });
                     //end ajax get_magic_effect_data
@@ -614,10 +573,8 @@ function userByingMagic(){
             }
         });
         //end ajax check_user_is_plying_status
-
     });
 }
-
 //Пользователь меняет статус активности волшебства
 function userChangesMagicEffectStatus(){
     $('.main-table .market-status-wrap .market-status').click(function(){
@@ -625,7 +582,6 @@ function userChangesMagicEffectStatus(){
             var status_id = $(this).parents('tr').children('.no-border').children('.button-plus').attr('data-type');
             var token = $('#buyingCardOrmagic input[name=_token]').val();
             var is_active = $(this).hasClass('active');
-
             $.ajax({
                 url: '/check_user_is_plying_status',
                 type: 'GET',
@@ -661,28 +617,20 @@ function userChangesMagicEffectStatus(){
         }
     });
 }
-
 //end of /magic
-
-/*
-* Общие методы
-*/
-
+/** Общие методы*/
 //Возвращает карты/волшебство в зависимости от расы
 function getCardsByRace(race){
-
     switch($('.market-page').attr('id')){
         case 'market':  var url = '/get_cards_by_race'; break;
         case 'magic':   var url = '/get_magic_by_race'; break;
     }
-
     $.ajax({
         url:	url,
         type:	'GET',
         data:	{race:race},
         success:function(data){
             var res = JSON.parse(data);
-
             switch($('.market-page').attr('id')){
                 case 'market':
                     $('.market-selection .select-rase-img, .content-card-field-wrap .market-cards-items-wrap').empty();
@@ -706,16 +654,13 @@ function getCardsByRace(race){
         }
     })
 }
-
 //Функция обновления значений цены usd в золото
 function eventsToRefreshGoldPrices(input){
     input.change(function(){refreshGoldPrices();});
     input.keyup(function(){refreshGoldPrices();});
     input.keydown(function(){refreshGoldPrices();});
-
 }
 function refreshGoldPrices(){
-
         var goldValue = parseInt($('#buySomeGold input[name=goldToBuy]').val());
             console.log('%c'+$('#buySomeGold input[name=goldToBuy]').val(),'background-color:#f00; font-size:14px;');
             console.log('%c'+goldValue,'background-color:#ff0; font-size:14px;');
@@ -734,20 +679,14 @@ function refreshGoldPrices(){
             $('#buySomeGold .error').addClass('show');
             $('#buySomeGold .button-troll').addClass('unactive');
         }
-
 }
-
-
 //Функция обновления значений ресурсов пользователя
 function refreshRosources(resources){
     if(resources['gold'] != 'undefined') $('.rating .resurses .gold').text(resources['gold']);
     if(resources['silver'] != 'undefined') $('.rating .resurses .silver').text(resources['silver']);
     if(resources['energy'] != 'undefined') $('.rating .resurses .lighting').text(resources['energy']);
 }
-
-
 //Функция обновления значений цены золото в серебро
-
 function eventsToRefreshSilverPrices(input){
     input.change(function(){refreshSilverPrices();});
     input.keyup(function(){refreshSilverPrices();});
@@ -764,7 +703,6 @@ function refreshSilverPrices(){
             }else{
                 $('#buySomeSilver .button-troll').addClass('unactive');
             }
-
         }else{
             $('#buySomeSilver #silverToBuy').text('0');
             $('#buySomeSilver .error').addClass('show');
@@ -856,8 +794,6 @@ function showEnergyBuyingPopup(){
         });
     });
 }
-
-
 //Покупка золота
 function showGoldBuyingPopup(){
     $(document).on('click', '.buy-more-gold', function(event){
@@ -891,7 +827,6 @@ function showGoldBuyingPopup(){
     });
 }
 // клик по кнопке анимация
-
 function animationButtonClick() {
     var protect = false;
     if(protect == false) {
@@ -905,7 +840,6 @@ function animationButtonClick() {
         });
     }
 }
-
 function incrementDecrementInputNumber() {
     $('.input-type-number').each(function () {
         var input = $(this).find('input');
@@ -923,7 +857,6 @@ function incrementDecrementInputNumber() {
             }else {
                input.val(0);
             }
-
         });
         input.keydown(function(event) { // Разрешаем: backspace, delete, tab и escape Разрешаем: Ctrl+A Разрешаем: home, end, влево, вправо
             console.log(event.keyCode);
@@ -940,9 +873,6 @@ function resultPopupShow(message){
     $('#successEvent').find('.result').text(message);
     $('#successEvent').addClass('show');
 }
-
-
-
 function showErrorMessage(message){
     $('#buyingCardOrmagic .popup-content-wrap').html('<p>' + message + '</p>');
     $('#buyingCardOrmagic').addClass('show');
@@ -950,18 +880,14 @@ function showErrorMessage(message){
         $('#buyingCardOrmagic').removeClass('show');
     }, 3000);
 }
-
-
 //Вывод Колод для игры
 function showUserDecks(){
     var preload = $('#choose-rase-block .afterloader');
     preload.css({'opacity':'0', 'z-index':'-1'});
-
     $('.conteiner-rase ul li .button-buy-next').click(function(e){
         e.preventDefault();
         var race = $(this).data('name');
         $('.conteiner-rase #gameForm input[name=currentRace]').val(race);
-
         $.ajax({
             url:        '/validate_deck',
             type:       'GET',
@@ -982,8 +908,6 @@ function showUserDecks(){
         });
     });
 }
-
-
 //Присоединение к игре
 function userConnectToGame(){
     $('.tables-list').on('click', 'a.play-game', function(e){
@@ -1006,13 +930,11 @@ function userConnectToGame(){
         });
     });
 }
-
 function array_unique( inputArr ) {
     var result = [];
     $.each(inputArr, function(i, el){
         if($.inArray(el, result) === -1) result.push(el);
     });
-
     return result;
 }
 function sidebarPlay() {
@@ -1022,8 +944,6 @@ function sidebarPlay() {
         $('#choose-rase-block').addClass('show');
     });
 }
-
-
 $(document).ready(function(){
     if( (!$('.login-page').length>0) && (!$('.registration-main-page').length > 0) ) getUserData();  //Получить данные пользователя (по идее должна не работать только после логинизации)
     showFormOnMain();                       //Украшение формы логина на главной
@@ -1046,20 +966,19 @@ $(document).ready(function(){
     eventsToRefreshGoldPrices($('.market-buy-popup input[name=goldToBuy]'));
     showUserDecks();
     userConnectToGame();
-
+    if($('a.log_out_menu').length > 0){logoutUser();}
     $('.male-select').styler({
             selectPlaceholder: 'Выроб расы'
     });
-
     //вычисление количества активных пользователей на сайте
     setInterval(function(){
        $.get('/get_user_quantity', function(data){
                $('.people-box .preload-peoples img').hide();
                $('.people-box .people').css('opacity', '1').text(data);
        });
-
     },15000);
-
+        // отключение перетаскивания картинок
+    $("img").mousedown(function(){        return false;    });
     //Украшение селекторов
     if($('.content-card-top .market-selection select').length > 0){
         marketSelection();
@@ -1068,13 +987,10 @@ $(document).ready(function(){
             getCardsByRace($(this).val());
         });
     }
-
     //Изменение настроек пользоателя
     applySettings();
     //Изменение картинки
     settingUpdateImg();
-
-
     //Выбор расы колоды/волшебства
     $('.content-card-center-title select').change(function(){
         getUserDeck($(this).val());
@@ -1083,18 +999,14 @@ $(document).ready(function(){
     if($('.content-card-center-title select').length > 0){
         getUserDeck($('.content-card-center-title select').val());
     }
-
     //Закрытие popup-окна
     $(document).on('click', '.close-popup', function(){
        $(this).parent().hide();
     });
-
     //пользователь создает стол
     $(document).on('click', 'input[name=createTable]', function(){
         $('#createTable').show(300);
     });
-
-
     if($('.conteiner-pop').length>0){
         $('.conteiner-pop').jScrollPane();
     }
@@ -1107,5 +1019,4 @@ $(document).ready(function(){
             $('.item-rise').removeClass('active');
         }
     });
-
 });

@@ -173,7 +173,7 @@ $errors = $errors->all();
                             </ul>
                         </div>
                     </div>
-                    <div class="button-troll">
+                    <div class="button-troll disable-select">
                         <b>ЗАКРЫТЬ</b>
                     </div>
 

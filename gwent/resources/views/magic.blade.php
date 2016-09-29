@@ -11,7 +11,7 @@ $errors = $errors->all();
 
         <div class="main">
             <div class="mbox">
-                <div class="content-top-wrap">
+                <div class="content-top-wrap disable-select">
                     <div class="dragon-image cfix">
 
                             <div class="dragon-middle">
@@ -54,7 +54,7 @@ $errors = $errors->all();
                             <div class="market-cards">
                                 <div class="market-cards-wrap">
                                     <div class="market-cards-items-wrap effect-market-wrap">
-                                        <table class="main-table">
+                                        <table class="main-table disable-select">
                                             <thead>
                                             <tr>
 
