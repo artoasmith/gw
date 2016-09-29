@@ -42,7 +42,7 @@ function marketScrollInit() {
         autoReinitialise: true,
         autoReinitialiseDelay: 0,
         verticalDragMaxHeight: 65,
-        verticalDragMinHeight: 65,
+       
         showArrows: true
     });
 }

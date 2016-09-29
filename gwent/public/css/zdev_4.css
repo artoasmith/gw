@@ -618,7 +618,9 @@
     display: inline-block;
     vertical-align: middle;
     color: #d8ac4a;
-    font-size: 16px; }
+    font-size: 16px;
+
+  }
   .refil .refil_middle_form .refil_middle_body {
     text-align: center;
     padding-top: 50px;
@@ -714,9 +716,11 @@
       -moz-box-shadow: none;
       box-shadow: none;
       text-shadow: none;
-      background-color: rgba(231, 185, 81, 0.2); }
+      background-color: rgba(231, 185, 81, 0.2);
+      }
     .market-page .selection-rase .jq-selectbox__select-text {
       height: 100%;
+      padding-top: 6px;
       background: url("../images/left-menu-item-border-bg.png") center center no-repeat;
       -webkit-background-size: 100% 100%;
       -moz-background-size: 100% 100%;
@@ -759,7 +763,9 @@
       line-height: 40px;
       text-transform: uppercase; }
       .market-page .selection-rase .jq-selectbox li:hover {
-        text-shadow: 0 0 1px #ecbd53; }
+        text-shadow: 0 0 15px ;
+        color: #fff7b1;
+      }
     .market-page .selection-rase .selection-rase-img {
       display: inline-block;
       height: 50px;

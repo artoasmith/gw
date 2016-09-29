@@ -6146,16 +6146,6 @@ function selectStyled() {
     };
 }
 
-function marketScrollInit() {
-    $('.market-cards-wrap').jScrollPane({
-        contentWidth: '0px',
-        autoReinitialise: true,
-        autoReinitialiseDelay: 0,
-        verticalDragMaxHeight: 65,
-        verticalDragMinHeight: 65,
-        showArrows: true
-    });
-}
 
 function searchPlayConfig() {
     if ($('#look-for-oponent').length != '') {
